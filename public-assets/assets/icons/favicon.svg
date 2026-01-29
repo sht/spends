@@ -1,0 +1,35 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="16" cy="16" r="16" fill="url(#faviconGradient)"/>
+
+  <!-- Receipt (left) - simplified for favicon -->
+  <g id="receipt">
+    <!-- Receipt paper -->
+    <rect x="6" y="7" width="10" height="18" rx="0.5" fill="white" opacity="0.95"/>
+    <!-- Receipt lines -->
+    <line x1="8" y1="11" x2="14" y2="11" stroke="url(#faviconGradient)" stroke-width="1" stroke-linecap="round"/>
+    <line x1="8" y1="15" x2="14" y2="15" stroke="url(#faviconGradient)" stroke-width="1" stroke-linecap="round"/>
+    <line x1="8" y1="19" x2="12" y2="19" stroke="url(#faviconGradient)" stroke-width="1" stroke-linecap="round"/>
+  </g>
+
+  <!-- Chart (right) - simplified for favicon -->
+  <g id="chart">
+    <!-- Chart bars -->
+    <rect x="17" y="21" width="2" height="4" fill="white" opacity="0.95"/>
+    <rect x="20" y="18" width="2" height="7" fill="white" opacity="0.95"/>
+    <rect x="23" y="14" width="2" height="11" fill="white" opacity="0.95"/>
+  </g>
+
+  <!-- Checkmark (top right) - small badge -->
+  <circle cx="26" cy="8" r="2.5" fill="white" opacity="0.95"/>
+  <path d="M 24.8 8 L 25.5 8.8 L 27 7.2" stroke="url(#faviconGradient)" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Gradient definition -->
+  <defs>
+    <linearGradient id="faviconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+</svg>
+ 
