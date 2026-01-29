@@ -1,4 +1,5 @@
 import Alpine from 'alpinejs';
+import { Modal } from 'bootstrap';
 
 document.addEventListener('alpine:init', () => {
   Alpine.data('inventoryTable', () => ({
@@ -28,6 +29,25 @@ document.addEventListener('alpine:init', () => {
       this.filterInventory();
       this.calculateStats();
       this.updatePagination();
+
+      // Setup modal event listener
+      const inventoryModal = document.getElementById('inventoryModal');
+      if (inventoryModal) {
+        inventoryModal.addEventListener('show.bs.modal', (e) => {
+          setTimeout(() => {
+            const modalContent = inventoryModal.querySelector('.modal-content');
+            if (modalContent && modalContent.__x) {
+              const alpineData = modalContent.__x.$data;
+              // Check if it's being opened from the "New Purchase" button
+              if (e.relatedTarget && e.relatedTarget.classList.contains('btn-primary') && e.relatedTarget.textContent.includes('New Purchase')) {
+                alpineData.resetForm();
+              }
+              // If edit mode is set, keep it; otherwise reset to add mode
+              console.log('Modal opened - isEditMode:', alpineData.isEditMode);
+            }
+          }, 10);
+        });
+      }
 
       setTimeout(() => {
         this.hideLoadingScreen();
@@ -195,12 +215,82 @@ document.addEventListener('alpine:init', () => {
 
     viewItem(item) {
       console.log('View item:', item);
-      alert(`Viewing: ${item.name}\nPrice: $${item.price.toFixed(2)}\nStatus: ${item.status}\nDate: ${item.purchaseDate}`);
+      // Create detailed item object with all fields
+      const detailedItem = {
+        productName: item.name,
+        retailer: item.retailer || 'Amazon',
+        brand: item.brand,
+        modelNumber: item.modelNumber || '',
+        serialNumber: item.serialNumber || '',
+        purchaseDate: item.purchaseDate,
+        price: item.price,
+        quantity: item.quantity || 1,
+        link: item.link || '',
+        warrantyExpiry: item.warrantyExpiry || '',
+        returnDeadline: item.returnDeadline || '',
+        returnPolicy: item.returnPolicy || '',
+        taxDeductible: item.taxDeductible || false,
+        tags: item.tags || '',
+        notes: item.notes || ''
+      };
+
+      // Get the Alpine component and set the item data
+      const viewDetailsElement = document.querySelector('[x-data="viewPurchaseDetails()"]');
+      if (viewDetailsElement && viewDetailsElement.__x) {
+        viewDetailsElement.__x.$data.setItem(detailedItem);
+      }
+
+      // Show the modal
+      const viewDetailsModal = new Modal(document.getElementById('viewDetailsModal'));
+      viewDetailsModal.show();
     },
 
     editItem(item) {
       console.log('Edit item:', item);
-      alert(`Edit mode for: ${item.name}`);
+
+      // Create detailed item object with all fields
+      const detailedItem = {
+        productName: item.name,
+        retailer: item.retailer || 'Amazon',
+        brand: item.brand,
+        modelNumber: item.modelNumber || '',
+        serialNumber: item.serialNumber || '',
+        purchaseDate: item.purchaseDate,
+        price: item.price,
+        quantity: item.quantity || 1,
+        link: item.link || '',
+        warrantyExpiry: item.warrantyExpiry || '',
+        returnDeadline: item.returnDeadline || '',
+        returnPolicy: item.returnPolicy || '',
+        taxDeductible: item.taxDeductible || false,
+        tags: item.tags || '',
+        notes: item.notes || '',
+        id: item.id
+      };
+
+      // Get the modal element
+      const inventoryModalElement = document.getElementById('inventoryModal');
+
+      // Update modal title and icon directly
+      const modalTitle = inventoryModalElement.querySelector('.modal-title');
+      const titleIcon = modalTitle.querySelector('i');
+      const titleText = modalTitle.querySelector('span');
+
+      titleIcon.className = 'bi bi-pencil-circle text-primary me-2';
+      titleText.textContent = 'Edit Purchase';
+
+      // Get the Alpine component and set edit mode BEFORE showing
+      const modalContent = inventoryModalElement.querySelector('.modal-content');
+      if (modalContent && modalContent.__x) {
+        const alpineData = modalContent.__x.$data;
+        alpineData.isEditMode = true;
+        alpineData.editingItemId = item.id;
+        alpineData.form = { ...detailedItem };
+      }
+
+      // Show the modal
+      const inventoryModal = new Modal(inventoryModalElement);
+      inventoryModal.show();
     },
 
     deleteItem(item) {

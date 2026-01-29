@@ -225,7 +225,7 @@
                         <!-- Inventory Table -->
                         <div class="card">
                             <div class="card-header">
-                                <div class="row align-items-center">
+                                <div class="row align-items-center py-3">
                                     <div class="col">
                                         <h5 class="card-title mb-0">Inventory</h5>
                                     </div>
@@ -233,30 +233,30 @@
                                         <div class="d-flex gap-2">
                                             <!-- Search -->
                                             <div class="position-relative">
-                                                <input type="search" 
-                                                       class="form-control form-control-sm" 
+                                                <input type="search"
+                                                       class="form-control form-control-sm"
                                                        placeholder="Search inventory..."
                                                        x-model="searchQuery"
                                                        @input="filterInventory()"
-                                                       style="width: 200px;">
+                                                       style="width: 200px; padding: 0.75rem 0.5rem;">
                                                 <i class="bi bi-search position-absolute top-50 end-0 translate-middle-y me-2 text-muted"></i>
                                             </div>
-                                            
+
                                             <!-- Status Filter -->
-                                            <select class="form-select form-select-sm" 
-                                                    x-model="statusFilter" 
+                                            <select class="form-select form-select-sm"
+                                                    x-model="statusFilter"
                                                     @change="filterInventory()"
-                                                    style="width: 150px;">
+                                                    style="width: 150px; padding: 0.75rem 0.5rem;">
                                                 <option value="">All Status</option>
                                                 <option value="ordered">Ordered</option>
                                                 <option value="received">Received</option>
                                             </select>
-                                            
+
                                             <!-- Date Range -->
-                                            <select class="form-select form-select-sm" 
-                                                    x-model="dateFilter" 
+                                            <select class="form-select form-select-sm"
+                                                    x-model="dateFilter"
                                                     @change="filterInventory()"
-                                                    style="width: 150px;">
+                                                    style="width: 150px; padding: 0.75rem 0.5rem;">
                                                 <option value="">All Dates</option>
                                                 <option value="today">Today</option>
                                                 <option value="week">This Week</option>
@@ -380,78 +380,307 @@
         </div> <!-- /.admin-wrapper -->
     </div>
 
-    <!-- Item Details Modal -->
-    <div class="modal fade" id="inventoryModal" tabindex="-1">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Item Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <!-- Add Purchase Modal -->
+    <div class="modal fade" id="inventoryModal" tabindex="-1" aria-labelledby="inventoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content" x-data="addPurchaseForm()">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title" id="inventoryModalLabel">
+                        <i class="bi text-primary me-2" :class="{ 'bi-pencil-circle': isEditMode, 'bi-plus-circle': !isEditMode }"></i>
+                        <span x-text="isEditMode ? 'Edit Purchase' : 'Add Purchase'" @change="$el.textContent = isEditMode ? 'Edit Purchase' : 'Add Purchase'"></span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="row">
-                        <!-- Item Information -->
-                        <div class="col-lg-8">
-                            <h6 class="mb-3">Item Information</h6>
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Product</th>
-                                            <th>Quantity</th>
-                                            <th>Price</th>
-                                            <th>Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>Sample Product</td>
-                                            <td>2</td>
-                                            <td>$49.99</td>
-                                            <td>$99.98</td>
-                                        </tr>
-                                    </tbody>
-                                    <tfoot>
-                                        <tr>
-                                            <th colspan="3">Total:</th>
-                                            <th>$99.98</th>
-                                        </tr>
-                                    </tfoot>
-                                </table>
+                    <!-- Product Details Section -->
+                    <div class="mb-4">
+                        <h6 class="text-muted text-uppercase small fw-semibold mb-3">Product Details</h6>
+
+                        <div class="mb-3">
+                            <label for="productName" class="form-label">Product Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="productName" x-model="form.productName" placeholder="e.g., iPhone 15 Pro Max">
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="retailer" class="form-label">Retailer <span class="text-danger">*</span></label>
+                                <select class="form-select" id="retailer" x-model="form.retailer">
+                                    <option value="">Select retailer...</option>
+                                    <option>Amazon</option>
+                                    <option>eBay</option>
+                                    <option>Walmart</option>
+                                    <option>Target</option>
+                                    <option>Best Buy</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="brand" class="form-label">Brand <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="brand" x-model="form.brand" placeholder="e.g., Apple">
                             </div>
                         </div>
-                        
-                        <!-- Warranty Timeline -->
-                        <div class="col-lg-4">
-                            <h6 class="mb-3">Warranty Timeline</h6>
-                            <div class="warranty-timeline">
-                                <div class="timeline-item completed">
-                                    <div class="fw-medium">Purchase Date</div>
-                                    <small class="text-muted">Jan 15, 2025 at 10:30 AM</small>
+
+                        <div class="row g-3 mt-0">
+                            <div class="col-md-6">
+                                <label for="modelNumber" class="form-label">Model Number</label>
+                                <input type="text" class="form-control" id="modelNumber" x-model="form.modelNumber" placeholder="e.g., A2847">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="serialNumber" class="form-label">Serial Number</label>
+                                <input type="text" class="form-control" id="serialNumber" x-model="form.serialNumber" placeholder="Enter serial number">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Purchase Details Section -->
+                    <div class="mb-4">
+                        <h6 class="text-muted text-uppercase small fw-semibold mb-3">Purchase Details</h6>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="purchaseDate" class="form-label">Purchase Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="purchaseDate" x-model="form.purchaseDate">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="price" class="form-label">Price <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="price" x-model="form.price" placeholder="0.00" step="0.01">
                                 </div>
-                                <div class="timeline-item completed">
-                                    <div class="fw-medium">Payment Confirmed</div>
-                                    <small class="text-muted">Jan 15, 2025 at 10:32 AM</small>
-                                </div>
-                                <div class="timeline-item active">
-                                    <div class="fw-medium">Processing</div>
-                                    <small class="text-muted">Jan 16, 2025 at 9:15 AM</small>
-                                </div>
-                                <div class="timeline-item">
-                                    <div class="fw-medium">Shipped</div>
-                                    <small class="text-muted">Pending</small>
-                                </div>
-                                <div class="timeline-item">
-                                    <div class="fw-medium">Delivered</div>
-                                    <small class="text-muted">Pending</small>
-                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-0">
+                            <div class="col-md-6">
+                                <label for="quantity" class="form-label">Quantity</label>
+                                <input type="number" class="form-control" id="quantity" x-model="form.quantity" placeholder="1" min="1">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="link" class="form-label">Product Link</label>
+                                <input type="url" class="form-control" id="link" x-model="form.link" placeholder="https://example.com/product">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Warranty & Returns Section -->
+                    <div class="mb-4">
+                        <h6 class="text-muted text-uppercase small fw-semibold mb-3">Warranty & Returns</h6>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="warrantyExpiry" class="form-label">Warranty Expiry Date</label>
+                                <input type="date" class="form-control" id="warrantyExpiry" x-model="form.warrantyExpiry">
+                                <small class="text-muted">Leave blank if not applicable</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="returnDeadline" class="form-label">Return Deadline</label>
+                                <input type="date" class="form-control" id="returnDeadline" x-model="form.returnDeadline">
+                                <small class="text-muted">Leave blank if not applicable</small>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <label for="returnPolicy" class="form-label">Return Policy</label>
+                            <textarea class="form-control" id="returnPolicy" x-model="form.returnPolicy" rows="2" placeholder="e.g., 30-day money back guarantee"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Tax & Tags Section -->
+                    <div class="mb-4">
+                        <h6 class="text-muted text-uppercase small fw-semibold mb-3">Additional Info</h6>
+
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="taxDeductible" x-model="form.taxDeductible">
+                            <label class="form-check-label" for="taxDeductible">
+                                Tax Deductible
+                            </label>
+                        </div>
+
+                        <div>
+                            <label for="tags" class="form-label">Tags</label>
+                            <input type="text" class="form-control" id="tags" x-model="form.tags" placeholder="e.g., electronics, work, home">
+                        </div>
+                    </div>
+
+                    <!-- Notes Section -->
+                    <div class="mb-4">
+                        <h6 class="text-muted text-uppercase small fw-semibold mb-3">Notes</h6>
+                        <textarea class="form-control" x-model="form.notes" rows="3" placeholder="Add any additional notes..."></textarea>
+                    </div>
+
+                    <!-- File Upload Section -->
+                    <div class="mb-4">
+                        <div class="border rounded p-4" style="border: 1px solid #dee2e6;">
+                            <h6 class="text-center text-muted fw-semibold mb-4">Upload Files</h6>
+
+                            <!-- Upload Receipts -->
+                            <div class="mb-3">
+                                <label for="uploadReceipts" class="d-block text-center p-4 rounded" style="background-color: #f0f4ff; border: 2px dashed #d0d8f2; cursor: pointer; transition: all 0.3s;">
+                                    <div class="mb-2">
+                                        <i class="bi bi-file-earmark-text" style="font-size: 2.5rem; color: #6366f1;"></i>
+                                    </div>
+                                    <div class="text-dark fw-semibold">Upload Receipt(s)</div>
+                                    <input type="file" class="form-control d-none" id="uploadReceipts" multiple accept="image/*,.pdf">
+                                </label>
+                            </div>
+
+                            <!-- Upload Manuals -->
+                            <div class="mb-3">
+                                <label for="uploadManuals" class="d-block text-center p-4 rounded" style="background-color: #f0f4ff; border: 2px dashed #d0d8f2; cursor: pointer; transition: all 0.3s;">
+                                    <div class="mb-2">
+                                        <i class="bi bi-book" style="font-size: 2.5rem; color: #6366f1;"></i>
+                                    </div>
+                                    <div class="text-dark fw-semibold">Upload Manual(s)</div>
+                                    <input type="file" class="form-control d-none" id="uploadManuals" multiple accept=".pdf,.doc,.docx">
+                                </label>
+                            </div>
+
+                            <!-- Upload Photos -->
+                            <div>
+                                <label for="uploadPhotos" class="d-block text-center p-4 rounded" style="background-color: #f0f4ff; border: 2px dashed #d0d8f2; cursor: pointer; transition: all 0.3s;">
+                                    <div class="mb-2">
+                                        <i class="bi bi-camera" style="font-size: 2.5rem; color: #6366f1;"></i>
+                                    </div>
+                                    <div class="text-dark fw-semibold">Upload Photo(s)</div>
+                                    <input type="file" class="form-control d-none" id="uploadPhotos" multiple accept="image/*">
+                                </label>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" @click="savePurchase()" data-bs-dismiss="modal">
+                        <i class="bi bi-check-lg me-1"></i> <span x-text="isEditMode ? 'Update Purchase' : 'Save Purchase'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Purchase Details Modal -->
+    <div class="modal fade" id="viewDetailsModal" tabindex="-1" aria-labelledby="viewDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title" id="viewDetailsModalLabel">
+                        <i class="bi bi-eye text-primary me-2"></i>
+                        Purchase Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" x-data="viewPurchaseDetails()">
+                    <!-- Product Details Section -->
+                    <div class="mb-4">
+                        <h6 class="text-muted text-uppercase small fw-semibold mb-3">Product Details</h6>
+
+                        <div class="mb-3">
+                            <label class="form-label">Product Name</label>
+                            <div class="p-2 bg-light rounded" x-text="item.productName"></div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Retailer</label>
+                                <div class="p-2 bg-light rounded" x-text="item.retailer"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Brand</label>
+                                <div class="p-2 bg-light rounded" x-text="item.brand"></div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-0">
+                            <div class="col-md-6">
+                                <label class="form-label">Model Number</label>
+                                <div class="p-2 bg-light rounded" x-text="item.modelNumber || 'N/A'"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Serial Number</label>
+                                <div class="p-2 bg-light rounded" x-text="item.serialNumber || 'N/A'"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Purchase Details Section -->
+                    <div class="mb-4">
+                        <h6 class="text-muted text-uppercase small fw-semibold mb-3">Purchase Details</h6>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Purchase Date</label>
+                                <div class="p-2 bg-light rounded" x-text="item.purchaseDate"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Price</label>
+                                <div class="p-2 bg-light rounded" x-text="'$' + (item.price || '0.00')"></div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-0">
+                            <div class="col-md-6">
+                                <label class="form-label">Quantity</label>
+                                <div class="p-2 bg-light rounded" x-text="item.quantity || '1'"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Product Link</label>
+                                <div class="p-2 bg-light rounded">
+                                    <a :href="item.link" target="_blank" x-show="item.link" class="text-decoration-none" x-text="item.link"></a>
+                                    <span x-show="!item.link">N/A</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Warranty & Returns Section -->
+                    <div class="mb-4">
+                        <h6 class="text-muted text-uppercase small fw-semibold mb-3">Warranty & Returns</h6>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Warranty Expiry Date</label>
+                                <div class="p-2 bg-light rounded" x-text="item.warrantyExpiry || 'N/A'"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Return Deadline</label>
+                                <div class="p-2 bg-light rounded" x-text="item.returnDeadline || 'N/A'"></div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <label class="form-label">Return Policy</label>
+                            <div class="p-2 bg-light rounded" x-text="item.returnPolicy || 'N/A'"></div>
+                        </div>
+                    </div>
+
+                    <!-- Tax & Tags Section -->
+                    <div class="mb-4">
+                        <h6 class="text-muted text-uppercase small fw-semibold mb-3">Additional Info</h6>
+
+                        <div class="mb-3">
+                            <label class="form-label">Tax Deductible</label>
+                            <div class="p-2 bg-light rounded">
+                                <span x-show="item.taxDeductible" class="badge bg-success">Yes</span>
+                                <span x-show="!item.taxDeductible" class="badge bg-secondary">No</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="form-label">Tags</label>
+                            <div class="p-2 bg-light rounded" x-text="item.tags || 'N/A'"></div>
+                        </div>
+                    </div>
+
+                    <!-- Notes Section -->
+                    <div class="mb-4">
+                        <h6 class="text-muted text-uppercase small fw-semibold mb-3">Notes</h6>
+                        <div class="p-2 bg-light rounded" style="min-height: 80px;" x-text="item.notes || 'N/A'"></div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary">Update Status</button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="editItem()">
+                        <i class="bi bi-pencil me-1"></i> Edit
+                    </button>
                 </div>
             </div>
         </div>

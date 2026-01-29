@@ -340,7 +340,7 @@ class AdminApp {
       }
     }));
 
-    // Quick Add Form for Dashboard
+    // Quick Add Form for Dashboard (kept for backward compatibility)
     Alpine.data('quickAddForm', () => ({
       itemType: 'task',
       title: '',
@@ -400,6 +400,145 @@ class AdminApp {
 
         // Reset form for next use
         this.resetForm();
+      }
+    }));
+
+    // Add Purchase Form for Dashboard
+    Alpine.data('addPurchaseForm', () => ({
+      form: {
+        productName: '',
+        retailer: '',
+        brand: '',
+        modelNumber: '',
+        serialNumber: '',
+        purchaseDate: '',
+        price: '',
+        quantity: 1,
+        link: '',
+        warrantyExpiry: '',
+        returnDeadline: '',
+        returnPolicy: '',
+        taxDeductible: false,
+        tags: '',
+        notes: ''
+      },
+      isEditMode: false,
+      editingItemId: null,
+
+      init() {
+        this.resetForm();
+      },
+
+      resetForm() {
+        this.form = {
+          productName: '',
+          retailer: '',
+          brand: '',
+          modelNumber: '',
+          serialNumber: '',
+          purchaseDate: '',
+          price: '',
+          quantity: 1,
+          link: '',
+          warrantyExpiry: '',
+          returnDeadline: '',
+          returnPolicy: '',
+          taxDeductible: false,
+          tags: '',
+          notes: ''
+        };
+        this.isEditMode = false;
+        this.editingItemId = null;
+      },
+
+      savePurchase() {
+        if (!this.form.productName.trim()) {
+          window.AdminApp.notificationManager.warning('Please enter a product name');
+          return;
+        }
+
+        if (!this.form.retailer.trim()) {
+          window.AdminApp.notificationManager.warning('Please select a retailer');
+          return;
+        }
+
+        if (!this.form.brand.trim()) {
+          window.AdminApp.notificationManager.warning('Please enter a brand');
+          return;
+        }
+
+        if (!this.form.purchaseDate) {
+          window.AdminApp.notificationManager.warning('Please enter a purchase date');
+          return;
+        }
+
+        if (!this.form.price) {
+          window.AdminApp.notificationManager.warning('Please enter a price');
+          return;
+        }
+
+        const purchase = {
+          productName: this.form.productName,
+          retailer: this.form.retailer,
+          brand: this.form.brand,
+          modelNumber: this.form.modelNumber,
+          serialNumber: this.form.serialNumber,
+          purchaseDate: this.form.purchaseDate,
+          price: parseFloat(this.form.price),
+          quantity: parseInt(this.form.quantity) || 1,
+          link: this.form.link,
+          warrantyExpiry: this.form.warrantyExpiry || null,
+          returnDeadline: this.form.returnDeadline || null,
+          returnPolicy: this.form.returnPolicy,
+          taxDeductible: this.form.taxDeductible,
+          tags: this.form.tags,
+          notes: this.form.notes,
+          createdAt: new Date().toISOString()
+        };
+
+        console.log('New purchase created:', purchase);
+
+        const message = this.isEditMode
+          ? `Purchase "${this.form.productName}" updated successfully!`
+          : `Purchase "${this.form.productName}" created successfully!`;
+
+        window.AdminApp.notificationManager.success(message);
+
+        this.resetForm();
+      }
+    }));
+
+    // View Purchase Details
+    Alpine.data('viewPurchaseDetails', () => ({
+      item: {
+        productName: '',
+        retailer: '',
+        brand: '',
+        modelNumber: '',
+        serialNumber: '',
+        purchaseDate: '',
+        price: '',
+        quantity: 1,
+        link: '',
+        warrantyExpiry: '',
+        returnDeadline: '',
+        returnPolicy: '',
+        taxDeductible: false,
+        tags: '',
+        notes: ''
+      },
+
+      init() {
+        // Item data will be set when modal is opened
+      },
+
+      setItem(itemData) {
+        this.item = { ...itemData };
+      },
+
+      editItem() {
+        // This will open the edit modal with the item data
+        console.log('Edit item:', this.item);
       }
     }));
 
