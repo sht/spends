@@ -5,6 +5,7 @@ document.addEventListener('alpine:init', () => {
     // UI State
     sidebarVisible: false,
     activeSection: 'general',
+    confirmReset: false,
 
     // Settings Data
     settings: {
@@ -243,32 +244,35 @@ document.addEventListener('alpine:init', () => {
     },
 
     resetAllData() {
-      if (confirm('⚠️ This will delete ALL your data. This action cannot be undone. Are you sure?')) {
-        localStorage.removeItem('appSettings');
-        this.settings = {
-          language: 'en',
-          timezone: 'America/New_York',
-          dateFormat: 'MM/DD/YYYY',
-          currencyCode: 'USD',
-          cardVisibility: {
-            totalAssetsValue: true,
-            itemsCount: true,
-            avgPrice: true,
-            pendingWarranties: true,
-            taxDeductible: true,
-            expiredWarranties: true
-          },
-          notifications: {
-            desktop: true,
-            email: true,
-            sound: false,
-            marketing: false
-          },
-          retailers: []
-        };
-        this.retailerList = [];
-        this.showNotification('All data has been reset to defaults', 'success');
-      }
+      this.confirmReset = true;
+    },
+
+    confirmResetData() {
+      localStorage.removeItem('appSettings');
+      this.settings = {
+        language: 'en',
+        timezone: 'America/New_York',
+        dateFormat: 'MM/DD/YYYY',
+        currencyCode: 'USD',
+        cardVisibility: {
+          totalAssetsValue: true,
+          itemsCount: true,
+          avgPrice: true,
+          pendingWarranties: true,
+          taxDeductible: true,
+          expiredWarranties: true
+        },
+        notifications: {
+          desktop: true,
+          email: true,
+          sound: false,
+          marketing: false
+        },
+        retailers: []
+      };
+      this.retailerList = [];
+      this.confirmReset = false;
+      this.showNotification('All data has been reset to defaults', 'success');
     },
 
     // Notification Helper
