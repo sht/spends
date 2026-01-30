@@ -1,7 +1,7 @@
 from typing import List, Dict, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, extract, and_
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from decimal import Decimal
 from app.models.purchase import Purchase
 from app.models.warranty import Warranty
@@ -34,7 +34,7 @@ async def get_spending_by_month(db: AsyncSession, months: int = None) -> List[Sp
     
     # Only apply date filter if months is specified
     if months is not None:
-        today = datetime.utcnow()
+        today = date.today()
         start_date = today - timedelta(days=months * 30)
         stmt = stmt.where(Purchase.purchase_date >= start_date)
     
@@ -65,22 +65,22 @@ async def get_warranty_timeline(db: AsyncSession, months: int = None) -> List[Wa
     Get warranty timeline showing active, expired, and expiring soon warranties.
     If months is None, returns all data.
     """
-    today = datetime.utcnow()
-    
+    today = date.today()
+
     # For SQLite, we need to use a different approach since it doesn't have advanced date functions
     # We'll create a simplified version that groups warranties by their status
     stmt = select(Warranty)
     result = await db.execute(stmt)
     warranties = result.scalars().all()
-    
+
     # Group warranties by month based on their end date
     monthly_data: Dict[str, Dict[str, int]] = {}
-    
+
     for warranty in warranties:
         month_key = warranty.warranty_end.strftime('%Y-%m')
         if month_key not in monthly_data:
             monthly_data[month_key] = {'active': 0, 'expired': 0, 'expiring_soon': 0}
-        
+
         # Determine status for this warranty
         if warranty.status.value == 'EXPIRED':
             monthly_data[month_key]['expired'] += 1
@@ -238,9 +238,9 @@ async def get_spending_summary(db: AsyncSession) -> SummaryAnalytics:
     active_warranties_stmt = select(func.count(Warranty.id)).where(Warranty.status == 'ACTIVE')
     active_warranties_result = await db.execute(active_warranties_stmt)
     active_warranties = active_warranties_result.scalar() or 0
-    
+
     # Expiring warranties (within 30 days)
-    today = datetime.utcnow()
+    today = date.today()
     thirty_days_later = today + timedelta(days=30)
     expiring_warranties_stmt = select(func.count(Warranty.id)).where(
         and_(

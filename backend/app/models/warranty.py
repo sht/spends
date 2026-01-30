@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum
+from sqlalchemy import Column, Integer, String, Date, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
@@ -18,8 +18,8 @@ class Warranty(Base):
 
     id = Column(String, primary_key=True, default=lambda: str(uuid4()))
     purchase_id = Column(String, ForeignKey("purchases.id"), unique=True, nullable=False)
-    warranty_start = Column(DateTime, nullable=False)
-    warranty_end = Column(DateTime, nullable=False)
+    warranty_start = Column(Date, nullable=False)
+    warranty_end = Column(Date, nullable=False)
     warranty_type = Column(String(50))  # LIMITED, EXTENDED, LIFETIME, etc.
     status = Column(Enum(WarrantyStatus), default=WarrantyStatus.ACTIVE)
     provider = Column(String(255), nullable=True)

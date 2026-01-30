@@ -27,9 +27,31 @@ def upgrade() -> None:
                               type_=sa.Date(),
                               existing_nullable=True)
 
+    # Change warranty_start and warranty_end from DateTime to Date
+    with op.batch_alter_table('warranties') as batch_op:
+        batch_op.alter_column('warranty_start',
+                              existing_type=sa.DateTime(),
+                              type_=sa.Date(),
+                              existing_nullable=False)
+        batch_op.alter_column('warranty_end',
+                              existing_type=sa.DateTime(),
+                              type_=sa.Date(),
+                              existing_nullable=False)
+
 
 def downgrade() -> None:
-    # Revert Date back to DateTime
+    # Revert Date back to DateTime for warranties
+    with op.batch_alter_table('warranties') as batch_op:
+        batch_op.alter_column('warranty_start',
+                              existing_type=sa.Date(),
+                              type_=sa.DateTime(),
+                              existing_nullable=False)
+        batch_op.alter_column('warranty_end',
+                              existing_type=sa.Date(),
+                              type_=sa.DateTime(),
+                              existing_nullable=False)
+
+    # Revert Date back to DateTime for purchases
     with op.batch_alter_table('purchases') as batch_op:
         batch_op.alter_column('purchase_date',
                               existing_type=sa.Date(),

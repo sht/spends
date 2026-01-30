@@ -92,21 +92,25 @@ async def get_top_products_analytics(
     return TopProductsAnalytics(top_products=top_products)
 
 
-@router.get("/recent-purchases")
+@router.get("/recent-purchases", response_model=List[dict])
 async def get_recent_purchases_analytics(
     limit: int = 10,
     db: AsyncSession = Depends(get_db)
 ):
     from app.services.analytics_service import get_recent_purchases
+    from app.schemas.purchase import PurchaseResponse
     recent = await get_recent_purchases(db, limit)
-    return recent
+    # Convert to Pydantic models for proper serialization
+    return [PurchaseResponse.model_validate(p) for p in recent]
 
 
-@router.get("/recent-warranties")
+@router.get("/recent-warranties", response_model=List[dict])
 async def get_recent_warranties_analytics(
     limit: int = 10,
     db: AsyncSession = Depends(get_db)
 ):
     from app.services.analytics_service import get_recent_warranties
+    from app.schemas.warranty import WarrantyResponse
     recent = await get_recent_warranties(db, limit)
-    return recent
+    # Convert to Pydantic models for proper serialization
+    return [WarrantyResponse.model_validate(w) for w in recent]
