@@ -42,10 +42,28 @@ This document tracks the progress of the development roadmap for the Spends Trac
 - ✅ Alembic migration system ready
 - ✅ Initial data (retailers, brands) loaded
 
+### Phase 3: API Endpoints - CRUD 📝
+**Objective:** Build REST endpoints for managing purchases, warranties, retailers, brands
+
+**Completed Tasks:**
+- ✅ Create all Pydantic schemas with validation
+- ✅ Implement all CRUD routes for purchases
+- ✅ Implement all CRUD routes for warranties
+- ✅ Implement all CRUD routes for retailers
+- ✅ Implement all CRUD routes for brands
+- ✅ Add pagination support (skip/limit)
+- ✅ Add filtering (status, dates, search)
+- ✅ Add proper error handling and status codes
+- ✅ Document endpoints in docstrings
+
+**Deliverables:**
+- ✅ All CRUD endpoints functional and tested
+- ✅ Swagger docs auto-generated
+
 ## Current Status
 
-Phase 1 and Phase 2 have been completed. The backend infrastructure is set up with SQLite for local development, with a path to migrate to PostgreSQL in production. The database models are defined and initial data has been seeded.
+Phase 1, Phase 2, and Phase 3 have been completed. The backend infrastructure is set up with SQLite for local development, with a path to migrate to PostgreSQL in production. The database models are defined, initial data has been seeded, and all CRUD endpoints are functional.
 
 ## Next Steps
 
-Moving on to Phase 3: API Endpoints - CRUD 📝
+Moving on to Phase 4: Analytics Endpoints 📊
