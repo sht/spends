@@ -68,23 +68,19 @@ document.addEventListener('alpine:init', () => {
 
     // Retailer Management
     newRetailerName: '',
-    retailerList: [
-      { id: 1, name: 'Amazon', isBrand: true },
-      { id: 2, name: 'eBay', isBrand: true },
-      { id: 3, name: 'Apple Store', isBrand: false },
-      { id: 4, name: 'Walmart', isBrand: false }
-    ],
+    retailerList: [],
 
     // Data Management
     importFile: null,
     exportFormats: ['JSON', 'CSV'],
 
-    init() {
+    async init() {
       // Get current theme from document or localStorage
       const currentTheme = document.documentElement.getAttribute('data-bs-theme') ||
                           localStorage.getItem('theme') || 'light';
 
       this.loadSettings();
+      await this.loadRetailers();
 
       // Hide loading screen when settings page is ready
       setTimeout(() => {
@@ -132,24 +128,91 @@ document.addEventListener('alpine:init', () => {
       this.sidebarVisible = false;
     },
 
-    // Retailer Management
-    addRetailer() {
-      if (this.newRetailerName.trim()) {
-        this.retailerList.push({
-          id: Date.now(),
-          name: this.newRetailerName,
-          isBrand: false
-        });
+    async loadRetailers() {
+      try {
+        // Get API URL from global variable or fallback to default
+        const apiUrl = window.APP_CONFIG?.API_URL || 'http://localhost:8000/api';
+
+        // Fetch retailers from the backend API
+        const response = await fetch(`${apiUrl}/retailers`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+
+        // Transform API response to match expected format
+        this.retailerList = data.items.map(retailer => ({
+          id: retailer.id,
+          name: retailer.name,
+          isBrand: false  // Default to false; could be enhanced to distinguish brands from retailers
+        }));
+
         this.settings.retailers = this.retailerList;
-        this.newRetailerName = '';
-        this.showNotification('Retailer added successfully!', 'success');
+      } catch (error) {
+        console.error('Error loading retailers:', error);
+        // Fallback to empty array if API fails
+        this.retailerList = [];
+        this.settings.retailers = [];
       }
     },
 
-    removeRetailer(id) {
-      this.retailerList = this.retailerList.filter(r => r.id !== id);
-      this.settings.retailers = this.retailerList;
-      this.showNotification('Retailer removed successfully!', 'success');
+    // Retailer Management
+    async addRetailer() {
+      if (this.newRetailerName.trim()) {
+        try {
+          // Get API URL from global variable or fallback to default
+          const apiUrl = window.APP_CONFIG?.API_URL || 'http://localhost:8000/api';
+
+          // Add retailer to the backend API
+          const response = await fetch(`${apiUrl}/retailers`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              name: this.newRetailerName,
+              url: ''  // Could be enhanced to accept URL input
+            })
+          });
+
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          const newRetailer = await response.json();
+
+          // Add to local list
+          this.retailerList.push({
+            id: newRetailer.id,
+            name: newRetailer.name,
+            isBrand: false
+          });
+
+          this.settings.retailers = this.retailerList;
+          this.newRetailerName = '';
+          this.showNotification('Retailer added successfully!', 'success');
+        } catch (error) {
+          console.error('Error adding retailer:', error);
+          this.showNotification('Failed to add retailer', 'error');
+        }
+      }
+    },
+
+    async removeRetailer(id) {
+      try {
+        // Get API URL from global variable or fallback to default
+        const apiUrl = window.APP_CONFIG?.API_URL || 'http://localhost:8000/api';
+
+        // Remove retailer from the backend API
+        const response = await fetch(`${apiUrl}/retailers/${id}`, {
+          method: 'DELETE'
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        // Remove from local list
+        this.retailerList = this.retailerList.filter(r => r.id !== id);
+        this.settings.retailers = this.retailerList;
+        this.showNotification('Retailer removed successfully!', 'success');
+      } catch (error) {
+        console.error('Error removing retailer:', error);
+        this.showNotification('Failed to remove retailer', 'error');
+      }
     },
 
     toggleRetailerBrand(id) {

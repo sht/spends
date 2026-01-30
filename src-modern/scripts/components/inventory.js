@@ -24,8 +24,8 @@ document.addEventListener('alpine:init', () => {
       totalSpending: 0
     },
 
-    init() {
-      this.loadInventoryData();
+    async init() {
+      await this.loadInventoryData();
       this.filterInventory();
       this.calculateStats();
       this.updatePagination();
@@ -65,7 +65,40 @@ document.addEventListener('alpine:init', () => {
       }
     },
 
-    loadInventoryData() {
+    async loadInventoryData() {
+      try {
+        // Show loading state
+        this.showLoadingState();
+
+        // Get API URL from global variable or fallback to default
+        const apiUrl = window.APP_CONFIG?.API_URL || 'http://localhost:8000/api';
+
+        // Fetch inventory data from the backend API
+        const response = await fetch(`${apiUrl}/purchases`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+
+        // Transform API response to match expected format
+        this.items = data.items.map(item => ({
+          id: item.id,
+          name: item.product_name,
+          brand: item.brand?.name || 'Unknown',
+          price: parseFloat(item.price),
+          status: item.status?.toLowerCase() || 'ordered',
+          purchaseDate: new Date(item.purchase_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+        }));
+
+        // Hide loading state
+        this.hideLoadingState();
+      } catch (error) {
+        console.error('Error loading inventory data:', error);
+        this.showErrorState();
+        // Fallback to mock data if API fails
+        this.loadMockInventoryData();
+      }
+    },
+
+    loadMockInventoryData() {
       // Product list for random selection
       const products = [
         { name: 'Apple iPhone 15 Pro', brand: 'Apple', price: 999 },
@@ -111,6 +144,31 @@ document.addEventListener('alpine:init', () => {
           purchaseDate: getRandomDate()
         };
       });
+    },
+
+    showLoadingState() {
+      const tableContainer = document.querySelector('.table-responsive');
+      if (tableContainer) {
+        const loader = document.createElement('div');
+        loader.className = 'position-absolute top-50 start-50 translate-middle';
+        loader.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
+        loader.style.zIndex = '10';
+        loader.style.backgroundColor = 'rgba(255, 255, 255, 0.7)';
+        loader.style.padding = '20px';
+        loader.style.borderRadius = '5px';
+        tableContainer.style.position = 'relative';
+        tableContainer.appendChild(loader);
+      }
+    },
+
+    showErrorState() {
+      const tableContainer = document.querySelector('.table-responsive');
+      if (tableContainer) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'alert alert-danger';
+        errorDiv.innerHTML = '<strong>Error:</strong> Failed to load inventory data. Please check your connection and try again.';
+        tableContainer.parentNode.insertBefore(errorDiv, tableContainer);
+      }
     },
 
     calculateStats() {

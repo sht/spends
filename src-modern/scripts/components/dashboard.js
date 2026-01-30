@@ -51,8 +51,8 @@ export class DashboardManager {
   async init() {
     console.log('📊 Dashboard initialized');
 
-    // Load only necessary data
-    this.loadDashboardData();
+    // Load only necessary data from API
+    await this.loadDashboardData();
 
     // Initialize all chart instances (handle duplicate IDs in HTML)
     this.initWarrantyCharts();
@@ -62,8 +62,166 @@ export class DashboardManager {
     this.populateRecentOrders();
   }
 
-  loadDashboardData() {
-    // Generate only data needed for displayed charts
+  async loadDashboardData() {
+    try {
+      // Show loading state
+      this.showLoadingState();
+
+      // Fetch all required data from the backend API
+      const [warrantyData, spendingData, retailersData, brandsData, topProductsData, recentOrdersData] = await Promise.all([
+        this.fetchWarrantyData(),
+        this.fetchSpendingData(),
+        this.fetchRetailersData(),
+        this.fetchBrandsData(),
+        this.fetchTopProductsData(),
+        this.fetchRecentOrdersData()
+      ]);
+
+      // Update internal data
+      this.data.warranty = warrantyData;
+      this.data.spending = spendingData;
+      this.data.retailers = retailersData;
+      this.data.brands = brandsData;
+      this.data.topProducts = topProductsData;
+      this.data.recentOrders = recentOrdersData;
+
+      // Calculate order data based on fetched data
+      this.data.orders = this.calculateOrderData(recentOrdersData);
+
+      // Hide loading state
+      this.hideLoadingState();
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      this.showErrorState();
+    }
+  }
+
+  async fetchWarrantyData() {
+    try {
+      // Get API URL from global variable or fallback to default
+      const apiUrl = window.APP_CONFIG?.API_URL || 'http://localhost:8000/api';
+      const response = await fetch(`${apiUrl}/analytics/warranties/timeline`);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      return data.timeline || [];
+    } catch (error) {
+      console.error('Error fetching warranty data:', error);
+      return this.generateWarrantyData(); // fallback to mock data
+    }
+  }
+
+  async fetchSpendingData() {
+    try {
+      // Get API URL from global variable or fallback to default
+      const apiUrl = window.APP_CONFIG?.API_URL || 'http://localhost:8000/api';
+      const response = await fetch(`${apiUrl}/analytics/spending`);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      return data.spending_over_time || [];
+    } catch (error) {
+      console.error('Error fetching spending data:', error);
+      return this.generateSpendingData(); // fallback to mock data
+    }
+  }
+
+  async fetchRetailersData() {
+    try {
+      // Get API URL from global variable or fallback to default
+      const apiUrl = window.APP_CONFIG?.API_URL || 'http://localhost:8000/api';
+      const response = await fetch(`${apiUrl}/analytics/retailers`);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      return data.retailers || [];
+    } catch (error) {
+      console.error('Error fetching retailers data:', error);
+      return this.generateRetailerData(); // fallback to mock data
+    }
+  }
+
+  async fetchBrandsData() {
+    try {
+      // Get API URL from global variable or fallback to default
+      const apiUrl = window.APP_CONFIG?.API_URL || 'http://localhost:8000/api';
+      const response = await fetch(`${apiUrl}/analytics/brands`);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      return data.brands || [];
+    } catch (error) {
+      console.error('Error fetching brands data:', error);
+      return this.generateBrandData(); // fallback to mock data
+    }
+  }
+
+  async fetchTopProductsData() {
+    try {
+      // Get API URL from global variable or fallback to default
+      const apiUrl = window.APP_CONFIG?.API_URL || 'http://localhost:8000/api';
+      const response = await fetch(`${apiUrl}/analytics/top-products`);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      return data.top_products || [];
+    } catch (error) {
+      console.error('Error fetching top products data:', error);
+      return this.generateTopProducts(); // fallback to mock data
+    }
+  }
+
+  async fetchRecentOrdersData() {
+    try {
+      // Get API URL from global variable or fallback to default
+      const apiUrl = window.APP_CONFIG?.API_URL || 'http://localhost:8000/api';
+      const response = await fetch(`${apiUrl}/analytics/recent-purchases?limit=10`);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching recent orders data:', error);
+      return this.generateRecentOrders(); // fallback to mock data
+    }
+  }
+
+  calculateOrderData(recentOrdersData) {
+    // Calculate order statistics based on recent orders
+    const completed = recentOrdersData.filter(order => order.status === 'RECEIVED').length;
+    const processing = recentOrdersData.filter(order => order.status === 'ORDERED').length;
+    const pending = recentOrdersData.filter(order => order.status === 'PENDING').length;
+    const cancelled = recentOrdersData.length - (completed + processing + pending);
+
+    return {
+      completed,
+      processing,
+      pending,
+      cancelled
+    };
+  }
+
+  showLoadingState() {
+    // Show loading indicators on dashboard cards
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(card => {
+      const loadingSpinner = document.createElement('div');
+      loadingSpinner.className = 'position-absolute top-50 start-50 translate-middle';
+      loadingSpinner.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
+      loadingSpinner.style.zIndex = '10';
+      card.style.position = 'relative';
+      card.appendChild(loadingSpinner);
+    });
+  }
+
+  hideLoadingState() {
+    // Remove loading indicators
+    const spinners = document.querySelectorAll('.spinner-border');
+    spinners.forEach(spinner => spinner.remove());
+  }
+
+  showErrorState() {
+    // Show error message on dashboard
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'alert alert-danger';
+    errorDiv.innerHTML = '<strong>Error:</strong> Failed to load dashboard data. Please check your connection and try again.';
+    const container = document.querySelector('.container-fluid') || document.body;
+    container.insertBefore(errorDiv, container.firstChild);
+
+    // Also fall back to mock data
     this.data.warranty = this.generateWarrantyData();
     this.data.spending = this.generateSpendingData();
     this.data.retailers = this.generateRetailerData();
@@ -87,10 +245,10 @@ export class DashboardManager {
 
     return monthLabels.map(month => ({
       month,
-      // Warranty expiring - showing trend over months
-      expiringWarranties: Math.floor(Math.random() * 20) + 5,
-      // Already expired warranties
-      expiredWarranties: Math.floor(Math.random() * 15) + 2
+      // Active warranties - warranties that are still valid
+      activeWarranties: Math.floor(Math.random() * 30) + 20,
+      // Expired warranties - warranties that have ended
+      expiredWarranties: Math.floor(Math.random() * 15) + 5
     }));
   }
 
@@ -219,20 +377,20 @@ export class DashboardManager {
           labels: this.data.warranty.map(item => item.month),
           datasets: [
             {
-              label: 'Warranties Expiring',
-              data: this.data.warranty.map(item => item.expiringWarranties),
-              borderColor: 'rgb(245, 158, 11)',
-              backgroundColor: 'rgba(245, 158, 11, 0.1)',
+              label: 'Active Warranties',
+              data: this.data.warranty.map(item => item.activeWarranties),
+              borderColor: 'rgb(16, 185, 129)',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
               fill: true,
               tension: 0.4,
-              pointBackgroundColor: 'rgb(245, 158, 11)',
+              pointBackgroundColor: 'rgb(16, 185, 129)',
               pointBorderColor: '#fff',
               pointBorderWidth: 2,
               pointRadius: 6,
               pointHoverRadius: 8
             },
             {
-              label: 'Warranties Expired',
+              label: 'Expired Warranties',
               data: this.data.warranty.map(item => item.expiredWarranties),
               borderColor: 'rgb(239, 68, 68)',
               backgroundColor: 'rgba(239, 68, 68, 0.1)',
