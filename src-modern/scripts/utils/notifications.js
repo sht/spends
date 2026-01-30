@@ -27,7 +27,8 @@ export class NotificationManager {
     const container = document.createElement('div');
     container.id = 'toast-container';
     container.className = 'position-fixed top-0 end-0 p-3';
-    container.style.zIndex = '11';
+    container.style.zIndex = '9999';
+    container.style.marginTop = '70px'; // Space for fixed navbar
     container.setAttribute('aria-live', 'polite');
     container.setAttribute('aria-atomic', 'true');
     document.body.appendChild(container);

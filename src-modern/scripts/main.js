@@ -92,9 +92,6 @@ class AdminApp {
       // Hide loading screen with fade out animation
       this.hideLoadingScreen();
 
-      // Show initialization complete notification
-      this.notificationManager.show('Application loaded successfully!', 'success');
-
     } catch (error) {
       console.error('❌ Failed to initialize Admin App:', error);
     }
@@ -152,7 +149,9 @@ class AdminApp {
 
     switch (currentPage) {
       case 'dashboard':
-        this.components.set('dashboard', new DashboardManager());
+        const dashboardManager = new DashboardManager();
+        this.components.set('dashboard', dashboardManager);
+        window.dashboardManager = dashboardManager;
         break;
       case 'settings':
         await this.initSettingsPage();
@@ -606,8 +605,6 @@ class AdminApp {
             ? `Purchase "${this.form.productName}" updated successfully!`
             : `Purchase "${this.form.productName}" created successfully!`;
 
-          window.AdminApp.notificationManager.success(message);
-          
           // Close the modal programmatically
           const modalEl = document.getElementById('newItemModal');
           if (modalEl) {
@@ -617,15 +614,33 @@ class AdminApp {
           
           this.resetForm();
 
-          // Refresh the page data if dashboard is loaded
-          if (window.dashboardManager) {
-            window.dashboardManager.loadDashboardData();
-          }
-          
-          // Refresh inventory if on inventory page
-          if (window.location.pathname.includes('inventory')) {
-            window.location.reload();
-          }
+          // Show success notification
+          window.AdminApp.notificationManager.success(message);
+
+          // Refresh the data without page reload
+          setTimeout(async () => {
+            console.log('Refreshing data after purchase...');
+            
+            // Refresh dashboard data if on dashboard page
+            const isDashboard = document.querySelector('[data-page="dashboard"]');
+            console.log('Is dashboard:', !!isDashboard, 'dashboardManager:', !!window.dashboardManager);
+            
+            if (window.dashboardManager && isDashboard) {
+              console.log('Refreshing dashboard data...');
+              await window.dashboardManager.loadDashboardData();
+              console.log('Dashboard data refreshed');
+            }
+            
+            // Refresh inventory data if on inventory page
+            if (window.location.pathname.includes('inventory')) {
+              console.log('Refreshing inventory data...');
+              // Trigger inventory refresh if inventory component exists
+              const inventoryEl = document.querySelector('[x-data="inventoryTable"]');
+              if (inventoryEl && inventoryEl.__x) {
+                await inventoryEl.__x.$data.loadInventoryData();
+              }
+            }
+          }, 1000);
         } catch (error) {
           console.error('Error saving purchase:', error);
           window.AdminApp.notificationManager.error(`Failed to save purchase: ${error.message}`);

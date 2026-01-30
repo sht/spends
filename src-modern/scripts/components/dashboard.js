@@ -92,12 +92,43 @@ export class DashboardManager {
       // Calculate order data based on fetched data
       this.data.orders = this.calculateOrderData(recentOrdersData);
 
+      // Update charts with new data
+      this.updateCharts();
+      
+      // Update tables
+      this.populateTopProducts();
+      this.populateRecentOrders();
+
       // Hide loading state
       this.hideLoadingState();
     } catch (error) {
       console.error('Error loading dashboard data:', error);
       this.showErrorState();
     }
+  }
+
+  updateCharts() {
+    // Update warranty charts
+    this.charts.forEach((chart, key) => {
+      if (key.startsWith('warranty-')) {
+        chart.data.labels = this.data.warranty.map(item => item.month);
+        chart.data.datasets[0].data = this.data.warranty.map(item => item.active);
+        chart.data.datasets[1].data = this.data.warranty.map(item => item.expired);
+        chart.update('none'); // Update without animation
+      } else if (key === 'spending') {
+        chart.data.labels = this.data.spending.map(item => item.month);
+        chart.data.datasets[0].data = this.data.spending.map(item => item.amount);
+        chart.update('none');
+      } else if (key === 'retailers') {
+        chart.data.labels = this.data.retailers.map(item => item.name);
+        chart.data.datasets[0].data = this.data.retailers.map(item => item.count);
+        chart.update('none');
+      } else if (key === 'brands') {
+        chart.data.labels = this.data.brands.map(item => item.name);
+        chart.data.datasets[0].data = this.data.brands.map(item => item.count);
+        chart.update('none');
+      }
+    });
   }
 
   async fetchWarrantyData() {
