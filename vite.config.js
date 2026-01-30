@@ -1,8 +1,9 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import { resolve } from 'path';
 import { fileURLToPath, URL } from 'node:url';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
+const env = loadEnv('development', __dirname);
 
 export default defineConfig({
   plugins: [],
@@ -43,7 +44,7 @@ export default defineConfig({
   },
 
   server: {
-    port: 3000,
+    port: env.VITE_PORT ? parseInt(env.VITE_PORT) : 3000,
     open: true,
     // Enable CORS for development
     cors: true,
