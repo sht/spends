@@ -196,16 +196,19 @@
                             <label for="retailer" class="form-label">Retailer <span class="text-danger">*</span></label>
                             <select class="form-select" id="retailer" x-model="form.retailer">
                                 <option value="">Select retailer...</option>
-                                <option>Amazon</option>
-                                <option>eBay</option>
-                                <option>Walmart</option>
-                                <option>Target</option>
-                                <option>Best Buy</option>
+                                <template x-for="retailer in retailers" :key="retailer.id">
+                                    <option :value="retailer.name" x-text="retailer.name"></option>
+                                </template>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label for="brand" class="form-label">Brand <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="brand" x-model="form.brand" placeholder="e.g., Apple">
+                            <select class="form-select" id="brand" x-model="form.brand">
+                                <option value="">Select brand...</option>
+                                <template x-for="brand in brands" :key="brand.id">
+                                    <option :value="brand.name" x-text="brand.name"></option>
+                                </template>
+                            </select>
                         </div>
                     </div>
 

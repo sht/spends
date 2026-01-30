@@ -364,21 +364,21 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label for="retailer" class="form-label">Retailer <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="retailer" x-model="form.retailer" list="retailer-list" placeholder="e.g., Amazon">
-                            <datalist id="retailer-list">
+                            <select class="form-select" id="retailer" x-model="form.retailer">
+                                <option value="">Select retailer...</option>
                                 <template x-for="retailer in retailers" :key="retailer.id">
                                     <option :value="retailer.name" x-text="retailer.name"></option>
                                 </template>
-                            </datalist>
+                            </select>
                         </div>
                         <div class="col-md-6">
                             <label for="brand" class="form-label">Brand <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="brand" x-model="form.brand" list="brand-list" placeholder="e.g., Apple">
-                            <datalist id="brand-list">
+                            <select class="form-select" id="brand" x-model="form.brand">
+                                <option value="">Select brand...</option>
                                 <template x-for="brand in brands" :key="brand.id">
                                     <option :value="brand.name" x-text="brand.name"></option>
                                 </template>
-                            </datalist>
+                            </select>
                         </div>
                     </div>
 
