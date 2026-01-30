@@ -9,7 +9,7 @@ export default defineConfig({
   plugins: [],
   root: 'src-modern',
   publicDir: '../public-assets',
-  base: './',
+  base: '/',
 
   build: {
     outDir: '../dist-modern',
@@ -47,6 +47,18 @@ export default defineConfig({
     host: env.VITE_HOST || false,
     port: env.VITE_PORT ? parseInt(env.VITE_PORT) : 3000,
     open: env.VITE_OPEN_BROWSER === 'true',
+    // Proxy API requests to the FastAPI backend during development
+    proxy: {
+      '/api': {
+        target: env.VITE_API_URL || 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      // Also proxy the root and other pages to FastAPI for template rendering
+      '^/(?!scripts/|styles/|assets/|public-assets/|@fs/|@vite/|node_modules/|src/).*': {
+        target: env.VITE_API_URL || 'http://localhost:8000',
+        changeOrigin: true,
+      },
+    },
   },
 
   preview: {

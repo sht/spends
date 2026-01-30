@@ -7,8 +7,7 @@ def run_dev_server():
         "app.main:app",
         host=settings.host,
         port=settings.port,
-        reload=True,
-        debug=settings.debug
+        reload=settings.debug
     )
 
 
