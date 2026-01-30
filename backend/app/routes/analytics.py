@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 
 @router.get("/spending", response_model=SpendingAnalytics)
 async def get_spending_analytics(
-    months: int = 12,
+    months: int = None,
     db: AsyncSession = Depends(get_db)
 ):
     spending_data = await get_spending_by_month(db, months)
@@ -43,7 +43,7 @@ async def get_summary_analytics(db: AsyncSession = Depends(get_db)):
 
 @router.get("/warranties/timeline", response_model=WarrantyAnalytics)
 async def get_warranty_timeline_analytics(
-    months: int = 12,
+    months: int = None,
     db: AsyncSession = Depends(get_db)
 ):
     timeline_data = await get_warranty_timeline(db, months)

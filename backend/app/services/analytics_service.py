@@ -17,14 +17,10 @@ from app.schemas.analytics import (
 )
 
 
-async def get_spending_by_month(db: AsyncSession, months: int = 12) -> List[SpendingByMonth]:
+async def get_spending_by_month(db: AsyncSession, months: int = None) -> List[SpendingByMonth]:
     """
-    Get total spending over the specified number of months
+    Get total spending grouped by month. If months is None, returns all data.
     """
-    # Calculate the date range
-    today = datetime.utcnow()
-    start_date = today - timedelta(days=months * 30)  # Approximate months as 30 days
-    
     # Query to get spending grouped by month
     stmt = (
         select(
@@ -32,18 +28,31 @@ async def get_spending_by_month(db: AsyncSession, months: int = 12) -> List[Spen
             func.sum(Purchase.price).label('total_amount'),
             func.count(Purchase.id).label('item_count')
         )
-        .where(Purchase.purchase_date >= start_date)
         .group_by(func.strftime('%Y-%m', Purchase.purchase_date))
         .order_by(func.strftime('%Y-%m', Purchase.purchase_date))
     )
+    
+    # Only apply date filter if months is specified
+    if months is not None:
+        today = datetime.utcnow()
+        start_date = today - timedelta(days=months * 30)
+        stmt = stmt.where(Purchase.purchase_date >= start_date)
     
     result = await db.execute(stmt)
     rows = result.all()
     
     spending_data = []
     for row in rows:
+        # Format month from "2024-06" to "Jun 2024"
+        month_str = row.month
+        try:
+            month_date = datetime.strptime(month_str, '%Y-%m')
+            formatted_month = month_date.strftime('%b %Y')  # e.g., "Jun 2024"
+        except (ValueError, TypeError):
+            formatted_month = month_str  # Fallback to original if parsing fails
+        
         spending_data.append(SpendingByMonth(
-            month=row.month,
+            month=formatted_month,
             total_amount=row.total_amount or Decimal('0.00'),
             item_count=row.item_count or 0
         ))
@@ -51,13 +60,12 @@ async def get_spending_by_month(db: AsyncSession, months: int = 12) -> List[Spen
     return spending_data
 
 
-async def get_warranty_timeline(db: AsyncSession, months: int = 12) -> List[WarrantyTimelineItem]:
+async def get_warranty_timeline(db: AsyncSession, months: int = None) -> List[WarrantyTimelineItem]:
     """
-    Get warranty timeline showing active, expired, and expiring soon warranties
+    Get warranty timeline showing active, expired, and expiring soon warranties.
+    If months is None, returns all data.
     """
-    # Calculate the date range
     today = datetime.utcnow()
-    end_date = today + timedelta(days=months * 30)  # Future months to look ahead
     
     # For SQLite, we need to use a different approach since it doesn't have advanced date functions
     # We'll create a simplified version that groups warranties by their status
@@ -85,18 +93,25 @@ async def get_warranty_timeline(db: AsyncSession, months: int = 12) -> List[Warr
             # Voided warranties are neither active nor expired in the traditional sense
             pass
     
-    # Convert to WarrantyTimelineItem objects
+    # Convert to WarrantyTimelineItem objects with formatted month names
     timeline_items = []
     for month, counts in monthly_data.items():
+        # Format month from "2024-06" to "Jun 2024"
+        try:
+            month_date = datetime.strptime(month, '%Y-%m')
+            formatted_month = month_date.strftime('%b %Y')  # e.g., "Jun 2024"
+        except (ValueError, TypeError):
+            formatted_month = month  # Fallback to original if parsing fails
+        
         timeline_items.append(WarrantyTimelineItem(
-            month=month,
+            month=formatted_month,
             active=counts['active'],
             expired=counts['expired'],
             expiring_soon=counts['expiring_soon']
         ))
     
-    # Sort by month
-    timeline_items.sort(key=lambda x: x.month)
+    # Sort by month (convert back to sortable format for sorting)
+    timeline_items.sort(key=lambda x: datetime.strptime(x.month, '%b %Y') if x.month else datetime.min)
     
     return timeline_items
 
