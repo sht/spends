@@ -425,6 +425,26 @@ class AdminApp {
         await this.loadBrands();
       },
 
+      // Check if selected retailer is also a brand
+      get isBrandRetailer() {
+        if (!this.form.retailer) return false;
+        const retailer = this.retailers.find(r => r.name === this.form.retailer);
+        return retailer && retailer.isBrand;
+      },
+
+      // Handle retailer selection change
+      onRetailerChange() {
+        if (this.isBrandRetailer) {
+          // Auto-fill brand with retailer name and keep it disabled
+          this.form.brand = this.form.retailer;
+        } else {
+          // Clear brand if retailer is not a brand (unless in edit mode)
+          if (!this.isEditMode) {
+            this.form.brand = '';
+          }
+        }
+      },
+
       async loadRetailers() {
         try {
           const apiUrl = window.APP_CONFIG?.API_URL || 'http://192.168.68.55:8000/api';

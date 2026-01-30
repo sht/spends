@@ -194,7 +194,7 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label for="retailer" class="form-label">Retailer <span class="text-danger">*</span></label>
-                            <select class="form-select" id="retailer" x-model="form.retailer">
+                            <select class="form-select" id="retailer" x-model="form.retailer" @change="onRetailerChange()">
                                 <option value="">Select retailer...</option>
                                 <template x-for="retailer in retailers" :key="retailer.id">
                                     <option :value="retailer.name" x-text="retailer.name"></option>
@@ -203,12 +203,13 @@
                         </div>
                         <div class="col-md-6">
                             <label for="brand" class="form-label">Brand <span class="text-danger">*</span></label>
-                            <select class="form-select" id="brand" x-model="form.brand">
+                            <select class="form-select" id="brand" x-model="form.brand" :disabled="isBrandRetailer">
                                 <option value="">Select brand...</option>
                                 <template x-for="brand in brands" :key="brand.id">
                                     <option :value="brand.name" x-text="brand.name"></option>
                                 </template>
                             </select>
+                            <small class="text-muted" x-show="isBrandRetailer" x-text="`Brand auto-filled: ${form.retailer} is also a brand`"></small>
                         </div>
                     </div>
 
