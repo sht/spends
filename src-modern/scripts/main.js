@@ -28,10 +28,9 @@ import Alpine from 'alpinejs';
 // Import styles (Bootstrap Icons are included in SCSS)
 import '../styles/scss/main.scss';
 
-// Import feature components (currently unused)
-// import { AccountComponent } from './components/account.js';
-// import { AnalyticsComponent } from './components/analytics.js';
-// import { FormsComponent } from './components/forms.js';
+// Import page-specific Alpine components
+import { registerSettingsComponent } from './components/settings.js';
+import { registerInventoryComponent } from './components/inventory.js';
 
 // Application Class
 class AdminApp {
@@ -154,19 +153,13 @@ class AdminApp {
         window.dashboardManager = dashboardManager;
         break;
       case 'settings':
-        await this.initSettingsPage();
+        console.log('⚙️ Settings page components registered');
+        break;
+      case 'inventory':
+        console.log('📦 Inventory page components registered');
         break;
       default:
         console.log('Page-specific components loading complete');
-    }
-  }
-
-  async initSettingsPage() {
-    try {
-      await import('./components/settings.js');
-      console.log('⚙️ Settings page script loaded successfully');
-    } catch (error) {
-      console.error('Failed to load settings page script:', error);
     }
   }
 
@@ -682,6 +675,10 @@ class AdminApp {
         console.log('Edit item:', this.item);
       }
     }));
+
+    // Register page-specific Alpine components
+    registerSettingsComponent();
+    registerInventoryComponent();
 
     // Start Alpine.js
     Alpine.start();

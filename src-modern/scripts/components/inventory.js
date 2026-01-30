@@ -1,7 +1,7 @@
 import Alpine from 'alpinejs';
 import { Modal } from 'bootstrap';
 
-document.addEventListener('alpine:init', () => {
+export function registerInventoryComponent() {
   Alpine.data('inventoryTable', () => ({
     items: [],
     filteredItems: [],
@@ -375,4 +375,4 @@ document.addEventListener('alpine:init', () => {
       }
     }
   }));
-});
+}

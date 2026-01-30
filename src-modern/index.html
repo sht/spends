@@ -9,7 +9,7 @@
     <meta name="author" content="Bootstrap Admin Template">
     
     <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="Modern Bootstrap Admin Template">
+    <meta property="og:title" content="Modern Bootstrap Admin">
     <meta property="og:description" content="Clean and modern admin dashboard template built with Bootstrap 5">
     <meta property="og:type" content="website">
     
@@ -79,6 +79,7 @@
         color: #6366f1 !important;
       }
     </style>
+    
 </head>
 
 <body data-page="dashboard" class="admin-layout">
@@ -98,7 +99,7 @@
         <header class="admin-header">
             <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
                 <div class="container-fluid">
-                    <!-- Logo/Brand - Now first on the left -->
+                    <!-- Logo/Brand -->
                     <a class="navbar-brand d-flex align-items-center" href="./index.html">
                         <img src="/assets/images/logo.svg" alt="Logo" height="32" class="d-inline-block align-text-top me-2">
                         <h1 class="h4 mb-0 fw-bold text-primary">Spends</h1>
@@ -199,8 +200,10 @@
 
         <!-- Sidebar Backdrop (mobile overlay) -->
         <div class="sidebar-backdrop" aria-hidden="true"></div>
+        
         <!-- Main Content -->
         <main class="admin-main">
+            <!-- Main Content -->
             <div class="container-fluid p-4 p-lg-5">
                 <!-- Page Header -->
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
@@ -456,14 +459,12 @@
                 </div>
             </div>
         </footer>
-        </div> <!-- /.admin-wrapper -->
-    </div>
+    </div> <!-- /.admin-wrapper -->
 
     <!-- Toast Container -->
     <div aria-live="polite" aria-atomic="true" class="position-fixed top-0 end-0 p-3" style="z-index: 9999; margin-top: 70px;">
         <div id="toast-container"></div>
     </div>
-
 
     <!-- Icon Demo Modal -->
     <div class="modal fade" id="iconDemoModal" tabindex="-1">
@@ -552,9 +553,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Scripts -->
-    <script type="module" src="/scripts/main.js"></script>
 
     <!-- Add Purchase Modal -->
     <div class="modal fade" id="newItemModal" tabindex="-1" aria-labelledby="newItemModalLabel" aria-hidden="true">
@@ -735,5 +733,8 @@
             </div>
         </div>
     </div>
+
+    <!-- Page-specific Scripts -->
+    <script type="module" src="/scripts/main.js"></script>
 </body>
-</html> 
+</html>

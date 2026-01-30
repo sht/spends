@@ -1,27 +1,37 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="light">
 <head>
+    <!-- Meta Tags -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings & Preferences - Modern Bootstrap Admin</title>
-
-    <!-- SEO Meta Tags -->
-    <meta name="description" content="Application settings and user preferences configuration">
-    <meta name="keywords" content="bootstrap, admin, dashboard, settings, preferences, configuration">
-
+    <meta name="description" content="Modern Bootstrap 5 Admin Template - Clean, responsive dashboard">
+    <meta name="keywords" content="bootstrap, admin, dashboard, template, modern, responsive">
+    <meta name="author" content="Bootstrap Admin Template">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Modern Bootstrap Admin">
+    <meta property="og:description" content="Clean and modern admin dashboard template built with Bootstrap 5">
+    <meta property="og:type" content="website">
+    
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/assets/icons/favicon.svg">
     <link rel="icon" type="image/png" href="/assets/icons/favicon.png">
-
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="/manifest.json">
-
+    
     <!-- Preconnect to external domains -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    <!-- Fonts with display=swap -->
+    <!-- Fonts with display=swap to show fallback immediately -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Title -->
+    <title>Settings - Modern Bootstrap Admin</title>
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#6366f1">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
 
     <!-- Inline critical styles to prevent FOUC -->
     <style>
@@ -69,6 +79,7 @@
         color: #6366f1 !important;
       }
     </style>
+    
 </head>
 
 <body data-page="settings" class="settings-page">
@@ -81,599 +92,628 @@
         </div>
     </div>
 
-    <!-- Admin App Container -->
-    <div class="admin-app">
-        <div class="admin-wrapper" id="admin-wrapper">
+    <!-- Main Wrapper -->
+    <div class="admin-wrapper" id="admin-wrapper">
+        
+        <!-- Header -->
+        <header class="admin-header">
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+                <div class="container-fluid">
+                    <!-- Logo/Brand -->
+                    <a class="navbar-brand d-flex align-items-center" href="./index.html">
+                        <img src="/assets/images/logo.svg" alt="Logo" height="32" class="d-inline-block align-text-top me-2">
+                        <h1 class="h4 mb-0 fw-bold text-primary">Spends</h1>
+                    </a>
 
-            <!-- Header -->
-            <header class="admin-header">
-                <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
-                    <div class="container-fluid">
-                        <!-- Logo/Brand -->
-                        <a class="navbar-brand d-flex align-items-center" href="./index.html">
-                            <img src="/assets/images/logo.svg" alt="Logo" height="32" class="d-inline-block align-text-top me-2">
-                            <h1 class="h4 mb-0 fw-bold text-primary">Metis</h1>
-                        </a>
+                    <!-- Sidebar Toggle -->
+                    <button class="hamburger-menu" type="button" data-sidebar-toggle aria-label="Toggle sidebar">
+                        <i class="bi bi-list"></i>
+                    </button>
 
-                        <!-- Sidebar Toggle -->
-                        <button class="hamburger-menu" type="button" data-sidebar-toggle aria-label="Toggle sidebar">
-                            <i class="bi bi-list"></i>
-                        </button>
-
-                        <!-- Right Side Icons -->
-                        <div class="navbar-nav flex-row">
-                            <!-- Theme Toggle with Alpine.js -->
-                            <div x-data="themeSwitch">
-                                <button class="btn btn-outline-secondary me-2"
-                                        type="button"
-                                        @click="toggle()"
-                                        data-bs-toggle="tooltip"
-                                        data-bs-placement="bottom"
-                                        title="Toggle theme">
-                                    <i class="bi bi-sun-fill" x-show="currentTheme === 'light'"></i>
-                                    <i class="bi bi-moon-fill" x-show="currentTheme === 'dark'"></i>
-                                </button>
+                    <!-- Search Bar with Alpine.js -->
+                    <div class="search-container flex-grow-1 mx-4" x-data="searchComponent">
+                        <div class="position-relative">
+                            <input type="search" 
+                                   class="form-control" 
+                                   placeholder="Search... (Ctrl+K)"
+                                   x-model="query"
+                                   @input="search()"
+                                   data-search-input
+                                   aria-label="Search">
+                            <i class="bi bi-search position-absolute top-50 end-0 translate-middle-y me-3"></i>
+                            
+                            <!-- Search Results Dropdown -->
+                            <div x-show="results.length > 0" 
+                                 x-transition:enter="transition ease-out duration-100"
+                                 x-transition:enter-start="opacity-0 scale-95"
+                                 x-transition:enter-end="opacity-100 scale-100"
+                                 class="position-absolute top-100 start-0 w-100 bg-white border rounded-2 shadow-lg mt-1 z-3">
+                                <template x-for="result in results" :key="result.title">
+                                    <a :href="result.url" class="d-block px-3 py-2 text-decoration-none text-dark border-bottom">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-file-text me-2 text-muted"></i>
+                                            <span x-text="result.title"></span>
+                                            <small class="ms-auto text-muted" x-text="result.type"></small>
+                                        </div>
+                                    </a>
+                                </template>
                             </div>
+                        </div>
+                    </div>
 
-                            <!-- Fullscreen Toggle -->
-                            <button class="btn btn-outline-secondary me-2"
-                                    type="button"
-                                    data-fullscreen-toggle
+                    <!-- Right Side Icons -->
+                    <div class="navbar-nav flex-row">
+                        <!-- Theme Toggle with Alpine.js -->
+                        <div x-data="themeSwitch">
+                            <button class="btn btn-outline-secondary me-2" 
+                                    type="button" 
+                                    @click="toggle()"
                                     data-bs-toggle="tooltip"
                                     data-bs-placement="bottom"
-                                    title="Toggle fullscreen">
-                                <i class="bi bi-arrows-fullscreen icon-hover"></i>
+                                    title="Toggle theme">
+                                <i class="bi bi-sun-fill" x-show="currentTheme === 'light'"></i>
+                                <i class="bi bi-moon-fill" x-show="currentTheme === 'dark'"></i>
                             </button>
-
                         </div>
+
+                        <!-- Fullscreen Toggle (hidden on phones) -->
+                        <button class="btn btn-outline-secondary me-2 d-none d-md-inline-block"
+                                type="button"
+                                data-fullscreen-toggle
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="bottom"
+                                title="Toggle fullscreen">
+                            <i class="bi bi-arrows-fullscreen icon-hover"></i>
+                        </button>
                     </div>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Sidebar -->
+        <aside class="admin-sidebar" id="admin-sidebar">
+            <div class="sidebar-content">
+                <nav class="sidebar-nav">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="./index.html">
+                                <i class="bi bi-speedometer2"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="./inventory.html">
+                                <i class="bi bi-bag-check"></i>
+                                <span>Inventory</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="./settings.html">
+                                <i class="bi bi-gear"></i>
+                                <span>Settings</span>
+                            </a>
+                        </li>
+                    </ul>
                 </nav>
-            </header>
+            </div>
+        </aside>
 
-            <!-- Sidebar -->
-            <aside class="admin-sidebar" id="admin-sidebar">
-                <div class="sidebar-content">
-                    <nav class="sidebar-nav">
-                        <ul class="nav flex-column">
-                            <li class="nav-item">
-                                <a class="nav-link" href="./index.html">
-                                    <i class="bi bi-speedometer2"></i>
-                                    <span>Dashboard</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="./inventory.html">
-                                    <i class="bi bi-bag-check"></i>
-                                    <span>Inventory</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link active" href="./settings.html">
-                                    <i class="bi bi-gear"></i>
-                                    <span>Settings</span>
-                                    <span class="badge bg-primary rounded-pill ms-auto">Active</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </nav>
-                </div>
-            </aside>
-
-            <!-- Sidebar Backdrop (mobile overlay) -->
-            <div class="sidebar-backdrop" aria-hidden="true"></div>
-
+        <!-- Sidebar Backdrop (mobile overlay) -->
+        <div class="sidebar-backdrop" aria-hidden="true"></div>
+        
+        <!-- Main Content -->
+        <main class="admin-main">
             <!-- Main Content -->
-            <main class="admin-main">
-                <div class="container-fluid p-4 p-lg-4">
+            <div class="container-fluid p-4 p-lg-4">
 
-                    <!-- Page Header -->
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <div>
-                            <h1 class="h3 mb-0">Settings</h1>
-                            <p class="text-muted mb-0">Manage your application preferences and configuration</p>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-primary" @click="saveSettings()">
-                                <i class="bi bi-check-lg me-2"></i>Save Changes
-                            </button>
-                        </div>
+                <!-- Page Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1 class="h3 mb-0">Settings</h1>
+                        <p class="text-muted mb-0">Manage your application preferences and configuration</p>
                     </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-primary" @click="saveSettings()">
+                            <i class="bi bi-check-lg me-2"></i>Save Changes
+                        </button>
+                    </div>
+                </div>
 
-                    <!-- Settings Container -->
-                    <div x-data="settingsComponent" x-init="init()" class="settings-layout">
-                        <div class="row g-4">
+                <!-- Settings Container -->
+                <div x-data="settingsComponent" x-init="init()" class="settings-layout">
+                    <div class="row g-4">
 
-                            <!-- Settings Navigation Sidebar -->
-                            <div class="col-lg-3">
-                                <nav class="nav nav-pills flex-column gap-2" role="tablist">
-                                    <button type="button"
-                                            class="nav-link text-start d-flex align-items-center"
-                                            :class="{ 'active': activeSection === 'general' }"
-                                            @click="setActiveSection('general')"
-                                            role="tab"
-                                            :aria-selected="activeSection === 'general'">
-                                        <i class="bi bi-sliders me-2"></i>
-                                        <span>General</span>
-                                    </button>
-                                    <button type="button"
-                                            class="nav-link text-start d-flex align-items-center"
-                                            :class="{ 'active': activeSection === 'dashboard' }"
-                                            @click="setActiveSection('dashboard')"
-                                            role="tab"
-                                            :aria-selected="activeSection === 'dashboard'">
-                                        <i class="bi bi-speedometer2 me-2"></i>
-                                        <span>Dashboard</span>
-                                    </button>
-                                    <button type="button"
-                                            class="nav-link text-start d-flex align-items-center"
-                                            :class="{ 'active': activeSection === 'notifications' }"
-                                            @click="setActiveSection('notifications')"
-                                            role="tab"
-                                            :aria-selected="activeSection === 'notifications'">
-                                        <i class="bi bi-bell me-2"></i>
-                                        <span>Notifications</span>
-                                    </button>
-                                    <button type="button"
-                                            class="nav-link text-start d-flex align-items-center"
-                                            :class="{ 'active': activeSection === 'retailer' }"
-                                            @click="setActiveSection('retailer')"
-                                            role="tab"
-                                            :aria-selected="activeSection === 'retailer'">
-                                        <i class="bi bi-shop me-2"></i>
-                                        <span>Retailer</span>
-                                    </button>
-                                    <button type="button"
-                                            class="nav-link text-start d-flex align-items-center"
-                                            :class="{ 'active': activeSection === 'dataManagement' }"
-                                            @click="setActiveSection('dataManagement')"
-                                            role="tab"
-                                            :aria-selected="activeSection === 'dataManagement'">
-                                        <i class="bi bi-database me-2"></i>
-                                        <span>Data Management</span>
-                                    </button>
-                                </nav>
+                        <!-- Settings Navigation Sidebar -->
+                        <div class="col-lg-3">
+                            <nav class="nav nav-pills flex-column gap-2" role="tablist">
+                                <button type="button"
+                                        class="nav-link text-start d-flex align-items-center"
+                                        :class="{ 'active': activeSection === 'general' }"
+                                        @click="setActiveSection('general')"
+                                        role="tab"
+                                        :aria-selected="activeSection === 'general'">
+                                    <i class="bi bi-sliders me-2"></i>
+                                    <span>General</span>
+                                </button>
+                                <button type="button"
+                                        class="nav-link text-start d-flex align-items-center"
+                                        :class="{ 'active': activeSection === 'dashboard' }"
+                                        @click="setActiveSection('dashboard')"
+                                        role="tab"
+                                        :aria-selected="activeSection === 'dashboard'">
+                                    <i class="bi bi-speedometer2 me-2"></i>
+                                    <span>Dashboard</span>
+                                </button>
+                                <button type="button"
+                                        class="nav-link text-start d-flex align-items-center"
+                                        :class="{ 'active': activeSection === 'notifications' }"
+                                        @click="setActiveSection('notifications')"
+                                        role="tab"
+                                        :aria-selected="activeSection === 'notifications'">
+                                    <i class="bi bi-bell me-2"></i>
+                                    <span>Notifications</span>
+                                </button>
+                                <button type="button"
+                                        class="nav-link text-start d-flex align-items-center"
+                                        :class="{ 'active': activeSection === 'retailer' }"
+                                        @click="setActiveSection('retailer')"
+                                        role="tab"
+                                        :aria-selected="activeSection === 'retailer'">
+                                    <i class="bi bi-shop me-2"></i>
+                                    <span>Retailer</span>
+                                </button>
+                                <button type="button"
+                                        class="nav-link text-start d-flex align-items-center"
+                                        :class="{ 'active': activeSection === 'dataManagement' }"
+                                        @click="setActiveSection('dataManagement')"
+                                        role="tab"
+                                        :aria-selected="activeSection === 'dataManagement'">
+                                    <i class="bi bi-database me-2"></i>
+                                    <span>Data Management</span>
+                                </button>
+                            </nav>
+                        </div>
+
+                        <!-- Settings Content -->
+                        <div class="col-lg-9">
+
+                            <!-- General Settings Tab -->
+                            <div x-show="activeSection === 'general'" class="settings-section" role="tabpanel">
+                                <div class="card">
+                                    <div class="card-header bg-body-secondary border-bottom rounded-top py-3">
+                                        <h5 class="mb-0">
+                                            <i class="bi bi-sliders me-2"></i>General Settings
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-4">
+                                            <!-- Date Format -->
+                                            <div class="col-md-6">
+                                                <label for="dateFormat" class="form-label fw-500">Date Format</label>
+                                                <select id="dateFormat" class="form-select" x-model="settings.dateFormat">
+                                                    <option value="">Select a format...</option>
+                                                    <option value="MM/DD/YYYY">MM/DD/YYYY (US)</option>
+                                                    <option value="DD/MM/YYYY">DD/MM/YYYY (UK)</option>
+                                                    <option value="YYYY-MM-DD">YYYY-MM-DD (ISO)</option>
+                                                    <option value="DD.MM.YYYY">DD.MM.YYYY (Europe)</option>
+                                                </select>
+                                                <small class="text-muted d-block mt-1">Choose how dates are displayed throughout the application</small>
+                                            </div>
+
+                                            <!-- Currency Code -->
+                                            <div class="col-md-6">
+                                                <label for="currencyCode" class="form-label fw-500">Currency Code</label>
+                                                <select id="currencyCode" class="form-select" x-model="settings.currencyCode">
+                                                    <option value="">Select a currency...</option>
+                                                    <option value="USD">USD - US Dollar</option>
+                                                    <option value="EUR">EUR - Euro</option>
+                                                    <option value="GBP">GBP - British Pound</option>
+                                                    <option value="JPY">JPY - Japanese Yen</option>
+                                                    <option value="CAD">CAD - Canadian Dollar</option>
+                                                    <option value="AUD">AUD - Australian Dollar</option>
+                                                    <option value="CHF">CHF - Swiss Franc</option>
+                                                    <option value="CNY">CNY - Chinese Yuan</option>
+                                                    <option value="INR">INR - Indian Rupee</option>
+                                                </select>
+                                                <small class="text-muted d-block mt-1">Set your preferred currency for financial displays</small>
+                                            </div>
+
+                                            <!-- Timezone -->
+                                            <div class="col-md-6">
+                                                <label for="timezone" class="form-label fw-500">Timezone</label>
+                                                <select id="timezone" class="form-select" x-model="settings.timezone">
+                                                    <option value="">Select a timezone...</option>
+                                                    <option value="UTC">UTC (Coordinated Universal Time)</option>
+                                                    <option value="America/New_York">Eastern Time (ET)</option>
+                                                    <option value="America/Chicago">Central Time (CT)</option>
+                                                    <option value="America/Denver">Mountain Time (MT)</option>
+                                                    <option value="America/Los_Angeles">Pacific Time (PT)</option>
+                                                    <option value="Europe/London">London (GMT)</option>
+                                                    <option value="Europe/Paris">Paris (CET)</option>
+                                                    <option value="Europe/Berlin">Berlin (CET)</option>
+                                                    <option value="Asia/Tokyo">Tokyo (JST)</option>
+                                                    <option value="Asia/Shanghai">Shanghai (CST)</option>
+                                                    <option value="Asia/Singapore">Singapore (SGT)</option>
+                                                    <option value="Australia/Sydney">Sydney (AEDT)</option>
+                                                </select>
+                                                <small class="text-muted d-block mt-1">Set your local timezone for accurate timestamps</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <!-- Settings Content -->
-                            <div class="col-lg-9">
-
-                                <!-- General Settings Tab -->
-                                <div x-show="activeSection === 'general'" class="settings-section" role="tabpanel">
-                                    <div class="card">
-                                        <div class="card-header bg-body-secondary border-bottom rounded-top py-3">
-                                            <h5 class="mb-0">
-                                                <i class="bi bi-sliders me-2"></i>General Settings
-                                            </h5>
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="row g-4">
-                                                <!-- Date Format -->
-                                                <div class="col-md-6">
-                                                    <label for="dateFormat" class="form-label fw-500">Date Format</label>
-                                                    <select id="dateFormat" class="form-select" x-model="settings.dateFormat">
-                                                        <option value="">Select a format...</option>
-                                                        <option value="MM/DD/YYYY">MM/DD/YYYY (US)</option>
-                                                        <option value="DD/MM/YYYY">DD/MM/YYYY (UK)</option>
-                                                        <option value="YYYY-MM-DD">YYYY-MM-DD (ISO)</option>
-                                                        <option value="DD.MM.YYYY">DD.MM.YYYY (Europe)</option>
-                                                    </select>
-                                                    <small class="text-muted d-block mt-1">Choose how dates are displayed throughout the application</small>
-                                                </div>
-
-                                                <!-- Currency Code -->
-                                                <div class="col-md-6">
-                                                    <label for="currencyCode" class="form-label fw-500">Currency Code</label>
-                                                    <select id="currencyCode" class="form-select" x-model="settings.currencyCode">
-                                                        <option value="">Select a currency...</option>
-                                                        <option value="USD">USD - US Dollar</option>
-                                                        <option value="EUR">EUR - Euro</option>
-                                                        <option value="GBP">GBP - British Pound</option>
-                                                        <option value="JPY">JPY - Japanese Yen</option>
-                                                        <option value="CAD">CAD - Canadian Dollar</option>
-                                                        <option value="AUD">AUD - Australian Dollar</option>
-                                                        <option value="CHF">CHF - Swiss Franc</option>
-                                                        <option value="CNY">CNY - Chinese Yuan</option>
-                                                        <option value="INR">INR - Indian Rupee</option>
-                                                    </select>
-                                                    <small class="text-muted d-block mt-1">Set your preferred currency for financial displays</small>
-                                                </div>
-
-                                                <!-- Timezone -->
-                                                <div class="col-md-6">
-                                                    <label for="timezone" class="form-label fw-500">Timezone</label>
-                                                    <select id="timezone" class="form-select" x-model="settings.timezone">
-                                                        <option value="">Select a timezone...</option>
-                                                        <option value="UTC">UTC (Coordinated Universal Time)</option>
-                                                        <option value="America/New_York">Eastern Time (ET)</option>
-                                                        <option value="America/Chicago">Central Time (CT)</option>
-                                                        <option value="America/Denver">Mountain Time (MT)</option>
-                                                        <option value="America/Los_Angeles">Pacific Time (PT)</option>
-                                                        <option value="Europe/London">London (GMT)</option>
-                                                        <option value="Europe/Paris">Paris (CET)</option>
-                                                        <option value="Europe/Berlin">Berlin (CET)</option>
-                                                        <option value="Asia/Tokyo">Tokyo (JST)</option>
-                                                        <option value="Asia/Shanghai">Shanghai (CST)</option>
-                                                        <option value="Asia/Singapore">Singapore (SGT)</option>
-                                                        <option value="Australia/Sydney">Sydney (AEDT)</option>
-                                                    </select>
-                                                    <small class="text-muted d-block mt-1">Set your local timezone for accurate timestamps</small>
+                            <!-- Dashboard Settings Tab -->
+                            <div x-show="activeSection === 'dashboard'" class="settings-section" role="tabpanel">
+                                <div class="card">
+                                    <div class="card-header bg-body-secondary border-bottom rounded-top py-3">
+                                        <h5 class="mb-0">
+                                            <i class="bi bi-speedometer2 me-2"></i>Card Visibility
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-muted mb-4">Toggle which dashboard cards are visible on your dashboard</p>
+                                        <div class="row g-4">
+                                            <!-- Total Assets Value -->
+                                            <div class="col-md-6">
+                                                <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
+                                                    <div>
+                                                        <h6 class="mb-1">Total Assets Value</h6>
+                                                        <small class="text-muted">Show total value of all assets</small>
+                                                    </div>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="toggleTotalAssets" x-model="settings.cardVisibility.totalAssets">
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
 
-                                <!-- Dashboard Settings Tab -->
-                                <div x-show="activeSection === 'dashboard'" class="settings-section" role="tabpanel">
-                                    <div class="card">
-                                        <div class="card-header bg-body-secondary border-bottom rounded-top py-3">
-                                            <h5 class="mb-0">
-                                                <i class="bi bi-speedometer2 me-2"></i>Card Visibility
-                                            </h5>
-                                        </div>
-                                        <div class="card-body">
-                                            <p class="text-muted mb-4">Toggle which dashboard cards are visible on your dashboard</p>
-                                            <div class="row g-4">
-                                                <!-- Total Assets Value -->
-                                                <div class="col-md-6">
-                                                    <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
-                                                        <div>
-                                                            <h6 class="mb-1">Total Assets Value</h6>
-                                                            <small class="text-muted">Show total value of all assets</small>
-                                                        </div>
-                                                        <div class="form-check form-switch">
-                                                            <input class="form-check-input" type="checkbox" id="toggleTotalAssets" x-model="settings.cardVisibility.totalAssets">
-                                                        </div>
+                                            <!-- Items Count -->
+                                            <div class="col-md-6">
+                                                <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
+                                                    <div>
+                                                        <h6 class="mb-1">Items Count</h6>
+                                                        <small class="text-muted">Display total number of items</small>
+                                                    </div>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="toggleItemsCount" x-model="settings.cardVisibility.itemsCount">
                                                     </div>
                                                 </div>
+                                            </div>
 
-                                                <!-- Items Count -->
-                                                <div class="col-md-6">
-                                                    <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
-                                                        <div>
-                                                            <h6 class="mb-1">Items Count</h6>
-                                                            <small class="text-muted">Display total number of items</small>
-                                                        </div>
-                                                        <div class="form-check form-switch">
-                                                            <input class="form-check-input" type="checkbox" id="toggleItemsCount" x-model="settings.cardVisibility.itemsCount">
-                                                        </div>
+                                            <!-- Avg Price -->
+                                            <div class="col-md-6">
+                                                <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
+                                                    <div>
+                                                        <h6 class="mb-1">Average Price</h6>
+                                                        <small class="text-muted">Show average item price</small>
+                                                    </div>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="toggleAvgPrice" x-model="settings.cardVisibility.avgPrice">
                                                     </div>
                                                 </div>
+                                            </div>
 
-                                                <!-- Avg Price -->
-                                                <div class="col-md-6">
-                                                    <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
-                                                        <div>
-                                                            <h6 class="mb-1">Average Price</h6>
-                                                            <small class="text-muted">Show average item price</small>
-                                                        </div>
-                                                        <div class="form-check form-switch">
-                                                            <input class="form-check-input" type="checkbox" id="toggleAvgPrice" x-model="settings.cardVisibility.avgPrice">
-                                                        </div>
+                                            <!-- Pending Warranties -->
+                                            <div class="col-md-6">
+                                                <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
+                                                    <div>
+                                                        <h6 class="mb-1">Pending Warranties</h6>
+                                                        <small class="text-muted">Display items with active warranties</small>
+                                                    </div>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="togglePendingWarranties" x-model="settings.cardVisibility.pendingWarranties">
                                                     </div>
                                                 </div>
+                                            </div>
 
-                                                <!-- Pending Warranties -->
-                                                <div class="col-md-6">
-                                                    <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
-                                                        <div>
-                                                            <h6 class="mb-1">Pending Warranties</h6>
-                                                            <small class="text-muted">Display items with active warranties</small>
-                                                        </div>
-                                                        <div class="form-check form-switch">
-                                                            <input class="form-check-input" type="checkbox" id="togglePendingWarranties" x-model="settings.cardVisibility.pendingWarranties">
-                                                        </div>
+                                            <!-- Tax Deductible -->
+                                            <div class="col-md-6">
+                                                <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
+                                                    <div>
+                                                        <h6 class="mb-1">Tax Deductible</h6>
+                                                        <small class="text-muted">Show tax deductible items count</small>
+                                                    </div>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="toggleTaxDeductible" x-model="settings.cardVisibility.taxDeductible">
                                                     </div>
                                                 </div>
+                                            </div>
 
-                                                <!-- Tax Deductible -->
-                                                <div class="col-md-6">
-                                                    <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
-                                                        <div>
-                                                            <h6 class="mb-1">Tax Deductible</h6>
-                                                            <small class="text-muted">Show tax deductible items count</small>
-                                                        </div>
-                                                        <div class="form-check form-switch">
-                                                            <input class="form-check-input" type="checkbox" id="toggleTaxDeductible" x-model="settings.cardVisibility.taxDeductible">
-                                                        </div>
+                                            <!-- Expired Warranties -->
+                                            <div class="col-md-6">
+                                                <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
+                                                    <div>
+                                                        <h6 class="mb-1">Expired Warranties</h6>
+                                                        <small class="text-muted">Display expired warranty count</small>
                                                     </div>
-                                                </div>
-
-                                                <!-- Expired Warranties -->
-                                                <div class="col-md-6">
-                                                    <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
-                                                        <div>
-                                                            <h6 class="mb-1">Expired Warranties</h6>
-                                                            <small class="text-muted">Display expired warranty count</small>
-                                                        </div>
-                                                        <div class="form-check form-switch">
-                                                            <input class="form-check-input" type="checkbox" id="toggleExpiredWarranties" x-model="settings.cardVisibility.expiredWarranties">
-                                                        </div>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="toggleExpiredWarranties" x-model="settings.cardVisibility.expiredWarranties">
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
-                                <!-- Notifications Settings Tab -->
-                                <div x-show="activeSection === 'notifications'" class="settings-section" role="tabpanel">
-                                    <div class="card">
-                                        <div class="card-header bg-body-secondary border-bottom rounded-top py-3">
-                                            <h5 class="mb-0">
-                                                <i class="bi bi-bell me-2"></i>Notification Preferences
-                                            </h5>
-                                        </div>
-                                        <div class="card-body">
-                                            <p class="text-muted mb-4">Control how and when you receive notifications</p>
-                                            <div class="row g-4">
-                                                <!-- Desktop Notifications -->
-                                                <div class="col-md-6">
-                                                    <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
-                                                        <div>
-                                                            <h6 class="mb-1">Desktop Notifications</h6>
-                                                            <small class="text-muted">Show notifications on your desktop</small>
-                                                        </div>
-                                                        <div class="form-check form-switch">
-                                                            <input class="form-check-input" type="checkbox" id="toggleDesktop" x-model="settings.notifications.desktop">
-                                                        </div>
+                            <!-- Notifications Settings Tab -->
+                            <div x-show="activeSection === 'notifications'" class="settings-section" role="tabpanel">
+                                <div class="card">
+                                    <div class="card-header bg-body-secondary border-bottom rounded-top py-3">
+                                        <h5 class="mb-0">
+                                            <i class="bi bi-bell me-2"></i>Notification Preferences
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-muted mb-4">Control how and when you receive notifications</p>
+                                        <div class="row g-4">
+                                            <!-- Desktop Notifications -->
+                                            <div class="col-md-6">
+                                                <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
+                                                    <div>
+                                                        <h6 class="mb-1">Desktop Notifications</h6>
+                                                        <small class="text-muted">Show notifications on your desktop</small>
+                                                    </div>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="toggleDesktop" x-model="settings.notifications.desktop">
                                                     </div>
                                                 </div>
+                                            </div>
 
-                                                <!-- Email Notifications -->
-                                                <div class="col-md-6">
-                                                    <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
-                                                        <div>
-                                                            <h6 class="mb-1">Email Notifications</h6>
-                                                            <small class="text-muted">Receive important updates via email</small>
-                                                        </div>
-                                                        <div class="form-check form-switch">
-                                                            <input class="form-check-input" type="checkbox" id="toggleEmail" x-model="settings.notifications.email">
-                                                        </div>
+                                            <!-- Email Notifications -->
+                                            <div class="col-md-6">
+                                                <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
+                                                    <div>
+                                                        <h6 class="mb-1">Email Notifications</h6>
+                                                        <small class="text-muted">Receive important updates via email</small>
+                                                    </div>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="toggleEmail" x-model="settings.notifications.email">
                                                     </div>
                                                 </div>
+                                            </div>
 
-                                                <!-- Sound Alerts -->
-                                                <div class="col-md-6">
-                                                    <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
-                                                        <div>
-                                                            <h6 class="mb-1">Sound Alerts</h6>
-                                                            <small class="text-muted">Play sounds for important notifications</small>
-                                                        </div>
-                                                        <div class="form-check form-switch">
-                                                            <input class="form-check-input" type="checkbox" id="toggleSound" x-model="settings.notifications.sound">
-                                                        </div>
+                                            <!-- Sound Alerts -->
+                                            <div class="col-md-6">
+                                                <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
+                                                    <div>
+                                                        <h6 class="mb-1">Sound Alerts</h6>
+                                                        <small class="text-muted">Play sounds for important notifications</small>
+                                                    </div>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="toggleSound" x-model="settings.notifications.sound">
                                                     </div>
                                                 </div>
+                                            </div>
 
-                                                <!-- Marketing Updates -->
-                                                <div class="col-md-6">
-                                                    <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
-                                                        <div>
-                                                            <h6 class="mb-1">Marketing Updates</h6>
-                                                            <small class="text-muted">Receive updates about new features and promotions</small>
-                                                        </div>
-                                                        <div class="form-check form-switch">
-                                                            <input class="form-check-input" type="checkbox" id="toggleMarketing" x-model="settings.notifications.marketing">
-                                                        </div>
+                                            <!-- Marketing Updates -->
+                                            <div class="col-md-6">
+                                                <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
+                                                    <div>
+                                                        <h6 class="mb-1">Marketing Updates</h6>
+                                                        <small class="text-muted">Receive updates about new features and promotions</small>
+                                                    </div>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="toggleMarketing" x-model="settings.notifications.marketing">
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
-                                <!-- Retailer Settings Tab -->
-                                <div x-show="activeSection === 'retailer'" class="settings-section" role="tabpanel">
+                            <!-- Retailer Settings Tab -->
+                            <div x-show="activeSection === 'retailer'" class="settings-section" role="tabpanel">
 
-                                    <!-- Add New Retailer Card -->
-                                    <div class="card mb-4">
-                                        <div class="card-header bg-body-secondary border-bottom rounded-top py-3">
-                                            <h5 class="mb-0">
-                                                <i class="bi bi-plus-circle me-2"></i>Add New Retailer
-                                            </h5>
-                                        </div>
-                                        <div class="card-body">
-                                            <label for="retailerName" class="form-label fw-500 mb-3">Retailer Name</label>
-                                            <div class="d-flex gap-2">
-                                                <input type="text"
-                                                       class="form-control flex-grow-1"
-                                                       id="retailerName"
-                                                       placeholder="Enter retailer name"
-                                                       x-model="newRetailerName"
-                                                       @keydown.enter="addRetailer()">
-                                                <button type="button"
-                                                        class="btn btn-primary"
-                                                        style="width: 40%; white-space: nowrap;"
-                                                        @click="addRetailer()">
-                                                    Add Retailer
-                                                </button>
-                                            </div>
-                                            <small class="text-muted d-block mt-2">Name of the retailer or store</small>
-                                        </div>
+                                <!-- Add New Retailer Card -->
+                                <div class="card mb-4">
+                                    <div class="card-header bg-body-secondary border-bottom rounded-top py-3">
+                                        <h5 class="mb-0">
+                                            <i class="bi bi-plus-circle me-2"></i>Add New Retailer
+                                        </h5>
                                     </div>
-
-                                    <!-- Current Retailers Card -->
-                                    <div class="card">
-                                        <div class="card-header bg-body-secondary border-bottom rounded-top py-3">
-                                            <h5 class="mb-0">
-                                                <i class="bi bi-shop me-2"></i>Current Retailers
-                                            </h5>
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="table-responsive">
-                                                <table class="table table-hover mb-0">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Name</th>
-                                                            <th>Is Brand</th>
-                                                            <th>Actions</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <template x-for="retailer in settings.retailers" :key="retailer.id">
-                                                            <tr>
-                                                                <td>
-                                                                    <span x-text="retailer.name"></span>
-                                                                </td>
-                                                                <td>
-                                                                    <div class="form-check form-switch">
-                                                                        <input class="form-check-input"
-                                                                               type="checkbox"
-                                                                               :id="`isBrand_${retailer.id}`"
-                                                                               :checked="retailer.isBrand"
-                                                                               @change="toggleRetailerBrand(retailer)">
-                                                                    </div>
-                                                                </td>
-                                                                <td>
-                                                                    <button type="button"
-                                                                            class="btn btn-sm btn-outline-danger"
-                                                                            @click="deleteRetailer(retailer.id)"
-                                                                            title="Delete retailer">
-                                                                        <i class="bi bi-trash"></i>
-                                                                    </button>
-                                                                </td>
-                                                            </tr>
-                                                        </template>
-                                                        <template x-if="settings.retailers.length === 0">
-                                                            <tr>
-                                                                <td colspan="3" class="text-center text-muted py-4">
-                                                                    No retailers added yet. Add one to get started.
-                                                                </td>
-                                                            </tr>
-                                                        </template>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Data Management Settings Tab -->
-                                <div x-show="activeSection === 'dataManagement'" class="settings-section" role="tabpanel">
-
-                                    <!-- Data Export Card -->
-                                    <div class="card mb-4">
-                                        <div class="card-header bg-body-secondary border-bottom rounded-top py-3">
-                                            <h5 class="mb-0">
-                                                <i class="bi bi-download me-2"></i>Data Export
-                                            </h5>
-                                        </div>
-                                        <div class="card-body">
-                                            <p class="text-muted mb-4">Download your data in various formats</p>
-                                            <div class="row g-3">
-                                                <div class="col-md-6">
-                                                    <button type="button"
-                                                            class="btn btn-outline-primary w-100 py-3"
-                                                            @click="exportData('json')">
-                                                        <i class="bi bi-file-code me-2"></i>
-                                                        <span>Export as JSON</span>
-                                                    </button>
-                                                    <small class="text-muted d-block mt-2 text-center">Machine readable format</small>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <button type="button"
-                                                            class="btn btn-outline-success w-100 py-3"
-                                                            @click="exportData('csv')">
-                                                        <i class="bi bi-file-spreadsheet me-2"></i>
-                                                        <span>Export as CSV</span>
-                                                    </button>
-                                                    <small class="text-muted d-block mt-2 text-center">Spreadsheet format</small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Data Import Card -->
-                                    <div class="card mb-4">
-                                        <div class="card-header bg-body-secondary border-bottom rounded-top py-3">
-                                            <h5 class="mb-0">
-                                                <i class="bi bi-upload me-2"></i>Data Import
-                                            </h5>
-                                        </div>
-                                        <div class="card-body">
-                                            <p class="text-muted mb-4">Upload and import your data from CSV or JSON files</p>
-                                            <div class="input-group">
-                                                <input type="file"
-                                                       class="form-control"
-                                                       id="importFile"
-                                                       accept=".csv,.json"
-                                                       @change="onFileSelected($event)">
-                                                <button class="btn btn-primary"
-                                                        type="button"
-                                                        @click="importData()">
-                                                    <i class="bi bi-upload me-2"></i>Import
-                                                </button>
-                                            </div>
-                                            <small class="text-muted d-block mt-2">Supported formats: CSV, JSON</small>
-                                        </div>
-                                    </div>
-
-                                    <!-- Danger Zone Card -->
-                                    <div class="card border-danger">
-                                        <div class="card-header bg-danger bg-opacity-10 border-danger">
-                                            <h5 class="mb-0 text-danger">
-                                                <i class="bi bi-exclamation-triangle me-2"></i>Danger Zone
-                                            </h5>
-                                        </div>
-                                        <div class="card-body">
-                                            <p class="text-muted mb-4">
-                                                <strong>Warning:</strong> The following action is irreversible. Please proceed with caution.
-                                            </p>
+                                    <div class="card-body">
+                                        <label for="retailerName" class="form-label fw-500 mb-3">Retailer Name</label>
+                                        <div class="d-flex gap-2">
+                                            <input type="text"
+                                                   class="form-control flex-grow-1"
+                                                   id="retailerName"
+                                                   placeholder="Enter retailer name"
+                                                   x-model="newRetailerName"
+                                                   @keydown.enter="addRetailer()">
                                             <button type="button"
-                                                    class="btn btn-danger"
-                                                    @click="resetAllData()"
-                                                    x-show="!confirmReset">
-                                                <i class="bi bi-arrow-clockwise me-2"></i>Reset All Data
+                                                    class="btn btn-primary"
+                                                    style="width: 40%; white-space: nowrap;"
+                                                    @click="addRetailer()">
+                                                Add Retailer
                                             </button>
-                                            <div x-show="confirmReset" class="alert alert-danger" role="alert">
-                                                <p class="mb-3">
-                                                    <strong>Are you sure?</strong> This will permanently delete all your data and cannot be undone.
-                                                </p>
-                                                <div class="d-flex gap-2">
-                                                    <button type="button"
-                                                            class="btn btn-danger"
-                                                            @click="confirmResetData()">
-                                                        <i class="bi bi-check-lg me-2"></i>Yes, Reset Everything
-                                                    </button>
-                                                    <button type="button"
-                                                            class="btn btn-secondary"
-                                                            @click="confirmReset = false">
-                                                        <i class="bi bi-x-lg me-2"></i>Cancel
-                                                    </button>
-                                                </div>
+                                        </div>
+                                        <small class="text-muted d-block mt-2">Name of the retailer or store</small>
+                                    </div>
+                                </div>
+
+                                <!-- Current Retailers Card -->
+                                <div class="card">
+                                    <div class="card-header bg-body-secondary border-bottom rounded-top py-3">
+                                        <h5 class="mb-0">
+                                            <i class="bi bi-shop me-2"></i>Current Retailers
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover mb-0">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Name</th>
+                                                        <th>Is Brand</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <template x-for="retailer in settings.retailers" :key="retailer.id">
+                                                        <tr>
+                                                            <td>
+                                                                <span x-text="retailer.name"></span>
+                                                            </td>
+                                                            <td>
+                                                                <div class="form-check form-switch">
+                                                                    <input class="form-check-input"
+                                                                           type="checkbox"
+                                                                           :id="`isBrand_${retailer.id}`"
+                                                                           :checked="retailer.isBrand"
+                                                                           @change="toggleRetailerBrand(retailer)">
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <button type="button"
+                                                                        class="btn btn-sm btn-outline-danger"
+                                                                        @click="deleteRetailer(retailer.id)"
+                                                                        title="Delete retailer">
+                                                                    <i class="bi bi-trash"></i>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    </template>
+                                                    <template x-if="settings.retailers.length === 0">
+                                                        <tr>
+                                                            <td colspan="3" class="text-center text-muted py-4">
+                                                                No retailers added yet. Add one to get started.
+                                                            </td>
+                                                        </tr>
+                                                    </template>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Data Management Settings Tab -->
+                            <div x-show="activeSection === 'dataManagement'" class="settings-section" role="tabpanel">
+
+                                <!-- Data Export Card -->
+                                <div class="card mb-4">
+                                    <div class="card-header bg-body-secondary border-bottom rounded-top py-3">
+                                        <h5 class="mb-0">
+                                            <i class="bi bi-download me-2"></i>Data Export
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-muted mb-4">Download your data in various formats</p>
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <button type="button"
+                                                        class="btn btn-outline-primary w-100 py-3"
+                                                        @click="exportData('json')">
+                                                    <i class="bi bi-file-code me-2"></i>
+                                                    <span>Export as JSON</span>
+                                                </button>
+                                                <small class="text-muted d-block mt-2 text-center">Machine readable format</small>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <button type="button"
+                                                        class="btn btn-outline-success w-100 py-3"
+                                                        @click="exportData('csv')">
+                                                    <i class="bi bi-file-spreadsheet me-2"></i>
+                                                    <span>Export as CSV</span>
+                                                </button>
+                                                <small class="text-muted d-block mt-2 text-center">Spreadsheet format</small>
                                             </div>
                                         </div>
                                     </div>
+                                </div>
 
+                                <!-- Data Import Card -->
+                                <div class="card mb-4">
+                                    <div class="card-header bg-body-secondary border-bottom rounded-top py-3">
+                                        <h5 class="mb-0">
+                                            <i class="bi bi-upload me-2"></i>Data Import
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-muted mb-4">Upload and import your data from CSV or JSON files</p>
+                                        <div class="input-group">
+                                            <input type="file"
+                                                   class="form-control"
+                                                   id="importFile"
+                                                   accept=".csv,.json"
+                                                   @change="onFileSelected($event)">
+                                            <button class="btn btn-primary"
+                                                    type="button"
+                                                    @click="importData()">
+                                                <i class="bi bi-upload me-2"></i>Import
+                                            </button>
+                                        </div>
+                                        <small class="text-muted d-block mt-2">Supported formats: CSV, JSON</small>
+                                    </div>
+                                </div>
+
+                                <!-- Danger Zone Card -->
+                                <div class="card border-danger">
+                                    <div class="card-header bg-danger bg-opacity-10 border-danger">
+                                        <h5 class="mb-0 text-danger">
+                                            <i class="bi bi-exclamation-triangle me-2"></i>Danger Zone
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-muted mb-4">
+                                            <strong>Warning:</strong> The following action is irreversible. Please proceed with caution.
+                                        </p>
+                                        <button type="button"
+                                                class="btn btn-danger"
+                                                @click="resetAllData()"
+                                                x-show="!confirmReset">
+                                            <i class="bi bi-arrow-clockwise me-2"></i>Reset All Data
+                                        </button>
+                                        <div x-show="confirmReset" class="alert alert-danger" role="alert">
+                                            <p class="mb-3">
+                                                <strong>Are you sure?</strong> This will permanently delete all your data and cannot be undone.
+                                            </p>
+                                            <div class="d-flex gap-2">
+                                                <button type="button"
+                                                        class="btn btn-danger"
+                                                        @click="confirmResetData()">
+                                                    <i class="bi bi-check-lg me-2"></i>Yes, Reset Everything
+                                                </button>
+                                                <button type="button"
+                                                        class="btn btn-secondary"
+                                                        @click="confirmReset = false">
+                                                    <i class="bi bi-x-lg me-2"></i>Cancel
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                             </div>
 
                         </div>
-                    </div>
 
-                </div>
-            </main>
-
-            <!-- Footer -->
-            <footer class="admin-footer">
-                <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-12 text-center">
-                            <p class="mb-0 text-muted">Spendings Tracker</p>
-                        </div>
                     </div>
                 </div>
-            </footer>
 
-        </div> <!-- /.admin-wrapper -->
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="admin-footer">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <p class="mb-0 text-muted">Spendings Tracker</p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div> <!-- /.admin-wrapper -->
+
+    <!-- Toast Container -->
+    <div aria-live="polite" aria-atomic="true" class="position-fixed top-0 end-0 p-3" style="z-index: 9999; margin-top: 70px;">
+        <div id="toast-container"></div>
     </div>
 
-    <!-- Page-specific Component -->
-    <script type="module" src="./scripts/components/settings.js"></script>
-
-    <!-- Main App Script -->
+    <!-- Main Scripts -->
     <script type="module" src="./scripts/main.js"></script>
 </body>
 </html>

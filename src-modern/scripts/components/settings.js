@@ -1,6 +1,6 @@
 import Alpine from 'alpinejs';
 
-document.addEventListener('alpine:init', () => {
+export function registerSettingsComponent() {
   Alpine.data('settingsComponent', () => ({
     // UI State
     sidebarVisible: false,
@@ -459,4 +459,4 @@ document.addEventListener('alpine:init', () => {
       console.log(`[${type.toUpperCase()}] ${message}`);
     }
   }));
-});
+}
