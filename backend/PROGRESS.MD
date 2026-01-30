@@ -78,10 +78,26 @@ This document tracks the progress of the development roadmap for the Spends Trac
 - ✅ All analytics endpoints functional
 - ✅ Frontend can fetch and display real data instead of mock data
 
+### Phase 5: Data Import/Export 💾
+**Objective:** Allow users to export and import their data
+
+**Completed Tasks:**
+- ✅ Create import/export utility functions
+- ✅ Create JSON export endpoint
+- ✅ Create CSV export endpoint
+- ✅ Create JSON import endpoint
+- ✅ Create CSV import endpoint
+- ✅ Add data validation for imports
+- ✅ Handle duplicates during import
+- ✅ Return import report (success count, errors, warnings)
+
+**Deliverables:**
+- ✅ Users can export and import their purchase data
+
 ## Current Status
 
-Phase 1, Phase 2, Phase 3, and Phase 4 have been completed. The backend infrastructure is set up with SQLite for local development, with a path to migrate to PostgreSQL in production. The database models are defined, initial data has been seeded, all CRUD endpoints are functional, and analytics endpoints are implemented.
+Phase 1, Phase 2, Phase 3, Phase 4, and Phase 5 have been completed. The backend infrastructure is set up with SQLite for local development, with a path to migrate to PostgreSQL in production. The database models are defined, initial data has been seeded, all CRUD endpoints are functional, analytics endpoints are implemented, and import/export functionality is available.
 
 ## Next Steps
 
-Moving on to Phase 5: Data Import/Export 💾
+Moving on to Phase 6: Testing 🧪
