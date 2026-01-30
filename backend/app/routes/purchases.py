@@ -23,11 +23,14 @@ async def list_purchases(
 ):
     purchases, total = await get_purchases(db, skip, limit, status, retailer_id, search)
     
+    # Convert SQLAlchemy models to Pydantic schemas
+    purchase_responses = [PurchaseResponse.model_validate(p) for p in purchases]
+    
     # Calculate number of pages
     pages = (total + limit - 1) // limit
     
     return PaginatedResponse(
-        items=purchases,
+        items=purchase_responses,
         total=total,
         page=skip // limit + 1,
         limit=limit,

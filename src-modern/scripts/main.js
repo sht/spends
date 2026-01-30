@@ -424,9 +424,39 @@ class AdminApp {
       },
       isEditMode: false,
       editingItemId: null,
+      retailers: [],
+      brands: [],
 
-      init() {
+      async init() {
         this.resetForm();
+        await this.loadRetailers();
+        await this.loadBrands();
+      },
+
+      async loadRetailers() {
+        try {
+          const apiUrl = window.APP_CONFIG?.API_URL || 'http://192.168.68.55:8000/api';
+          const response = await fetch(`${apiUrl}/retailers/`);
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          const data = await response.json();
+          this.retailers = data.items || [];
+        } catch (error) {
+          console.error('Error loading retailers:', error);
+          this.retailers = [];
+        }
+      },
+
+      async loadBrands() {
+        try {
+          const apiUrl = window.APP_CONFIG?.API_URL || 'http://192.168.68.55:8000/api';
+          const response = await fetch(`${apiUrl}/brands/`);
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          const data = await response.json();
+          this.brands = data.items || [];
+        } catch (error) {
+          console.error('Error loading brands:', error);
+          this.brands = [];
+        }
       },
 
       resetForm() {
@@ -498,13 +528,108 @@ class AdminApp {
 
         console.log('New purchase created:', purchase);
 
-        const message = this.isEditMode
-          ? `Purchase "${this.form.productName}" updated successfully!`
-          : `Purchase "${this.form.productName}" created successfully!`;
+        // Send data to backend API
+        this.submitPurchaseToAPI(purchase);
+      },
 
-        window.AdminApp.notificationManager.success(message);
+      async getOrCreateRetailer(apiUrl, retailerName) {
+        // Check if retailer exists
+        let retailer = this.retailers.find(r => r.name.toLowerCase() === retailerName.toLowerCase());
+        if (retailer) return retailer.id;
+        
+        // Create new retailer
+        const response = await fetch(`${apiUrl}/retailers`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: retailerName, url: '' })
+        });
+        if (!response.ok) throw new Error('Failed to create retailer');
+        const newRetailer = await response.json();
+        this.retailers.push(newRetailer);
+        return newRetailer.id;
+      },
 
-        this.resetForm();
+      async getOrCreateBrand(apiUrl, brandName) {
+        // Check if brand exists
+        let brand = this.brands.find(b => b.name.toLowerCase() === brandName.toLowerCase());
+        if (brand) return brand.id;
+        
+        // Create new brand
+        const response = await fetch(`${apiUrl}/brands`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: brandName, url: '' })
+        });
+        if (!response.ok) throw new Error('Failed to create brand');
+        const newBrand = await response.json();
+        this.brands.push(newBrand);
+        return newBrand.id;
+      },
+
+      async submitPurchaseToAPI(purchase) {
+        try {
+          const apiUrl = window.APP_CONFIG?.API_URL || 'http://192.168.68.55:8000/api';
+          
+          // Get or create retailer and brand IDs
+          const retailerId = await this.getOrCreateRetailer(apiUrl, purchase.retailer);
+          const brandId = await this.getOrCreateBrand(apiUrl, purchase.brand);
+          
+          // Prepare the payload according to backend schema
+          const payload = {
+            product_name: purchase.productName,
+            price: purchase.price,
+            purchase_date: purchase.purchaseDate + 'T00:00:00',
+            retailer_id: retailerId,
+            brand_id: brandId,
+            status: 'RECEIVED',
+            notes: purchase.notes,
+            tax_deductible: purchase.taxDeductible ? 1 : 0
+          };
+
+          const response = await fetch(`${apiUrl}/purchases`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+          }
+
+          const savedPurchase = await response.json();
+          console.log('Purchase saved to API:', savedPurchase);
+
+          const message = this.isEditMode
+            ? `Purchase "${this.form.productName}" updated successfully!`
+            : `Purchase "${this.form.productName}" created successfully!`;
+
+          window.AdminApp.notificationManager.success(message);
+          
+          // Close the modal programmatically
+          const modalEl = document.getElementById('newItemModal');
+          if (modalEl) {
+            const modal = Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+          }
+          
+          this.resetForm();
+
+          // Refresh the page data if dashboard is loaded
+          if (window.dashboardManager) {
+            window.dashboardManager.loadDashboardData();
+          }
+          
+          // Refresh inventory if on inventory page
+          if (window.location.pathname.includes('inventory')) {
+            window.location.reload();
+          }
+        } catch (error) {
+          console.error('Error saving purchase:', error);
+          window.AdminApp.notificationManager.error(`Failed to save purchase: ${error.message}`);
+        }
       }
     }));
 

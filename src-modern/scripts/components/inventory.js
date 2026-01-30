@@ -74,7 +74,7 @@ document.addEventListener('alpine:init', () => {
         const apiUrl = window.APP_CONFIG?.API_URL || 'http://192.168.68.55:8000/api';
 
         // Fetch inventory data from the backend API
-        const response = await fetch(`${apiUrl}/purchases`);
+        const response = await fetch(`${apiUrl}/purchases/`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
 
@@ -89,9 +89,10 @@ document.addEventListener('alpine:init', () => {
         }));
 
         // Hide loading state
-        this.hideLoadingScreen();
+        this.hideLoadingState();
       } catch (error) {
         console.error('Error loading inventory data:', error);
+        this.hideLoadingState();
         this.showErrorState();
         // Fallback to mock data if API fails
         this.loadMockInventoryData();
@@ -149,8 +150,11 @@ document.addEventListener('alpine:init', () => {
     showLoadingState() {
       const tableContainer = document.querySelector('.table-responsive');
       if (tableContainer) {
+        // Remove any existing loader first
+        this.hideLoadingState();
+        
         const loader = document.createElement('div');
-        loader.className = 'position-absolute top-50 start-50 translate-middle';
+        loader.className = 'position-absolute top-50 start-50 translate-middle inventory-loader';
         loader.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
         loader.style.zIndex = '10';
         loader.style.backgroundColor = 'rgba(255, 255, 255, 0.7)';
@@ -158,6 +162,16 @@ document.addEventListener('alpine:init', () => {
         loader.style.borderRadius = '5px';
         tableContainer.style.position = 'relative';
         tableContainer.appendChild(loader);
+      }
+    },
+
+    hideLoadingState() {
+      const tableContainer = document.querySelector('.table-responsive');
+      if (tableContainer) {
+        const loader = tableContainer.querySelector('.inventory-loader');
+        if (loader) {
+          loader.remove();
+        }
       }
     },
 

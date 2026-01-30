@@ -20,11 +20,14 @@ async def list_retailers(
 ):
     retailers, total = await get_retailers(db, skip, limit)
     
+    # Convert SQLAlchemy models to Pydantic schemas
+    retailer_responses = [RetailerResponse.model_validate(r) for r in retailers]
+    
     # Calculate number of pages
     pages = (total + limit - 1) // limit
     
     return PaginatedResponse(
-        items=retailers,
+        items=retailer_responses,
         total=total,
         page=skip // limit + 1,
         limit=limit,

@@ -20,11 +20,14 @@ async def list_brands(
 ):
     brands, total = await get_brands(db, skip, limit)
     
+    # Convert SQLAlchemy models to Pydantic schemas
+    brand_responses = [BrandResponse.model_validate(b) for b in brands]
+    
     # Calculate number of pages
     pages = (total + limit - 1) // limit
     
     return PaginatedResponse(
-        items=brands,
+        items=brand_responses,
         total=total,
         page=skip // limit + 1,
         limit=limit,
