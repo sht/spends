@@ -24,10 +24,28 @@ This document tracks the progress of the development roadmap for the Spends Trac
 - ✅ SQLite database accessible via SQLAlchemy
 - ✅ Auto-generated API docs at http://localhost:8000/docs
 
+### Phase 2: Database Models 🗄️
+**Objective:** Define all database schemas and relationships
+
+**Completed Tasks:**
+- ✅ Create Purchase SQLAlchemy model
+- ✅ Create Warranty SQLAlchemy model
+- ✅ Create Retailer SQLAlchemy model
+- ✅ Create Brand SQLAlchemy model
+- ✅ Add database constraints (unique, not null, check)
+- ✅ Set up Alembic for migrations
+- ✅ Create initial migration
+- ✅ Seed default retailers and brands
+
+**Deliverables:**
+- ✅ SQLite tables with proper schema (migratable to PostgreSQL)
+- ✅ Alembic migration system ready
+- ✅ Initial data (retailers, brands) loaded
+
 ## Current Status
 
-Phase 1 has been completed. The backend infrastructure is set up with SQLite for local development, with a path to migrate to PostgreSQL in production.
+Phase 1 and Phase 2 have been completed. The backend infrastructure is set up with SQLite for local development, with a path to migrate to PostgreSQL in production. The database models are defined and initial data has been seeded.
 
 ## Next Steps
 
-Moving on to Phase 2: Database Models 🗄️
+Moving on to Phase 3: API Endpoints - CRUD 📝
