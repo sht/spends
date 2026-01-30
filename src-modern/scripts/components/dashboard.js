@@ -132,11 +132,11 @@ export class DashboardManager {
         chart.update('none');
       } else if (key === 'retailers') {
         chart.data.labels = this.data.retailers.map(item => item.name);
-        chart.data.datasets[0].data = this.data.retailers.map(item => item.count);
+        chart.data.datasets[0].data = this.data.retailers.map(item => Math.round(item.percentage));
         chart.update('none');
       } else if (key === 'brands') {
         chart.data.labels = this.data.brands.map(item => item.name);
-        chart.data.datasets[0].data = this.data.brands.map(item => item.count);
+        chart.data.datasets[0].data = this.data.brands.map(item => Math.round(item.percentage));
         chart.update('none');
       }
     });
@@ -376,8 +376,9 @@ export class DashboardManager {
   generateRetailerData() {
     // Retailer distribution data
     const retailers = ['Amazon', 'eBay', 'Walmart', 'Target', 'Best Buy'];
-    return retailers.map(retailer => ({
-      retailer,
+    return retailers.map(name => ({
+      name,
+      count: Math.floor(Math.random() * 10) + 1,
       percentage: Math.floor(Math.random() * 30) + 10
     }));
   }
@@ -385,8 +386,9 @@ export class DashboardManager {
   generateBrandData() {
     // Brand distribution data
     const brands = ['Apple', 'Sony', 'Samsung', 'LG', 'Dell'];
-    return brands.map(brand => ({
-      brand,
+    return brands.map(name => ({
+      name,
+      count: Math.floor(Math.random() * 10) + 1,
       percentage: Math.floor(Math.random() * 25) + 10
     }));
   }
@@ -725,8 +727,8 @@ export class DashboardManager {
       const isRetailerChart = cardHeader?.textContent.includes('Retailers');
 
       const data = isRetailerChart ? this.data.retailers : this.data.brands;
-      const labels = data.map(item => isRetailerChart ? item.retailer : item.brand);
-      const values = data.map(item => item.percentage);
+      const labels = data.map(item => item.name);
+      const values = data.map(item => Math.round(item.percentage));
 
       const colors = [
         'rgba(16, 185, 129, 0.8)',
@@ -756,6 +758,15 @@ export class DashboardManager {
               labels: {
                 padding: 20,
                 usePointStyle: true
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const label = context.label || '';
+                  const value = Math.round(context.parsed);
+                  return `${label}: ${value}%`;
+                }
               }
             }
           }
