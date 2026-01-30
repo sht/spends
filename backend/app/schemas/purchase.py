@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal
 from enum import Enum
 from .common import BaseResponse
@@ -18,10 +18,17 @@ class PurchaseBase(BaseModel):
     retailer_id: Optional[str] = None
     brand_id: Optional[str] = None
     status: Optional[PurchaseStatus] = PurchaseStatus.RECEIVED
-    purchase_date: datetime
+    purchase_date: date
     notes: Optional[str] = None
     tax_deductible: Optional[int] = Field(default=0, ge=0, le=1)
-    warranty_expiry: Optional[datetime] = None
+    warranty_expiry: Optional[date] = None
+    model_number: Optional[str] = Field(default=None, max_length=100)
+    serial_number: Optional[str] = Field(default=None, max_length=100)
+    quantity: Optional[int] = Field(default=1, ge=1)
+    link: Optional[str] = Field(default=None, max_length=500)
+    return_deadline: Optional[date] = None
+    return_policy: Optional[str] = Field(default=None, max_length=50)
+    tags: Optional[str] = Field(default=None, max_length=255)
 
 
 class PurchaseCreate(PurchaseBase):
@@ -35,9 +42,49 @@ class PurchaseUpdate(BaseModel):
     retailer_id: Optional[str] = None
     brand_id: Optional[str] = None
     status: Optional[PurchaseStatus] = None
-    purchase_date: Optional[datetime] = None
+    purchase_date: Optional[date] = None
     notes: Optional[str] = None
+    warranty_expiry: Optional[date] = None
+    model_number: Optional[str] = Field(None, max_length=100)
+    serial_number: Optional[str] = Field(None, max_length=100)
+    quantity: Optional[int] = Field(None, ge=1)
+    link: Optional[str] = Field(None, max_length=500)
+    return_deadline: Optional[date] = None
+    return_policy: Optional[str] = Field(None, max_length=50)
+    tags: Optional[str] = Field(None, max_length=255)
+
+
+class RetailerInfo(BaseModel):
+    id: str
+    name: str
+    
+    class Config:
+        from_attributes = True
+
+
+class BrandInfo(BaseModel):
+    id: str
+    name: str
+    
+    class Config:
+        from_attributes = True
+
+
+class WarrantyInfo(BaseModel):
+    id: str
+    warranty_start: date
+    warranty_end: date
+    warranty_type: Optional[str] = None
+    status: Optional[str] = None
+    provider: Optional[str] = None
+    notes: Optional[str] = None
+    
+    class Config:
+        from_attributes = True
 
 
 class PurchaseResponse(PurchaseBase, BaseResponse):
     warranty_id: Optional[str] = None
+    retailer: Optional[RetailerInfo] = None
+    brand: Optional[BrandInfo] = None
+    warranty: Optional[WarrantyInfo] = None

@@ -49,6 +49,16 @@ export function registerInventoryComponent() {
         });
       }
 
+      // Listen for refresh-inventory event from addPurchaseForm
+      window.addEventListener('refresh-inventory', async () => {
+        console.log('Received refresh-inventory event');
+        await this.loadInventoryData();
+        this.filterInventory();
+        this.calculateStats();
+        this.updatePagination();
+        console.log('Inventory data refreshed after purchase update');
+      });
+
       setTimeout(() => {
         this.hideLoadingScreen();
       }, 500);
@@ -79,14 +89,44 @@ export function registerInventoryComponent() {
         const data = await response.json();
 
         // Transform API response to match expected format
-        this.items = data.items.map(item => ({
-          id: item.id,
-          name: item.product_name,
-          brand: item.brand?.name || 'Unknown',
-          price: parseFloat(item.price),
-          status: item.status?.toLowerCase() || 'ordered',
-          purchaseDate: new Date(item.purchase_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-        }));
+        // Dates come as YYYY-MM-DD strings, parse them without timezone conversion
+        this.items = data.items.map(item => {
+          // Parse date strings directly without creating Date objects to avoid timezone issues
+          const purchaseDateStr = item.purchase_date;
+          const warrantyExpiryStr = item.warranty?.warranty_end || item.warranty_expiry;
+          const returnDeadlineStr = item.return_deadline;
+          
+          // Format date for display (e.g., "Jan 30, 2026")
+          const formatDateForDisplay = (dateStr) => {
+            if (!dateStr) return '';
+            const [year, month, day] = dateStr.split('-').map(Number);
+            const date = new Date(year, month - 1, day); // Use local time, not UTC
+            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+          };
+          
+          return {
+            id: item.id,
+            name: item.product_name,
+            brand: item.brand?.name || 'Unknown',
+            retailer: item.retailer?.name || 'Unknown',
+            price: parseFloat(item.price),
+            status: item.status?.toLowerCase() || 'ordered',
+            // Formatted date for display
+            purchaseDate: formatDateForDisplay(purchaseDateStr),
+            // ISO date for edit form (YYYY-MM-DD) - use the string directly
+            purchaseDateISO: purchaseDateStr,
+            warrantyExpiry: warrantyExpiryStr || '',
+            notes: item.notes || '',
+            taxDeductible: item.tax_deductible === 1 || item.tax_deductible === true,
+            modelNumber: item.model_number || '',
+            serialNumber: item.serial_number || '',
+            quantity: item.quantity || 1,
+            link: item.link || '',
+            returnDeadline: returnDeadlineStr || '',
+            returnPolicy: item.return_policy || '',
+            tags: item.tags || ''
+          };
+        });
 
         // Hide loading state
         this.hideLoadingState();
@@ -318,49 +358,40 @@ export function registerInventoryComponent() {
     },
 
     editItem(item) {
-      console.log('Edit item:', item);
+      // Get fresh data from this.items to ensure we have the latest values
+      const freshItem = this.items.find(i => i.id === item.id) || item;
+      console.log('Edit item - fresh item:', freshItem);
+      console.log('Edit item - modelNumber:', freshItem.modelNumber);
+      console.log('Edit item - serialNumber:', freshItem.serialNumber);
 
       // Create detailed item object with all fields
+      // Use purchaseDateISO for the date input (YYYY-MM-DD format)
       const detailedItem = {
-        productName: item.name,
-        retailer: item.retailer || 'Amazon',
-        brand: item.brand,
-        modelNumber: item.modelNumber || '',
-        serialNumber: item.serialNumber || '',
-        purchaseDate: item.purchaseDate,
-        price: item.price,
-        quantity: item.quantity || 1,
-        link: item.link || '',
-        warrantyExpiry: item.warrantyExpiry || '',
-        returnDeadline: item.returnDeadline || '',
-        returnPolicy: item.returnPolicy || '',
-        taxDeductible: item.taxDeductible || false,
-        tags: item.tags || '',
-        notes: item.notes || '',
-        id: item.id
+        productName: freshItem.name,
+        retailer: freshItem.retailer || '',
+        brand: freshItem.brand || '',
+        modelNumber: freshItem.modelNumber || '',
+        serialNumber: freshItem.serialNumber || '',
+        purchaseDate: freshItem.purchaseDateISO || freshItem.purchaseDate,
+        price: freshItem.price,
+        quantity: freshItem.quantity || 1,
+        link: freshItem.link || '',
+        warrantyExpiry: freshItem.warrantyExpiry || '',
+        returnDeadline: freshItem.returnDeadline || '',
+        returnPolicy: freshItem.returnPolicy || '',
+        taxDeductible: freshItem.taxDeductible || false,
+        tags: freshItem.tags || '',
+        notes: freshItem.notes || '',
+        id: freshItem.id
       };
 
-      // Get the modal element
-      const inventoryModalElement = document.getElementById('inventoryModal');
-
-      // Update modal title and icon directly
-      const modalTitle = inventoryModalElement.querySelector('.modal-title');
-      const titleIcon = modalTitle.querySelector('i');
-      const titleText = modalTitle.querySelector('span');
-
-      titleIcon.className = 'bi bi-pencil-circle text-primary me-2';
-      titleText.textContent = 'Edit Purchase';
-
-      // Get the Alpine component and set edit mode BEFORE showing
-      const modalContent = inventoryModalElement.querySelector('.modal-content');
-      if (modalContent && modalContent.__x) {
-        const alpineData = modalContent.__x.$data;
-        alpineData.isEditMode = true;
-        alpineData.editingItemId = item.id;
-        alpineData.form = { ...detailedItem };
-      }
+      // Dispatch custom event to notify addPurchaseForm to enter edit mode
+      window.dispatchEvent(new CustomEvent('edit-purchase', { 
+        detail: { item: detailedItem }
+      }));
 
       // Show the modal
+      const inventoryModalElement = document.getElementById('inventoryModal');
       const inventoryModal = new Modal(inventoryModalElement);
       inventoryModal.show();
     },

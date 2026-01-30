@@ -423,6 +423,38 @@ class AdminApp {
         this.resetForm();
         await this.loadRetailers();
         await this.loadBrands();
+        
+        // Listen for edit-purchase event from inventory table
+        window.addEventListener('edit-purchase', (e) => {
+          console.log('Received edit-purchase event:', e.detail);
+          if (e.detail && e.detail.item) {
+            this.enterEditMode(e.detail.item);
+          }
+        });
+      },
+      
+      enterEditMode(item) {
+        this.isEditMode = true;
+        this.editingItemId = item.id;
+        // Set each form field individually to ensure reactivity
+        this.form.productName = item.productName || '';
+        this.form.retailer = item.retailer || '';
+        this.form.brand = item.brand || '';
+        this.form.modelNumber = item.modelNumber || '';
+        this.form.serialNumber = item.serialNumber || '';
+        this.form.purchaseDate = item.purchaseDate || '';
+        this.form.price = item.price || '';
+        this.form.quantity = item.quantity || 1;
+        this.form.link = item.link || '';
+        this.form.warrantyExpiry = item.warrantyExpiry || '';
+        this.form.returnDeadline = item.returnDeadline || '';
+        this.form.returnPolicy = item.returnPolicy || '';
+        this.form.taxDeductible = item.taxDeductible || false;
+        this.form.tags = item.tags || '';
+        this.form.notes = item.notes || '';
+        console.log('Entered edit mode with item:', item);
+        console.log('Form retailer set to:', this.form.retailer);
+        console.log('Form brand set to:', this.form.brand);
       },
 
       // Check if selected retailer is also a brand (using is_brand flag from API)
@@ -588,20 +620,34 @@ class AdminApp {
           const brandId = await this.getOrCreateBrand(apiUrl, purchase.brand);
           
           // Prepare the payload according to backend schema
+          // Dates are sent as YYYY-MM-DD strings without time component
           const payload = {
             product_name: purchase.productName,
             price: purchase.price,
-            purchase_date: purchase.purchaseDate + 'T00:00:00',
+            purchase_date: purchase.purchaseDate,
             retailer_id: retailerId,
             brand_id: brandId,
             status: 'RECEIVED',
             notes: purchase.notes,
             tax_deductible: purchase.taxDeductible ? 1 : 0,
-            warranty_expiry: purchase.warrantyExpiry || null
+            warranty_expiry: purchase.warrantyExpiry || null,
+            model_number: purchase.modelNumber || null,
+            serial_number: purchase.serialNumber || null,
+            quantity: parseInt(purchase.quantity) || 1,
+            link: purchase.link || null,
+            return_deadline: purchase.returnDeadline || null,
+            return_policy: purchase.returnPolicy || null,
+            tags: purchase.tags || null
           };
 
-          const response = await fetch(`${apiUrl}/purchases`, {
-            method: 'POST',
+          const isUpdate = this.isEditMode && this.editingItemId;
+          const url = isUpdate 
+            ? `${apiUrl}/purchases/${this.editingItemId}`
+            : `${apiUrl}/purchases`;
+          const method = isUpdate ? 'PUT' : 'POST';
+
+          const response = await fetch(url, {
+            method: method,
             headers: {
               'Content-Type': 'application/json'
             },
@@ -616,7 +662,7 @@ class AdminApp {
           const savedPurchase = await response.json();
           console.log('Purchase saved to API:', savedPurchase);
 
-          const message = this.isEditMode
+          const message = isUpdate
             ? `Purchase "${this.form.productName}" updated successfully!`
             : `Purchase "${this.form.productName}" created successfully!`;
 
@@ -649,11 +695,8 @@ class AdminApp {
             // Refresh inventory data if on inventory page
             if (window.location.pathname.includes('inventory')) {
               console.log('Refreshing inventory data...');
-              // Trigger inventory refresh if inventory component exists
-              const inventoryEl = document.querySelector('[x-data="inventoryTable"]');
-              if (inventoryEl && inventoryEl.__x) {
-                await inventoryEl.__x.$data.loadInventoryData();
-              }
+              // Dispatch event to trigger inventory refresh
+              window.dispatchEvent(new CustomEvent('refresh-inventory'));
             }
           }, 1000);
         } catch (error) {

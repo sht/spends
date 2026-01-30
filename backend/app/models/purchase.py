@@ -25,6 +25,13 @@ class Purchase(Base):
     purchase_date = Column(DateTime, nullable=False)
     notes = Column(String, nullable=True)
     tax_deductible = Column(Integer, default=0)  # 0 = false, 1 = true
+    model_number = Column(String(100), nullable=True)
+    serial_number = Column(String(100), nullable=True)
+    quantity = Column(Integer, default=1)
+    link = Column(String(500), nullable=True)
+    return_deadline = Column(DateTime, nullable=True)
+    return_policy = Column(String(50), nullable=True)
+    tags = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
