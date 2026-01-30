@@ -2,6 +2,7 @@ from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
+from datetime import datetime
 from app.models.purchase import Purchase
 from app.models.warranty import Warranty
 from app.schemas.purchase import PurchaseCreate, PurchaseUpdate
@@ -59,10 +60,30 @@ async def get_purchases(
 
 
 async def create_purchase(db: AsyncSession, purchase: PurchaseCreate) -> Purchase:
-    db_purchase = Purchase(**purchase.model_dump())
+    # Extract warranty_expiry if provided
+    warranty_expiry = purchase.warranty_expiry
+    
+    # Create purchase without warranty_expiry (it's not a Purchase column)
+    purchase_data = purchase.model_dump(exclude={'warranty_expiry'})
+    db_purchase = Purchase(**purchase_data)
     db.add(db_purchase)
     await db.commit()
     await db.refresh(db_purchase)
+    
+    # Create warranty if warranty_expiry is provided
+    if warranty_expiry:
+        from app.models.warranty import Warranty, WarrantyStatus
+        db_warranty = Warranty(
+            purchase_id=db_purchase.id,
+            warranty_start=db_purchase.purchase_date,
+            warranty_end=warranty_expiry,
+            status=WarrantyStatus.ACTIVE if warranty_expiry > datetime.utcnow() else WarrantyStatus.EXPIRED,
+            notes="Auto-created from purchase"
+        )
+        db.add(db_warranty)
+        await db.commit()
+        await db.refresh(db_warranty)
+    
     return db_purchase
 
 

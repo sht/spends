@@ -582,7 +582,8 @@ class AdminApp {
             brand_id: brandId,
             status: 'RECEIVED',
             notes: purchase.notes,
-            tax_deductible: purchase.taxDeductible ? 1 : 0
+            tax_deductible: purchase.taxDeductible ? 1 : 0,
+            warranty_expiry: purchase.warrantyExpiry || null
           };
 
           const response = await fetch(`${apiUrl}/purchases`, {

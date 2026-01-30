@@ -20,6 +20,8 @@ class PurchaseBase(BaseModel):
     status: Optional[PurchaseStatus] = PurchaseStatus.RECEIVED
     purchase_date: datetime
     notes: Optional[str] = None
+    tax_deductible: Optional[int] = Field(default=0, ge=0, le=1)
+    warranty_expiry: Optional[datetime] = None
 
 
 class PurchaseCreate(PurchaseBase):

@@ -122,6 +122,9 @@ export class DashboardManager {
         chart.data.labels = this.data.warranty.map(item => item.month);
         chart.data.datasets[0].data = this.data.warranty.map(item => item.active);
         chart.data.datasets[1].data = this.data.warranty.map(item => item.expired);
+        if (chart.data.datasets[2]) {
+          chart.data.datasets[2].data = this.data.warranty.map(item => item.expiring_soon);
+        }
         chart.update('none'); // Update without animation
       } else if (key === 'spending') {
         chart.data.labels = this.data.spending.map(item => item.month);
@@ -341,9 +344,11 @@ export class DashboardManager {
     return monthLabels.map(month => ({
       month,
       // Active warranties - warranties that are still valid
-      activeWarranties: Math.floor(Math.random() * 30) + 20,
+      active: Math.floor(Math.random() * 30) + 20,
       // Expired warranties - warranties that have ended
-      expiredWarranties: Math.floor(Math.random() * 15) + 5
+      expired: Math.floor(Math.random() * 15) + 5,
+      // Expiring soon - warranties ending within 30 days
+      expiring_soon: Math.floor(Math.random() * 10) + 2
     }));
   }
 
@@ -473,7 +478,7 @@ export class DashboardManager {
           datasets: [
             {
               label: 'Active Warranties',
-              data: this.data.warranty.map(item => item.activeWarranties),
+              data: this.data.warranty.map(item => item.active),
               borderColor: 'rgb(16, 185, 129)',
               backgroundColor: 'rgba(16, 185, 129, 0.1)',
               fill: true,
@@ -486,12 +491,25 @@ export class DashboardManager {
             },
             {
               label: 'Expired Warranties',
-              data: this.data.warranty.map(item => item.expiredWarranties),
+              data: this.data.warranty.map(item => item.expired),
               borderColor: 'rgb(239, 68, 68)',
               backgroundColor: 'rgba(239, 68, 68, 0.1)',
               fill: true,
               tension: 0.4,
               pointBackgroundColor: 'rgb(239, 68, 68)',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointRadius: 6,
+              pointHoverRadius: 8
+            },
+            {
+              label: 'Expiring Soon',
+              data: this.data.warranty.map(item => item.expiring_soon),
+              borderColor: 'rgb(245, 158, 11)',
+              backgroundColor: 'rgba(245, 158, 11, 0.1)',
+              fill: true,
+              tension: 0.4,
+              pointBackgroundColor: 'rgb(245, 158, 11)',
               pointBorderColor: '#fff',
               pointBorderWidth: 2,
               pointRadius: 6,
@@ -547,8 +565,10 @@ export class DashboardManager {
                 display: false
               },
               ticks: {
+                stepSize: 1,
+                precision: 0,
                 callback: function(value) {
-                  return value + ' warranties';
+                  return Math.round(value) + ' warranties';
                 }
               }
             }
