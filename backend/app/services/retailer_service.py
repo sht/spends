@@ -2,6 +2,7 @@ from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.models.retailer import Retailer
+from app.models.brand import Brand
 from app.schemas.retailer import RetailerCreate, RetailerUpdate
 
 
@@ -21,6 +22,36 @@ async def get_retailers(db: AsyncSession, skip: int = 0, limit: int = 20) -> tup
     total = len(total_result.scalars().all())
 
     return retailers, total
+
+
+async def get_retailers_with_brand_status(db: AsyncSession, skip: int = 0, limit: int = 20) -> tuple[List[dict], int]:
+    """Get retailers with isBrand flag indicating if retailer is also a brand."""
+    # Get all retailers
+    query = select(Retailer).offset(skip).limit(limit)
+    result = await db.execute(query)
+    retailers = result.scalars().all()
+
+    # Get all brand names for quick lookup
+    brand_result = await db.execute(select(Brand.name))
+    brand_names = {name for name in brand_result.scalars().all()}
+
+    # Build response with isBrand flag
+    retailers_with_status = []
+    for retailer in retailers:
+        retailers_with_status.append({
+            "id": retailer.id,
+            "name": retailer.name,
+            "url": retailer.url,
+            "created_at": retailer.created_at,
+            "is_brand": retailer.name in brand_names
+        })
+
+    # Get total count
+    count_query = select(Retailer.id)
+    total_result = await db.execute(count_query)
+    total = len(total_result.scalars().all())
+
+    return retailers_with_status, total
 
 
 async def create_retailer(db: AsyncSession, retailer: RetailerCreate) -> Retailer:

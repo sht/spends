@@ -19,4 +19,13 @@ class RetailerUpdate(BaseModel):
 
 
 class RetailerResponse(RetailerBase, BaseResponse):
-    pass
+    is_brand: bool = False
+
+
+class RetailerWithBrandStatus(BaseModel):
+    """Schema for retailer with is_brand flag."""
+    id: str
+    name: str
+    url: Optional[str] = None
+    created_at: Optional[datetime] = None
+    is_brand: bool = False

@@ -425,11 +425,12 @@ class AdminApp {
         await this.loadBrands();
       },
 
-      // Check if selected retailer is also a brand
+      // Check if selected retailer is also a brand (using is_brand flag from API)
       get isBrandRetailer() {
         if (!this.form.retailer) return false;
         const retailer = this.retailers.find(r => r.name === this.form.retailer);
-        return retailer && retailer.isBrand;
+        console.log('Checking isBrandRetailer:', this.form.retailer, 'found:', retailer, 'is_brand:', retailer?.is_brand);
+        return retailer && retailer.is_brand;
       },
 
       // Handle retailer selection change

@@ -3,10 +3,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 from app.database import get_db
 from app.models.retailer import Retailer
-from app.schemas.retailer import RetailerCreate, RetailerUpdate, RetailerResponse
+from app.schemas.retailer import RetailerCreate, RetailerUpdate, RetailerResponse, RetailerWithBrandStatus
 from app.schemas.common import PaginatedResponse
 from app.services.retailer_service import (
-    get_retailer, get_retailers, create_retailer, update_retailer, delete_retailer
+    get_retailer, get_retailers, get_retailers_with_brand_status,
+    create_retailer, update_retailer, delete_retailer
 )
 
 router = APIRouter(prefix="/api/retailers", tags=["retailers"])
@@ -18,16 +19,13 @@ async def list_retailers(
     limit: int = Query(20, le=100),
     db: AsyncSession = Depends(get_db)
 ):
-    retailers, total = await get_retailers(db, skip, limit)
-    
-    # Convert SQLAlchemy models to Pydantic schemas
-    retailer_responses = [RetailerResponse.model_validate(r) for r in retailers]
+    retailers, total = await get_retailers_with_brand_status(db, skip, limit)
     
     # Calculate number of pages
     pages = (total + limit - 1) // limit
     
     return PaginatedResponse(
-        items=retailer_responses,
+        items=retailers,
         total=total,
         page=skip // limit + 1,
         limit=limit,
