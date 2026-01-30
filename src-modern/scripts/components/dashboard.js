@@ -128,7 +128,8 @@ export class DashboardManager {
         chart.update('none'); // Update without animation
       } else if (key === 'spending') {
         chart.data.labels = this.data.spending.map(item => item.month);
-        chart.data.datasets[0].data = this.data.spending.map(item => item.amount);
+        chart.data.datasets[0].data = this.data.spending.map(item => item.totalSpending);
+        chart.data.datasets[1].data = this.data.spending.map(item => item.itemsCount);
         chart.update('none');
       } else if (key === 'retailers') {
         chart.data.labels = this.data.retailers.map(item => item.name);
@@ -163,7 +164,12 @@ export class DashboardManager {
       const response = await fetch(`${apiUrl}/analytics/spending`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
-      return data.spending_over_time || [];
+      // Transform API data to match chart format
+      return (data.spending_over_time || []).map(item => ({
+        month: item.month,
+        totalSpending: parseFloat(item.total_amount),
+        itemsCount: item.item_count
+      }));
     } catch (error) {
       console.error('Error fetching spending data:', error);
       return this.generateSpendingData(); // fallback to mock data
