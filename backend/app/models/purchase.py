@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DECIMAL, DateTime, ForeignKey, Enum
+from sqlalchemy import Column, Integer, String, DECIMAL, Date, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
@@ -22,14 +22,14 @@ class Purchase(Base):
     retailer_id = Column(String, ForeignKey("retailers.id"))
     brand_id = Column(String, ForeignKey("brands.id"))
     status = Column(Enum(PurchaseStatus), default=PurchaseStatus.RECEIVED)
-    purchase_date = Column(DateTime, nullable=False)
+    purchase_date = Column(Date, nullable=False)
     notes = Column(String, nullable=True)
     tax_deductible = Column(Integer, default=0)  # 0 = false, 1 = true
     model_number = Column(String(100), nullable=True)
     serial_number = Column(String(100), nullable=True)
     quantity = Column(Integer, default=1)
     link = Column(String(500), nullable=True)
-    return_deadline = Column(DateTime, nullable=True)
+    return_deadline = Column(Date, nullable=True)
     return_policy = Column(String(50), nullable=True)
     tags = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
