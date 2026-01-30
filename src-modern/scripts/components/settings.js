@@ -131,7 +131,7 @@ document.addEventListener('alpine:init', () => {
     async loadRetailers() {
       try {
         // Get API URL from global variable or fallback to default
-        const apiUrl = window.APP_CONFIG?.API_URL || 'http://localhost:8000/api';
+        const apiUrl = window.APP_CONFIG?.API_URL || 'http://192.168.68.55:8000/api';
 
         // Fetch retailers from the backend API
         const response = await fetch(`${apiUrl}/retailers`);
@@ -159,7 +159,7 @@ document.addEventListener('alpine:init', () => {
       if (this.newRetailerName.trim()) {
         try {
           // Get API URL from global variable or fallback to default
-          const apiUrl = window.APP_CONFIG?.API_URL || 'http://localhost:8000/api';
+          const apiUrl = window.APP_CONFIG?.API_URL || 'http://192.168.68.55:8000/api';
 
           // Add retailer to the backend API
           const response = await fetch(`${apiUrl}/retailers`, {
@@ -196,7 +196,7 @@ document.addEventListener('alpine:init', () => {
     async removeRetailer(id) {
       try {
         // Get API URL from global variable or fallback to default
-        const apiUrl = window.APP_CONFIG?.API_URL || 'http://localhost:8000/api';
+        const apiUrl = window.APP_CONFIG?.API_URL || 'http://192.168.68.55:8000/api';
 
         // Remove retailer from the backend API
         const response = await fetch(`${apiUrl}/retailers/${id}`, {

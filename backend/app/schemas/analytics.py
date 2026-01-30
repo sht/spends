@@ -55,3 +55,5 @@ class SummaryAnalytics(BaseModel):
     total_items: int
     active_warranties: int
     expiring_warranties: int
+    expired_warranties: int
+    tax_deductible_count: int

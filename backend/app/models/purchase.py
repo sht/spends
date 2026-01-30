@@ -24,6 +24,7 @@ class Purchase(Base):
     status = Column(Enum(PurchaseStatus), default=PurchaseStatus.RECEIVED)
     purchase_date = Column(DateTime, nullable=False)
     notes = Column(String, nullable=True)
+    tax_deductible = Column(Integer, default=0)  # 0 = false, 1 = true
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 

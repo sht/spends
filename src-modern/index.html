@@ -222,9 +222,9 @@
                 </div>
 
                 <!-- Stats Cards with Alpine.js -->
-                <div class="row g-2 g-lg-3 mb-4">
-                    <div class="col-lg-4" x-data="statsCounter(12426, 5)">
-                        <div class="card stats-card">
+                <div class="row g-2 g-lg-3 mb-4" id="kpi-cards">
+                    <div class="col-lg-4">
+                        <div class="card stats-card" data-kpi="total-value">
                             <div class="card-body">
                                 <div class="d-flex align-items-center">
                                     <div class="flex-shrink-0">
@@ -234,7 +234,7 @@
                                     </div>
                                     <div class="flex-grow-1 ms-3">
                                         <h6 class="mb-0 text-muted">Total Asset Value</h6>
-                                        <h3 class="mb-0">$12,464</h3>
+                                        <h3 class="mb-0 kpi-value">$0</h3>
                                     </div>
                                 </div>
                             </div>
@@ -242,7 +242,7 @@
                     </div>
 
                     <div class="col-lg-4">
-                        <div class="card stats-card">
+                        <div class="card stats-card" data-kpi="items-count">
                             <div class="card-body">
                                 <div class="d-flex align-items-center">
                                     <div class="flex-shrink-0">
@@ -252,7 +252,7 @@
                                     </div>
                                     <div class="flex-grow-1 ms-3">
                                         <h6 class="mb-0 text-muted">Items Count</h6>
-                                        <h3 class="mb-0">64</h3>
+                                        <h3 class="mb-0 kpi-value">0</h3>
                                     </div>
                                 </div>
                             </div>
@@ -260,7 +260,7 @@
                     </div>
 
                     <div class="col-lg-4">
-                        <div class="card stats-card">
+                        <div class="card stats-card" data-kpi="avg-price">
                             <div class="card-body">
                                 <div class="d-flex align-items-center">
                                     <div class="flex-shrink-0">
@@ -270,7 +270,7 @@
                                     </div>
                                     <div class="flex-grow-1 ms-3">
                                         <h6 class="mb-0 text-muted">Average Price</h6>
-                                        <h3 class="mb-0">$380</h3>
+                                        <h3 class="mb-0 kpi-value">$0</h3>
                                     </div>
                                 </div>
                             </div>
@@ -278,7 +278,7 @@
                     </div>
 
                     <div class="col-lg-4">
-                        <div class="card stats-card">
+                        <div class="card stats-card" data-kpi="active-warranties">
                             <div class="card-body">
                                 <div class="d-flex align-items-center">
                                     <div class="flex-shrink-0">
@@ -287,8 +287,8 @@
                                         </div>
                                     </div>
                                     <div class="flex-grow-1 ms-3">
-                                        <h6 class="mb-0 text-muted">Pending Warranties</h6>
-                                        <h3 class="mb-0">28</h3>
+                                        <h6 class="mb-0 text-muted">Active Warranties</h6>
+                                        <h3 class="mb-0 kpi-value">0</h3>
                                     </div>
                                 </div>
                             </div>
@@ -296,7 +296,7 @@
                     </div>
 
                     <div class="col-lg-4">
-                        <div class="card stats-card">
+                        <div class="card stats-card" data-kpi="tax-deductible">
                             <div class="card-body">
                                 <div class="d-flex align-items-center">
                                     <div class="flex-shrink-0">
@@ -306,7 +306,7 @@
                                     </div>
                                     <div class="flex-grow-1 ms-3">
                                         <h6 class="mb-0 text-muted">Tax Deductible</h6>
-                                        <h3 class="mb-0">17</h3>
+                                        <h3 class="mb-0 kpi-value">0</h3>
                                     </div>
                                 </div>
                             </div>
@@ -314,7 +314,7 @@
                     </div>
 
                     <div class="col-lg-4">
-                        <div class="card stats-card">
+                        <div class="card stats-card" data-kpi="expired-warranties">
                             <div class="card-body">
                                 <div class="d-flex align-items-center">
                                     <div class="flex-shrink-0">
@@ -324,7 +324,7 @@
                                     </div>
                                     <div class="flex-grow-1 ms-3">
                                         <h6 class="mb-0 text-muted">Expired Warranties</h6>
-                                        <h3 class="mb-0">16</h3>
+                                        <h3 class="mb-0 kpi-value">0</h3>
                                     </div>
                                 </div>
                             </div>

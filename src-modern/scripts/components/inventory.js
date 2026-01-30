@@ -71,7 +71,7 @@ document.addEventListener('alpine:init', () => {
         this.showLoadingState();
 
         // Get API URL from global variable or fallback to default
-        const apiUrl = window.APP_CONFIG?.API_URL || 'http://localhost:8000/api';
+        const apiUrl = window.APP_CONFIG?.API_URL || 'http://192.168.68.55:8000/api';
 
         // Fetch inventory data from the backend API
         const response = await fetch(`${apiUrl}/purchases`);
@@ -89,7 +89,7 @@ document.addEventListener('alpine:init', () => {
         }));
 
         // Hide loading state
-        this.hideLoadingState();
+        this.hideLoadingScreen();
       } catch (error) {
         console.error('Error loading inventory data:', error);
         this.showErrorState();

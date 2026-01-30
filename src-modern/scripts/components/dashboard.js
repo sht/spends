@@ -68,14 +68,18 @@ export class DashboardManager {
       this.showLoadingState();
 
       // Fetch all required data from the backend API
-      const [warrantyData, spendingData, retailersData, brandsData, topProductsData, recentOrdersData] = await Promise.all([
+      const [warrantyData, spendingData, retailersData, brandsData, topProductsData, recentOrdersData, summaryData] = await Promise.all([
         this.fetchWarrantyData(),
         this.fetchSpendingData(),
         this.fetchRetailersData(),
         this.fetchBrandsData(),
         this.fetchTopProductsData(),
-        this.fetchRecentOrdersData()
+        this.fetchRecentOrdersData(),
+        this.fetchSummaryData()
       ]);
+      
+      // Update KPI cards with summary data
+      this.updateKPICards(summaryData);
 
       // Update internal data
       this.data.warranty = warrantyData;
@@ -99,7 +103,7 @@ export class DashboardManager {
   async fetchWarrantyData() {
     try {
       // Get API URL from global variable or fallback to default
-      const apiUrl = window.APP_CONFIG?.API_URL || 'http://localhost:8000/api';
+      const apiUrl = window.APP_CONFIG?.API_URL || 'http://192.168.68.55:8000/api';
       const response = await fetch(`${apiUrl}/analytics/warranties/timeline`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
@@ -113,7 +117,7 @@ export class DashboardManager {
   async fetchSpendingData() {
     try {
       // Get API URL from global variable or fallback to default
-      const apiUrl = window.APP_CONFIG?.API_URL || 'http://localhost:8000/api';
+      const apiUrl = window.APP_CONFIG?.API_URL || 'http://192.168.68.55:8000/api';
       const response = await fetch(`${apiUrl}/analytics/spending`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
@@ -127,7 +131,7 @@ export class DashboardManager {
   async fetchRetailersData() {
     try {
       // Get API URL from global variable or fallback to default
-      const apiUrl = window.APP_CONFIG?.API_URL || 'http://localhost:8000/api';
+      const apiUrl = window.APP_CONFIG?.API_URL || 'http://192.168.68.55:8000/api';
       const response = await fetch(`${apiUrl}/analytics/retailers`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
@@ -141,7 +145,7 @@ export class DashboardManager {
   async fetchBrandsData() {
     try {
       // Get API URL from global variable or fallback to default
-      const apiUrl = window.APP_CONFIG?.API_URL || 'http://localhost:8000/api';
+      const apiUrl = window.APP_CONFIG?.API_URL || 'http://192.168.68.55:8000/api';
       const response = await fetch(`${apiUrl}/analytics/brands`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
@@ -155,7 +159,7 @@ export class DashboardManager {
   async fetchTopProductsData() {
     try {
       // Get API URL from global variable or fallback to default
-      const apiUrl = window.APP_CONFIG?.API_URL || 'http://localhost:8000/api';
+      const apiUrl = window.APP_CONFIG?.API_URL || 'http://192.168.68.55:8000/api';
       const response = await fetch(`${apiUrl}/analytics/top-products`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
@@ -169,13 +173,65 @@ export class DashboardManager {
   async fetchRecentOrdersData() {
     try {
       // Get API URL from global variable or fallback to default
-      const apiUrl = window.APP_CONFIG?.API_URL || 'http://localhost:8000/api';
+      const apiUrl = window.APP_CONFIG?.API_URL || 'http://192.168.68.55:8000/api';
       const response = await fetch(`${apiUrl}/analytics/recent-purchases?limit=10`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       return await response.json();
     } catch (error) {
       console.error('Error fetching recent orders data:', error);
       return this.generateRecentOrders(); // fallback to mock data
+    }
+  }
+
+  async fetchSummaryData() {
+    try {
+      const apiUrl = window.APP_CONFIG?.API_URL || 'http://192.168.68.55:8000/api';
+      const response = await fetch(`${apiUrl}/analytics/summary`);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching summary data:', error);
+      return null;
+    }
+  }
+
+  updateKPICards(summaryData) {
+    if (!summaryData) return;
+    
+    // Update Total Asset Value
+    const totalValueEl = document.querySelector('[data-kpi="total-value"] .kpi-value');
+    if (totalValueEl && summaryData.total_spent !== undefined) {
+      totalValueEl.textContent = '$' + parseFloat(summaryData.total_spent).toLocaleString();
+    }
+    
+    // Update Items Count
+    const itemsCountEl = document.querySelector('[data-kpi="items-count"] .kpi-value');
+    if (itemsCountEl && summaryData.total_items !== undefined) {
+      itemsCountEl.textContent = summaryData.total_items.toLocaleString();
+    }
+    
+    // Update Average Price
+    const avgPriceEl = document.querySelector('[data-kpi="avg-price"] .kpi-value');
+    if (avgPriceEl && summaryData.avg_price !== undefined) {
+      avgPriceEl.textContent = '$' + Math.round(parseFloat(summaryData.avg_price)).toLocaleString();
+    }
+    
+    // Update Active Warranties
+    const activeWarrantyEl = document.querySelector('[data-kpi="active-warranties"] .kpi-value');
+    if (activeWarrantyEl && summaryData.active_warranties !== undefined) {
+      activeWarrantyEl.textContent = summaryData.active_warranties.toLocaleString();
+    }
+    
+    // Update Tax Deductible
+    const taxDeductibleEl = document.querySelector('[data-kpi="tax-deductible"] .kpi-value');
+    if (taxDeductibleEl && summaryData.tax_deductible_count !== undefined) {
+      taxDeductibleEl.textContent = summaryData.tax_deductible_count.toLocaleString();
+    }
+    
+    // Update Expired Warranties
+    const expiredWarrantyEl = document.querySelector('[data-kpi="expired-warranties"] .kpi-value');
+    if (expiredWarrantyEl && summaryData.expired_warranties !== undefined) {
+      expiredWarrantyEl.textContent = summaryData.expired_warranties.toLocaleString();
     }
   }
 

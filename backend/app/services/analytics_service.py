@@ -237,12 +237,24 @@ async def get_spending_summary(db: AsyncSession) -> SummaryAnalytics:
     expiring_warranties_result = await db.execute(expiring_warranties_stmt)
     expiring_warranties = expiring_warranties_result.scalar() or 0
     
+    # Expired warranties
+    expired_warranties_stmt = select(func.count(Warranty.id)).where(Warranty.status == 'EXPIRED')
+    expired_warranties_result = await db.execute(expired_warranties_stmt)
+    expired_warranties = expired_warranties_result.scalar() or 0
+    
+    # Tax deductible items (tax_deductible is an Integer: 0 = false, 1 = true)
+    tax_deductible_stmt = select(func.count(Purchase.id)).where(Purchase.tax_deductible == 1)
+    tax_deductible_result = await db.execute(tax_deductible_stmt)
+    tax_deductible_count = tax_deductible_result.scalar() or 0
+    
     return SummaryAnalytics(
         total_spent=total_spent,
         avg_price=avg_price,
         total_items=total_items,
         active_warranties=active_warranties,
-        expiring_warranties=expiring_warranties
+        expiring_warranties=expiring_warranties,
+        expired_warranties=expired_warranties,
+        tax_deductible_count=tax_deductible_count
     )
 
 
