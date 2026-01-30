@@ -87,6 +87,42 @@ When you're ready to switch to PostgreSQL:
    alembic upgrade head
    ```
 
+## Cloud Deployment
+
+The application is designed for easy deployment to cloud platforms. Here are guides for popular platforms:
+
+### Deploy to Render
+
+1. Create a new Web Service on Render
+2. Connect to your GitHub repository
+3. Set the build command to:
+   ```bash
+   cd backend && pip install -r requirements.txt
+   ```
+4. Set the start command to:
+   ```bash
+   uvicorn app.main:app --host 0.0.0.0 --port $PORT
+   ```
+5. Add environment variables as needed (DATABASE_URL, etc.)
+
+### Deploy to Railway
+
+1. Create a new project on Railway
+2. Connect to your GitHub repository
+3. Add a new service and select your repository
+4. Set the deploy command to:
+   ```bash
+   cd backend && pip install -r requirements.txt && alembic upgrade head
+   ```
+5. Set the start command to:
+   ```bash
+   uvicorn app.main:app --host 0.0.0.0 --port $PORT
+   ```
+
+### Deploy to AWS, GCP, or Azure
+
+The application can be deployed to any cloud platform that supports Docker containers. Use the provided Dockerfile and docker-compose.yml as a starting point.
+
 ## API Documentation
 
 Auto-generated API documentation is available at `/docs` endpoint when the server is running.

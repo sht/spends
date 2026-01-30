@@ -478,11 +478,11 @@ export class DashboardManager {
                 {
                   label: 'Total Spending',
                   data: this.data.spending.map(item => item.totalSpending),
-                  borderColor: 'rgb(99, 102, 241)',
-                  backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                  borderColor: 'rgb(59, 130, 246)',
+                  backgroundColor: 'rgba(59, 130, 246, 0.1)',
                   fill: true,
                   tension: 0.4,
-                  pointBackgroundColor: 'rgb(99, 102, 241)',
+                  pointBackgroundColor: 'rgb(59, 130, 246)',
                   pointBorderColor: '#fff',
                   pointBorderWidth: 2,
                   pointRadius: 6,
@@ -492,11 +492,11 @@ export class DashboardManager {
                 {
                   label: 'Items Purchased',
                   data: this.data.spending.map(item => item.itemsCount),
-                  borderColor: 'rgb(16, 185, 129)',
-                  backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                  borderColor: 'rgb(20, 184, 166)',
+                  backgroundColor: 'rgba(20, 184, 166, 0.1)',
                   fill: true,
                   tension: 0.4,
-                  pointBackgroundColor: 'rgb(16, 185, 129)',
+                  pointBackgroundColor: 'rgb(20, 184, 166)',
                   pointBorderColor: '#fff',
                   pointBorderWidth: 2,
                   pointRadius: 6,
@@ -567,7 +567,7 @@ export class DashboardManager {
                   title: {
                     display: true,
                     text: 'Total Spending ($)',
-                    color: 'rgb(99, 102, 241)'
+                    color: 'rgb(59, 130, 246)'
                   }
                 },
                 y1: {
@@ -589,7 +589,7 @@ export class DashboardManager {
                   title: {
                     display: true,
                     text: 'Items Purchased',
-                    color: 'rgb(16, 185, 129)'
+                    color: 'rgb(20, 184, 166)'
                   }
                 }
               }
