@@ -64,6 +64,10 @@ export class DashboardManager {
 
   async loadDashboardData() {
     try {
+      // Show loading state on refresh button
+      const refreshBtn = document.querySelector('button[title="Refresh data"] i');
+      if (refreshBtn) refreshBtn.classList.add('icon-spin');
+      
       // Show loading state
       this.showLoadingState();
 
@@ -104,6 +108,10 @@ export class DashboardManager {
     } catch (error) {
       console.error('Error loading dashboard data:', error);
       this.showErrorState();
+    } finally {
+      // Remove spinning from refresh button (always run)
+      const refreshBtn = document.querySelector('button[title="Refresh data"] i');
+      if (refreshBtn) refreshBtn.classList.remove('icon-spin');
     }
   }
 
