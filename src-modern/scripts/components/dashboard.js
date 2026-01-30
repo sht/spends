@@ -211,7 +211,13 @@ export class DashboardManager {
       const response = await fetch(`${apiUrl}/analytics/top-products`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
-      return data.top_products || [];
+      // Transform API data to match table format
+      return (data.top_products || []).map((item, index) => ({
+        rank: index + 1,
+        name: item.product_name,
+        price: '$' + parseFloat(item.avg_price).toLocaleString(),
+        date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+      }));
     } catch (error) {
       console.error('Error fetching top products data:', error);
       return this.generateTopProducts(); // fallback to mock data
