@@ -230,7 +230,18 @@ export class DashboardManager {
       const apiUrl = window.APP_CONFIG?.API_URL || 'http://192.168.68.55:8000/api';
       const response = await fetch(`${apiUrl}/analytics/recent-purchases?limit=10`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      return await response.json();
+      const data = await response.json();
+      // Transform API data to match table format
+      return (data || []).map(item => ({
+        id: item.id.substring(0, 8) + '...',
+        customer: item.product_name,
+        amount: '$' + parseFloat(item.price).toLocaleString(),
+        status: {
+          class: item.status === 'RECEIVED' ? 'bg-success' : 'bg-warning',
+          text: item.status
+        },
+        date: new Date(item.purchase_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+      }));
     } catch (error) {
       console.error('Error fetching recent orders data:', error);
       return this.generateRecentOrders(); // fallback to mock data
@@ -711,6 +722,8 @@ export class DashboardManager {
                     display: false
                   },
                   ticks: {
+                    stepSize: 1,
+                    precision: 0,
                     callback: function(value) {
                       return value + ' items';
                     }
