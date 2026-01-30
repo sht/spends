@@ -373,12 +373,7 @@
                         </div>
                         <div class="col-md-6">
                             <label for="brand" class="form-label">Brand <span class="text-danger">*</span></label>
-                            <select class="form-select" id="brand" x-model="form.brand" :disabled="isBrandRetailer">
-                                <option value="">Select brand...</option>
-                                <template x-for="brand in brands" :key="brand.id">
-                                    <option :value="brand.name" x-text="brand.name"></option>
-                                </template>
-                            </select>
+                            <input type="text" class="form-control" id="brand" x-model="form.brand" :disabled="isBrandRetailer" placeholder="e.g., Apple">
                             <small class="text-muted" x-show="isBrandRetailer" x-text="`Brand auto-filled: ${form.retailer} is also a brand`"></small>
                         </div>
                     </div>
