@@ -257,13 +257,19 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label for="warrantyExpiry" class="form-label">Warranty Expiry Date</label>
-                            <input type="date" class="form-control" id="warrantyExpiry" x-model="form.warrantyExpiry">
-                            <small class="text-muted">Leave blank if not applicable</small>
+                            <input type="date" class="form-control" id="warrantyExpiry" x-model="form.warrantyExpiry" 
+                                   :disabled="!form.purchaseDate" 
+                                   :min="form.purchaseDate">
+                            <small class="text-muted" x-show="!form.purchaseDate">Select purchase date first</small>
+                            <small class="text-muted" x-show="form.purchaseDate">Must be on or after purchase date</small>
                         </div>
                         <div class="col-md-6">
                             <label for="returnDeadline" class="form-label">Return Deadline</label>
-                            <input type="date" class="form-control" id="returnDeadline" x-model="form.returnDeadline">
-                            <small class="text-muted">Leave blank if not applicable</small>
+                            <input type="date" class="form-control" id="returnDeadline" x-model="form.returnDeadline" 
+                                   :disabled="!form.purchaseDate" 
+                                   :min="form.purchaseDate">
+                            <small class="text-muted" x-show="!form.purchaseDate">Select purchase date first</small>
+                            <small class="text-muted" x-show="form.purchaseDate">Must be on or after purchase date</small>
                         </div>
                     </div>
 

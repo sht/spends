@@ -44,6 +44,7 @@ class PurchaseUpdate(BaseModel):
     status: Optional[PurchaseStatus] = None
     purchase_date: Optional[date] = None
     notes: Optional[str] = None
+    tax_deductible: Optional[int] = Field(None, ge=0, le=1)
     warranty_expiry: Optional[date] = None
     model_number: Optional[str] = Field(None, max_length=100)
     serial_number: Optional[str] = Field(None, max_length=100)

@@ -423,12 +423,19 @@ class AdminApp {
         this.resetForm();
         await this.loadRetailers();
         await this.loadBrands();
-        
+
         // Listen for edit-purchase event from inventory table
         window.addEventListener('edit-purchase', (e) => {
           console.log('Received edit-purchase event:', e.detail);
           if (e.detail && e.detail.item) {
             this.enterEditMode(e.detail.item);
+          }
+        });
+
+        // Watch for changes to purchase date to validate warranty/return dates
+        this.$watch('form.purchaseDate', (newDate) => {
+          if (newDate) {
+            this.validateDatesAfterPurchaseDateChange();
           }
         });
       },
@@ -449,7 +456,7 @@ class AdminApp {
         this.form.warrantyExpiry = item.warrantyExpiry || '';
         this.form.returnDeadline = item.returnDeadline || '';
         this.form.returnPolicy = item.returnPolicy || '';
-        this.form.taxDeductible = item.taxDeductible || false;
+        this.form.taxDeductible = this.ensureBoolean(item.taxDeductible);
         this.form.tags = item.tags || '';
         this.form.notes = item.notes || '';
         console.log('Entered edit mode with item:', item);
@@ -476,6 +483,36 @@ class AdminApp {
             this.form.brand = '';
           }
         }
+      },
+
+      validateDatesAfterPurchaseDateChange() {
+        // Check if warranty expiry date is before the new purchase date
+        if (this.form.warrantyExpiry && this.form.warrantyExpiry < this.form.purchaseDate) {
+          // Clear the warranty expiry date since it's invalid
+          this.form.warrantyExpiry = '';
+          window.AdminApp.notificationManager.warning('Warranty expiry date was cleared because it was before the new purchase date');
+        }
+
+        // Check if return deadline is before the new purchase date
+        if (this.form.returnDeadline && this.form.returnDeadline < this.form.purchaseDate) {
+          // Clear the return deadline since it's invalid
+          this.form.returnDeadline = '';
+          window.AdminApp.notificationManager.warning('Return deadline was cleared because it was before the new purchase date');
+        }
+      },
+
+      // Helper method to ensure boolean values are properly handled
+      ensureBoolean(value) {
+        if (typeof value === 'boolean') {
+          return value;
+        }
+        if (typeof value === 'number') {
+          return value !== 0;
+        }
+        if (typeof value === 'string') {
+          return value.toLowerCase() === 'true' || value === '1';
+        }
+        return Boolean(value);
       },
 
       async loadRetailers() {
@@ -549,6 +586,18 @@ class AdminApp {
 
         if (!this.form.price) {
           window.AdminApp.notificationManager.warning('Please enter a price');
+          return;
+        }
+
+        // Validate warranty date is not before purchase date
+        if (this.form.warrantyExpiry && this.form.warrantyExpiry < this.form.purchaseDate) {
+          window.AdminApp.notificationManager.warning('Warranty expiry date cannot be before purchase date');
+          return;
+        }
+
+        // Validate return deadline is not before purchase date
+        if (this.form.returnDeadline && this.form.returnDeadline < this.form.purchaseDate) {
+          window.AdminApp.notificationManager.warning('Return deadline cannot be before purchase date');
           return;
         }
 
@@ -629,7 +678,7 @@ class AdminApp {
             brand_id: brandId,
             status: 'RECEIVED',
             notes: purchase.notes,
-            tax_deductible: purchase.taxDeductible ? 1 : 0,
+            tax_deductible: this.ensureBoolean(purchase.taxDeductible) ? 1 : 0,
             warranty_expiry: purchase.warrantyExpiry || null,
             model_number: purchase.modelNumber || null,
             serial_number: purchase.serialNumber || null,
