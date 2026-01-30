@@ -8,9 +8,9 @@ This document outlines the development roadmap for the Spends Tracker backend. T
 
 - **Language:** Python 3.10+
 - **Framework:** FastAPI
-- **Database:** PostgreSQL
+- **Database:** SQLite (initial development) → PostgreSQL (production)
 - **ORM:** SQLAlchemy 2.0+
-- **Async Driver:** asyncpg
+- **Async Driver:** aiosqlite (SQLite) → asyncpg (PostgreSQL)
 - **Validation:** Pydantic v2
 - **Migrations:** Alembic
 - **Testing:** pytest
@@ -83,14 +83,14 @@ backend/
 - [ ] Initialize requirements.txt with dependencies
 - [ ] Create .env.example file
 - [ ] Set up FastAPI app with CORS middleware
-- [ ] Configure PostgreSQL connection (asyncpg)
-- [ ] Create docker-compose.yml for local PostgreSQL
+- [ ] Configure SQLite connection (aiosqlite) for local development
+- [ ] Create docker-compose.yml for local PostgreSQL (for later migration)
 - [ ] Set up project structure and __init__.py files
 - [ ] Configure development server (Uvicorn)
 
 **Deliverables:**
 - Running FastAPI server on http://localhost:8000
-- PostgreSQL database accessible via asyncpg
+- SQLite database accessible via SQLAlchemy
 - Auto-generated API docs at http://localhost:8000/docs
 
 ---
@@ -145,7 +145,7 @@ backend/
 - [ ] Seed default retailers and brands
 
 **Deliverables:**
-- PostgreSQL tables with proper schema
+- SQLite tables with proper schema (migratable to PostgreSQL)
 - Alembic migration system ready
 - Initial data (retailers, brands) loaded
 
@@ -428,10 +428,10 @@ source venv/bin/activate  # or `venv\Scripts\activate` on Windows
 # 2. Install dependencies
 pip install -r requirements.txt
 
-# 3. Start PostgreSQL with Docker
-docker-compose up -d
+# 3. For initial development with SQLite (no Docker needed)
+# Database file will be created automatically
 
-# 4. Run migrations
+# 4. Run migrations (uses SQLite initially)
 alembic upgrade head
 
 # 5. Seed initial data (optional)
@@ -439,6 +439,11 @@ python scripts/seed_data.py
 
 # 6. Start dev server
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# Later: To switch to PostgreSQL
+# docker-compose up -d  # Start PostgreSQL with Docker
+# Update .env to use PostgreSQL connection string
+# Run migrations again for PostgreSQL
 ```
 
 ### Database Migrations

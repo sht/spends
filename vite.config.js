@@ -44,10 +44,9 @@ export default defineConfig({
   },
 
   server: {
+    host: env.VITE_HOST || false,
     port: env.VITE_PORT ? parseInt(env.VITE_PORT) : 3000,
-    open: true,
-    // Enable CORS for development
-    cors: true,
+    open: env.VITE_OPEN_BROWSER === 'true',
   },
 
   preview: {
