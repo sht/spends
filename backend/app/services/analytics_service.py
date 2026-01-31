@@ -305,97 +305,112 @@ async def get_recent_purchases(db: AsyncSession, limit: int = 10) -> List:
     """
     Get recent purchases
     """
-    stmt = (
-        select(Purchase)
-        .order_by(Purchase.created_at.desc())
-        .limit(limit)
-    )
+    try:
+        stmt = (
+            select(Purchase)
+            .order_by(Purchase.created_at.desc())
+            .limit(limit)
+        )
 
-    result = await db.execute(stmt)
-    purchases = result.scalars().all()
+        result = await db.execute(stmt)
+        purchases = result.scalars().all()
 
-    # Ensure all date fields are properly handled for serialization
-    for purchase in purchases:
-        # Process purchase_date
-        if hasattr(purchase, 'purchase_date') and purchase.purchase_date:
-            try:
-                if isinstance(purchase.purchase_date, datetime):
-                    purchase.purchase_date = purchase.purchase_date.date()
-                elif isinstance(purchase.purchase_date, str):
-                    # Parse string date
-                    if ' ' in purchase.purchase_date:  # Contains time part
-                        parsed_date = datetime.fromisoformat(purchase.purchase_date.replace(' ', 'T'))
-                        purchase.purchase_date = parsed_date.date()
-                    else:
-                        purchase.purchase_date = date.fromisoformat(purchase.purchase_date)
-            except (ValueError, TypeError, AttributeError):
-                # If we can't process the date, leave it as is or set to None
-                purchase.purchase_date = None
+        # Ensure all date fields are properly handled for serialization
+        for purchase in purchases:
+            # Process purchase_date
+            if hasattr(purchase, 'purchase_date') and purchase.purchase_date:
+                try:
+                    if isinstance(purchase.purchase_date, datetime):
+                        purchase.purchase_date = purchase.purchase_date.date()
+                    elif isinstance(purchase.purchase_date, str):
+                        # Parse string date
+                        if ' ' in purchase.purchase_date:  # Contains time part
+                            parsed_date = datetime.fromisoformat(purchase.purchase_date.replace(' ', 'T'))
+                            purchase.purchase_date = parsed_date.date()
+                        else:
+                            purchase.purchase_date = date.fromisoformat(purchase.purchase_date)
+                except (ValueError, TypeError, AttributeError):
+                    # If we can't process the date, leave it as is or set to None
+                    # Don't raise an exception, just continue
+                    pass
 
-        # Process return_deadline
-        if hasattr(purchase, 'return_deadline') and purchase.return_deadline:
-            try:
-                if isinstance(purchase.return_deadline, datetime):
-                    purchase.return_deadline = purchase.return_deadline.date()
-                elif isinstance(purchase.return_deadline, str):
-                    # Parse string date
-                    if ' ' in purchase.return_deadline:  # Contains time part
-                        parsed_date = datetime.fromisoformat(purchase.return_deadline.replace(' ', 'T'))
-                        purchase.return_deadline = parsed_date.date()
-                    else:
-                        purchase.return_deadline = date.fromisoformat(purchase.return_deadline)
-            except (ValueError, TypeError, AttributeError):
-                # If we can't process the date, leave it as is or set to None
-                purchase.return_deadline = None
+            # Process return_deadline
+            if hasattr(purchase, 'return_deadline') and purchase.return_deadline:
+                try:
+                    if isinstance(purchase.return_deadline, datetime):
+                        purchase.return_deadline = purchase.return_deadline.date()
+                    elif isinstance(purchase.return_deadline, str):
+                        # Parse string date
+                        if ' ' in purchase.return_deadline:  # Contains time part
+                            parsed_date = datetime.fromisoformat(purchase.return_deadline.replace(' ', 'T'))
+                            purchase.return_deadline = parsed_date.date()
+                        else:
+                            purchase.return_deadline = date.fromisoformat(purchase.return_deadline)
+                except (ValueError, TypeError, AttributeError):
+                    # If we can't process the date, leave it as is or set to None
+                    # Don't raise an exception, just continue
+                    pass
 
-    return purchases
+        return purchases
+    except Exception as e:
+        # Log the error but return an empty list instead of raising an exception
+        # This prevents the frontend from receiving an error and falling back to mock data
+        print(f"Error in get_recent_purchases: {e}")
+        return []
 
 
 async def get_recent_warranties(db: AsyncSession, limit: int = 10) -> List:
     """
     Get recent warranties
     """
-    stmt = (
-        select(Warranty)
-        .order_by(Warranty.created_at.desc())
-        .limit(limit)
-    )
+    try:
+        stmt = (
+            select(Warranty)
+            .order_by(Warranty.created_at.desc())
+            .limit(limit)
+        )
 
-    result = await db.execute(stmt)
-    warranties = result.scalars().all()
+        result = await db.execute(stmt)
+        warranties = result.scalars().all()
 
-    # Ensure all date fields are properly handled for serialization
-    for warranty in warranties:
-        # Process warranty_start
-        if hasattr(warranty, 'warranty_start') and warranty.warranty_start:
-            try:
-                if isinstance(warranty.warranty_start, datetime):
-                    warranty.warranty_start = warranty.warranty_start.date()
-                elif isinstance(warranty.warranty_start, str):
-                    # Parse string date
-                    if ' ' in warranty.warranty_start:  # Contains time part
-                        parsed_date = datetime.fromisoformat(warranty.warranty_start.replace(' ', 'T'))
-                        warranty.warranty_start = parsed_date.date()
-                    else:
-                        warranty.warranty_start = date.fromisoformat(warranty.warranty_start)
-            except (ValueError, TypeError, AttributeError):
-                # If we can't process the date, leave it as is or set to None
-                warranty.warranty_start = None
+        # Ensure all date fields are properly handled for serialization
+        for warranty in warranties:
+            # Process warranty_start
+            if hasattr(warranty, 'warranty_start') and warranty.warranty_start:
+                try:
+                    if isinstance(warranty.warranty_start, datetime):
+                        warranty.warranty_start = warranty.warranty_start.date()
+                    elif isinstance(warranty.warranty_start, str):
+                        # Parse string date
+                        if ' ' in warranty.warranty_start:  # Contains time part
+                            parsed_date = datetime.fromisoformat(warranty.warranty_start.replace(' ', 'T'))
+                            warranty.warranty_start = parsed_date.date()
+                        else:
+                            warranty.warranty_start = date.fromisoformat(warranty.warranty_start)
+                except (ValueError, TypeError, AttributeError):
+                    # If we can't process the date, leave it as is or set to None
+                    # Don't raise an exception, just continue
+                    pass
 
-        # Process warranty_end
-        if hasattr(warranty, 'warranty_end') and warranty.warranty_end:
-            try:
-                if isinstance(warranty.warranty_end, datetime):
-                    warranty.warranty_end = warranty.warranty_end.date()
-                elif isinstance(warranty.warranty_end, str):
-                    # Parse string date
-                    if ' ' in warranty.warranty_end:  # Contains time part
-                        parsed_date = datetime.fromisoformat(warranty.warranty_end.replace(' ', 'T'))
-                        warranty.warranty_end = parsed_date.date()
-                    else:
-                        warranty.warranty_end = date.fromisoformat(warranty.warranty_end)
-            except (ValueError, TypeError, AttributeError):
-                # If we can't process the date, leave it as is or set to None
-                warranty.warranty_end = None
+            # Process warranty_end
+            if hasattr(warranty, 'warranty_end') and warranty.warranty_end:
+                try:
+                    if isinstance(warranty.warranty_end, datetime):
+                        warranty.warranty_end = warranty.warranty_end.date()
+                    elif isinstance(warranty.warranty_end, str):
+                        # Parse string date
+                        if ' ' in warranty.warranty_end:  # Contains time part
+                            parsed_date = datetime.fromisoformat(warranty.warranty_end.replace(' ', 'T'))
+                            warranty.warranty_end = parsed_date.date()
+                        else:
+                            warranty.warranty_end = date.fromisoformat(warranty.warranty_end)
+                except (ValueError, TypeError, AttributeError):
+                    # If we can't process the date, leave it as is or set to None
+                    # Don't raise an exception, just continue
+                    pass
 
-    return warranties
+        return warranties
+    except Exception as e:
+        # Log the error but return an empty list instead of raising an exception
+        print(f"Error in get_recent_warranties: {e}")
+        return []

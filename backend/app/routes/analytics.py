@@ -97,11 +97,68 @@ async def get_recent_purchases_analytics(
     limit: int = 10,
     db: AsyncSession = Depends(get_db)
 ):
-    from app.services.analytics_service import get_recent_purchases
-    from app.schemas.purchase import PurchaseResponse
-    recent = await get_recent_purchases(db, limit)
-    # Convert to Pydantic models for proper serialization
-    return [PurchaseResponse.model_validate(p) for p in recent]
+    from app.models.purchase import Purchase
+    from app.models.retailer import Retailer
+    from app.models.brand import Brand
+    from app.models.warranty import Warranty
+    from sqlalchemy import select
+    from sqlalchemy.orm import selectinload
+
+    # Query with proper relationship loading
+    stmt = (
+        select(Purchase)
+        .options(selectinload(Purchase.retailer))
+        .options(selectinload(Purchase.brand))
+        .options(selectinload(Purchase.warranty))
+        .order_by(Purchase.created_at.desc())
+        .limit(limit)
+    )
+
+    result = await db.execute(stmt)
+    purchases = result.scalars().all()
+
+    # Convert to dictionaries to avoid async relationship loading issues
+    result_list = []
+    for purchase in purchases:
+        purchase_dict = {
+            "id": purchase.id,
+            "product_name": purchase.product_name,
+            "price": float(purchase.price) if purchase.price else 0.0,
+            "currency_code": purchase.currency_code,
+            "status": purchase.status.value if purchase.status else None,
+            "purchase_date": purchase.purchase_date.isoformat() if purchase.purchase_date else None,
+            "notes": purchase.notes,
+            "tax_deductible": purchase.tax_deductible,
+            "model_number": purchase.model_number,
+            "serial_number": purchase.serial_number,
+            "quantity": purchase.quantity,
+            "link": purchase.link,
+            "return_deadline": purchase.return_deadline.isoformat() if purchase.return_deadline else None,
+            "return_policy": purchase.return_policy,
+            "tags": purchase.tags,
+            "created_at": purchase.created_at.isoformat() if purchase.created_at else None,
+            "updated_at": purchase.updated_at.isoformat() if purchase.updated_at else None,
+            "warranty_id": purchase.warranty.id if hasattr(purchase, 'warranty') and purchase.warranty else None,
+            "retailer": {
+                "id": purchase.retailer.id,
+                "name": purchase.retailer.name
+            } if hasattr(purchase, 'retailer') and purchase.retailer else None,
+            "brand": {
+                "id": purchase.brand.id,
+                "name": purchase.brand.name
+            } if hasattr(purchase, 'brand') and purchase.brand else None,
+            "warranty": {
+                "id": purchase.warranty.id if hasattr(purchase, 'warranty') and purchase.warranty else None,
+                "warranty_start": purchase.warranty.warranty_start.isoformat() if hasattr(purchase, 'warranty') and purchase.warranty and purchase.warranty.warranty_start else None,
+                "warranty_end": purchase.warranty.warranty_end.isoformat() if hasattr(purchase, 'warranty') and purchase.warranty and purchase.warranty.warranty_end else None,
+                "warranty_type": purchase.warranty.warranty_type if hasattr(purchase, 'warranty') and purchase.warranty else None,
+                "status": purchase.warranty.status.value if hasattr(purchase, 'warranty') and purchase.warranty and purchase.warranty.status else None,
+                "provider": purchase.warranty.provider if hasattr(purchase, 'warranty') and purchase.warranty else None,
+                "notes": purchase.warranty.notes if hasattr(purchase, 'warranty') and purchase.warranty else None
+            } if hasattr(purchase, 'warranty') and purchase.warranty else None
+        }
+        result_list.append(purchase_dict)
+    return result_list
 
 
 @router.get("/recent-warranties", response_model=List[dict])
