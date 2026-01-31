@@ -155,12 +155,12 @@ export function registerSettingsComponent() {
     async loadRetailers() {
       try {
         // Get API URL from global variable or fallback to default
-        const apiUrl = window.APP_CONFIG?.API_URL || 'http://192.168.68.55:8000/api';
+        const apiUrl = window.APP_CONFIG?.API_URL || '/api';
 
         // Fetch both retailers and brands from the backend API
         const [retailersResponse, brandsResponse] = await Promise.all([
-          fetch(`${apiUrl}/retailers`),
-          fetch(`${apiUrl}/brands?limit=100`)
+          fetch(`${apiUrl}/retailers/`),
+          fetch(`${apiUrl}/brands/?limit=100`)
         ]);
         
         if (!retailersResponse.ok) throw new Error(`HTTP error! status: ${retailersResponse.status}`);
@@ -176,7 +176,7 @@ export function registerSettingsComponent() {
         this.retailerList = retailersData.items.map(retailer => ({
           id: retailer.id,
           name: retailer.name,
-          isBrand: brandNames.has(retailer.name),
+          is_brand: brandNames.has(retailer.name),
           brandId: brandMap.get(retailer.name) || null
         }));
 
@@ -194,10 +194,10 @@ export function registerSettingsComponent() {
       if (this.newRetailerName.trim()) {
         try {
           // Get API URL from global variable or fallback to default
-          const apiUrl = window.APP_CONFIG?.API_URL || 'http://192.168.68.55:8000/api';
+          const apiUrl = window.APP_CONFIG?.API_URL || '/api';
 
           // Add retailer to the backend API
-          const response = await fetch(`${apiUrl}/retailers`, {
+          const response = await fetch(`${apiUrl}/retailers/`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -215,7 +215,7 @@ export function registerSettingsComponent() {
           this.retailerList.push({
             id: newRetailer.id,
             name: newRetailer.name,
-            isBrand: false
+            is_brand: false
           });
 
           this.settings.retailers = this.retailerList;
@@ -231,22 +231,22 @@ export function registerSettingsComponent() {
     async removeRetailer(id) {
       try {
         // Get API URL from global variable or fallback to default
-        const apiUrl = window.APP_CONFIG?.API_URL || 'http://192.168.68.55:8000/api';
+        const apiUrl = window.APP_CONFIG?.API_URL || '/api';
         
         // Find the retailer to check if it's also a brand
         const retailer = this.retailerList.find(r => r.id === id);
 
         // Remove retailer from the backend API
-        const response = await fetch(`${apiUrl}/retailers/${id}`, {
+        const response = await fetch(`${apiUrl}/retailers/${id}/`, {
           method: 'DELETE'
         });
 
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         
         // If retailer was also a brand, delete the brand too
-        if (retailer && retailer.isBrand && retailer.brandId) {
+        if (retailer && retailer.is_brand && retailer.brandId) {
           try {
-            await fetch(`${apiUrl}/brands/${retailer.brandId}`, {
+            await fetch(`${apiUrl}/brands/${retailer.brandId}/`, {
               method: 'DELETE'
             });
           } catch (brandError) {
@@ -270,13 +270,13 @@ export function registerSettingsComponent() {
     },
 
     async toggleRetailerBrand(retailer) {
-      const apiUrl = window.APP_CONFIG?.API_URL || 'http://192.168.68.55:8000/api';
-      const newIsBrand = !retailer.isBrand;
-      
+      const apiUrl = window.APP_CONFIG?.API_URL || '/api';
+      const newIsBrand = !retailer.is_brand;
+
       try {
         if (newIsBrand) {
           // Toggle turned ON - add to brands table
-          const response = await fetch(`${apiUrl}/brands`, {
+          const response = await fetch(`${apiUrl}/brands/`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -286,16 +286,16 @@ export function registerSettingsComponent() {
               url: ''
             })
           });
-          
+
           if (response.ok) {
             const brandData = await response.json();
-            retailer.isBrand = true;
+            retailer.is_brand = true;
             retailer.brandId = brandData.id; // Store brand ID for later deletion
             this.settings.retailers = this.retailerList;
             this.showNotification(`"${retailer.name}" added to Brands`, 'success');
           } else if (response.status === 409) {
             // Brand already exists (conflict)
-            retailer.isBrand = true;
+            retailer.is_brand = true;
             this.settings.retailers = this.retailerList;
             this.showNotification(`"${retailer.name}" is already in Brands`, 'info');
           } else {
@@ -304,18 +304,18 @@ export function registerSettingsComponent() {
         } else {
           // Toggle turned OFF - remove from brands table
           // First, we need to find the brand ID by name
-          const brandsResponse = await fetch(`${apiUrl}/brands?limit=100`);
+          const brandsResponse = await fetch(`${apiUrl}/brands/?limit=100`);
           if (brandsResponse.ok) {
             const brandsData = await brandsResponse.json();
             const brand = brandsData.items.find(b => b.name === retailer.name);
-            
+
             if (brand) {
-              const deleteResponse = await fetch(`${apiUrl}/brands/${brand.id}`, {
+              const deleteResponse = await fetch(`${apiUrl}/brands/${brand.id}/`, {
                 method: 'DELETE'
               });
-              
+
               if (deleteResponse.ok) {
-                retailer.isBrand = false;
+                retailer.is_brand = false;
                 delete retailer.brandId;
                 this.settings.retailers = this.retailerList;
                 this.showNotification(`"${retailer.name}" removed from Brands`, 'success');
@@ -324,7 +324,7 @@ export function registerSettingsComponent() {
               }
             } else {
               // Brand not found, just update local state
-              retailer.isBrand = false;
+              retailer.is_brand = false;
               delete retailer.brandId;
               this.settings.retailers = this.retailerList;
             }
@@ -334,7 +334,7 @@ export function registerSettingsComponent() {
         console.error('Error toggling brand status:', error);
         this.showNotification('Failed to update brand status', 'error');
         // Revert the checkbox state on error
-        retailer.isBrand = !newIsBrand;
+        retailer.is_brand = !newIsBrand;
         this.settings.retailers = this.retailerList;
       }
     },
