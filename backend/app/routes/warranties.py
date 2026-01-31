@@ -21,12 +21,15 @@ async def list_warranties(
     db: AsyncSession = Depends(get_db)
 ):
     warranties, total = await get_warranties(db, skip, limit, status, expiring_soon)
-    
+
+    # Convert SQLAlchemy models to Pydantic schemas
+    warranty_responses = [WarrantyResponse.model_validate(w) for w in warranties]
+
     # Calculate number of pages
     pages = (total + limit - 1) // limit
-    
+
     return PaginatedResponse(
-        items=warranties,
+        items=warranty_responses,
         total=total,
         page=skip // limit + 1,
         limit=limit,
@@ -75,4 +78,4 @@ async def get_expiring_warranties(
     # This would require additional logic to filter warranties expiring within 'days' days
     # For now, returning all warranties
     warranties, _ = await get_warranties(db, skip=0, limit=100)
-    return warranties
+    return [WarrantyResponse.model_validate(w) for w in warranties]
