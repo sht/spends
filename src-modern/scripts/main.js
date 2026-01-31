@@ -632,7 +632,7 @@ class AdminApp {
         if (retailer) return retailer.id;
         
         // Create new retailer
-        const response = await fetch(`${apiUrl}/retailers`, {
+        const response = await fetch(`${apiUrl}/retailers/`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: retailerName, url: '' })
@@ -649,7 +649,7 @@ class AdminApp {
         if (brand) return brand.id;
         
         // Create new brand
-        const response = await fetch(`${apiUrl}/brands`, {
+        const response = await fetch(`${apiUrl}/brands/`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: brandName, url: '' })
@@ -690,9 +690,9 @@ class AdminApp {
           };
 
           const isUpdate = this.isEditMode && this.editingItemId;
-          const url = isUpdate 
-            ? `${apiUrl}/purchases/${this.editingItemId}`
-            : `${apiUrl}/purchases`;
+          const url = isUpdate
+            ? `${apiUrl}/purchases/${this.editingItemId}/`
+            : `${apiUrl}/purchases/`;
           const method = isUpdate ? 'PUT' : 'POST';
 
           const response = await fetch(url, {

@@ -237,7 +237,7 @@ export function registerSettingsComponent() {
         const retailer = this.retailerList.find(r => r.id === id);
 
         // Remove retailer from the backend API
-        const response = await fetch(`${apiUrl}/retailers/${id}/`, {
+        const response = await fetch(`${apiUrl}/retailers/${id}`, {
           method: 'DELETE'
         });
 
@@ -246,7 +246,7 @@ export function registerSettingsComponent() {
         // If retailer was also a brand, delete the brand too
         if (retailer && retailer.is_brand && retailer.brandId) {
           try {
-            await fetch(`${apiUrl}/brands/${retailer.brandId}/`, {
+            await fetch(`${apiUrl}/brands/${retailer.brandId}`, {
               method: 'DELETE'
             });
           } catch (brandError) {
@@ -310,7 +310,7 @@ export function registerSettingsComponent() {
             const brand = brandsData.items.find(b => b.name === retailer.name);
 
             if (brand) {
-              const deleteResponse = await fetch(`${apiUrl}/brands/${brand.id}/`, {
+              const deleteResponse = await fetch(`${apiUrl}/brands/${brand.id}`, {
                 method: 'DELETE'
               });
 

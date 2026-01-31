@@ -52,6 +52,8 @@ export default defineConfig({
       '/api': {
         target: env.VITE_API_URL || 'http://localhost:8000',
         changeOrigin: true,
+        ws: true,
+        rewrite: (path) => path,
       },
     },
   },
