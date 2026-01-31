@@ -13,7 +13,7 @@ class PurchaseStatus(str, Enum):
 
 class PurchaseBase(BaseModel):
     product_name: str = Field(..., min_length=1, max_length=255)
-    price: Decimal = Field(..., gt=0, max_digits=10, decimal_places=2)
+    price: Decimal = Field(..., gt=0)
     currency_code: Optional[str] = Field(default="USD", max_length=3)
     retailer_id: Optional[str] = None
     brand_id: Optional[str] = None
@@ -37,7 +37,7 @@ class PurchaseCreate(PurchaseBase):
 
 class PurchaseUpdate(BaseModel):
     product_name: Optional[str] = Field(None, min_length=1, max_length=255)
-    price: Optional[Decimal] = Field(None, gt=0, max_digits=10, decimal_places=2)
+    price: Optional[Decimal] = Field(None, gt=0)
     currency_code: Optional[str] = Field(None, max_length=3)
     retailer_id: Optional[str] = None
     brand_id: Optional[str] = None

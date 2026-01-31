@@ -1,6 +1,6 @@
 """change purchase_date and return_deadline from datetime to date
 
-Revision ID: 47ff2a67-10f
+Revision ID: 47ff2a6710f
 Revises: 3468abcae249
 Create Date: 2026-01-30 20:00:08
 
@@ -9,7 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-revision = '47ff2a67-10f'
+revision = '47ff2a6710f'
 down_revision = '3468abcae249'
 branch_labels = None
 depends_on = None

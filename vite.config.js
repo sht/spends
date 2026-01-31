@@ -53,11 +53,6 @@ export default defineConfig({
         target: env.VITE_API_URL || 'http://localhost:8000',
         changeOrigin: true,
       },
-      // Also proxy the root and other pages to FastAPI for template rendering
-      '^/(?!scripts/|styles/|assets/|public-assets/|@fs/|@vite/|node_modules/|src/).*': {
-        target: env.VITE_API_URL || 'http://localhost:8000',
-        changeOrigin: true,
-      },
     },
   },
 
