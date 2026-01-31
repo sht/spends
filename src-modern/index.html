@@ -578,7 +578,7 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="retailer" class="form-label">Retailer <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="retailer" x-model="form.retailer" list="retailer-list" placeholder="e.g., Amazon">
+                                <input type="text" class="form-control" id="retailer" x-model="form.retailer" @change="onRetailerChange()" list="retailer-list" placeholder="e.g., Amazon">
                                 <datalist id="retailer-list">
                                     <template x-for="retailer in retailers" :key="retailer.id">
                                         <option :value="retailer.name" x-text="retailer.name"></option>
@@ -587,12 +587,13 @@
                             </div>
                             <div class="col-md-6">
                                 <label for="brand" class="form-label">Brand <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="brand" x-model="form.brand" list="brand-list" placeholder="e.g., Apple">
+                                <input type="text" class="form-control" id="brand" x-model="form.brand" :disabled="isBrandRetailer" list="brand-list" placeholder="e.g., Apple" :title="isBrandRetailer ? 'Brand is auto-filled from retailer' : ''">
                                 <datalist id="brand-list">
                                     <template x-for="brand in brands" :key="brand.id">
                                         <option :value="brand.name" x-text="brand.name"></option>
                                     </template>
                                 </datalist>
+                                <small x-show="isBrandRetailer" class="text-info">Brand is auto-filled from retailer</small>
                             </div>
                         </div>
 

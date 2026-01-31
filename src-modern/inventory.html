@@ -407,18 +407,22 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="retailer" class="form-label">Retailer <span class="text-danger">*</span></label>
-                                <select class="form-select" id="retailer" x-model="form.retailer">
-                                    <option value="">Select retailer...</option>
-                                    <option>Amazon</option>
-                                    <option>eBay</option>
-                                    <option>Walmart</option>
-                                    <option>Target</option>
-                                    <option>Best Buy</option>
-                                </select>
+                                <input type="text" class="form-control" id="retailer" x-model="form.retailer" @change="onRetailerChange()" list="retailer-list-inv" placeholder="e.g., Amazon">
+                                <datalist id="retailer-list-inv">
+                                    <template x-for="retailer in retailers" :key="retailer.id">
+                                        <option :value="retailer.name" x-text="retailer.name"></option>
+                                    </template>
+                                </datalist>
                             </div>
                             <div class="col-md-6">
                                 <label for="brand" class="form-label">Brand <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="brand" x-model="form.brand" placeholder="e.g., Apple">
+                                <input type="text" class="form-control" id="brand" x-model="form.brand" :disabled="isBrandRetailer" list="brand-list-inv" placeholder="e.g., Apple" :title="isBrandRetailer ? 'Brand is auto-filled from retailer' : ''">
+                                <datalist id="brand-list-inv">
+                                    <template x-for="brand in brands" :key="brand.id">
+                                        <option :value="brand.name" x-text="brand.name"></option>
+                                    </template>
+                                </datalist>
+                                <small x-show="isBrandRetailer" class="text-info">Brand is auto-filled from retailer</small>
                             </div>
                         </div>
 
