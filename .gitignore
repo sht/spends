@@ -45,9 +45,22 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.pyc
 .Python
 env/
 venv/
+# Build artifacts
+dist/
+build/
+# More Python cache patterns
+*.pyo
+*~
+# Migration cache files
+backend/migrations/versions/__pycache__/
+# Backup files
+*.backup
+*.bak
+*~
 ENV/
 build/
 develop-eggs/

@@ -62,14 +62,14 @@ async def get_purchases(
 async def create_purchase(db: AsyncSession, purchase: PurchaseCreate) -> Purchase:
     # Extract warranty_expiry if provided
     warranty_expiry = purchase.warranty_expiry
-    
+
     # Create purchase without warranty_expiry (it's not a Purchase column)
     purchase_data = purchase.model_dump(exclude={'warranty_expiry'})
     db_purchase = Purchase(**purchase_data)
     db.add(db_purchase)
     await db.commit()
     await db.refresh(db_purchase)
-    
+
     # Create warranty if warranty_expiry is provided
     if warranty_expiry:
         from app.models.warranty import Warranty, WarrantyStatus
@@ -85,8 +85,16 @@ async def create_purchase(db: AsyncSession, purchase: PurchaseCreate) -> Purchas
         db.add(db_warranty)
         await db.commit()
         await db.refresh(db_warranty)
-    
-    return db_purchase
+
+    # Return the purchase with relationships loaded to avoid lazy loading issues
+    result = await db.execute(
+        select(Purchase)
+        .options(selectinload(Purchase.retailer))
+        .options(selectinload(Purchase.brand))
+        .options(selectinload(Purchase.warranty))
+        .filter(Purchase.id == db_purchase.id)
+    )
+    return result.scalar_one_or_none()
 
 
 async def update_purchase(db: AsyncSession, purchase_id: str, purchase_update: PurchaseUpdate) -> Optional[Purchase]:

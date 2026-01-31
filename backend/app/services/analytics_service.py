@@ -77,7 +77,31 @@ async def get_warranty_timeline(db: AsyncSession, months: int = None) -> List[Wa
     monthly_data: Dict[str, Dict[str, int]] = {}
 
     for warranty in warranties:
-        month_key = warranty.warranty_end.strftime('%Y-%m')
+        # Handle potential null values for warranty_end
+        if not warranty.warranty_end:
+            continue
+
+        # Ensure warranty_end is a date object, not datetime or other format
+        try:
+            if isinstance(warranty.warranty_end, datetime):
+                warranty_end_date = warranty.warranty_end.date()
+            elif isinstance(warranty.warranty_end, date):
+                warranty_end_date = warranty.warranty_end
+            else:
+                # If it's a string or other format, try to parse it
+                if isinstance(warranty.warranty_end, str):
+                    # Parse the string date
+                    if ' ' in warranty.warranty_end:  # Contains time part
+                        parsed_date = datetime.fromisoformat(warranty.warranty_end.replace(' ', 'T'))
+                        warranty_end_date = parsed_date.date()
+                    else:
+                        warranty_end_date = date.fromisoformat(warranty.warranty_end)
+                else:
+                    continue  # Skip if we can't process the date
+        except (ValueError, TypeError, AttributeError):
+            continue  # Skip if we can't process the date
+
+        month_key = warranty_end_date.strftime('%Y-%m')
         if month_key not in monthly_data:
             monthly_data[month_key] = {'active': 0, 'expired': 0, 'expiring_soon': 0}
 
@@ -87,12 +111,12 @@ async def get_warranty_timeline(db: AsyncSession, months: int = None) -> List[Wa
         elif warranty.status.value == 'ACTIVE':
             monthly_data[month_key]['active'] += 1
             # Check if it's expiring soon (within 30 days)
-            if (warranty.warranty_end - today).days <= 30:
+            if (warranty_end_date - today).days <= 30:
                 monthly_data[month_key]['expiring_soon'] += 1
         elif warranty.status.value == 'VOIDED':
             # Voided warranties are neither active nor expired in the traditional sense
             pass
-    
+
     # Convert to WarrantyTimelineItem objects with formatted month names
     timeline_items = []
     for month, counts in monthly_data.items():
@@ -102,17 +126,21 @@ async def get_warranty_timeline(db: AsyncSession, months: int = None) -> List[Wa
             formatted_month = month_date.strftime('%b %Y')  # e.g., "Jun 2024"
         except (ValueError, TypeError):
             formatted_month = month  # Fallback to original if parsing fails
-        
+
         timeline_items.append(WarrantyTimelineItem(
             month=formatted_month,
             active=counts['active'],
             expired=counts['expired'],
             expiring_soon=counts['expiring_soon']
         ))
-    
+
     # Sort by month (convert back to sortable format for sorting)
-    timeline_items.sort(key=lambda x: datetime.strptime(x.month, '%b %Y') if x.month else datetime.min)
-    
+    try:
+        timeline_items.sort(key=lambda x: datetime.strptime(x.month, '%b %Y') if x.month else datetime.min)
+    except ValueError:
+        # If month format is unexpected, sort as strings
+        timeline_items.sort(key=lambda x: x.month)
+
     return timeline_items
 
 
@@ -282,10 +310,44 @@ async def get_recent_purchases(db: AsyncSession, limit: int = 10) -> List:
         .order_by(Purchase.created_at.desc())
         .limit(limit)
     )
-    
+
     result = await db.execute(stmt)
     purchases = result.scalars().all()
-    
+
+    # Ensure all date fields are properly handled for serialization
+    for purchase in purchases:
+        # Process purchase_date
+        if hasattr(purchase, 'purchase_date') and purchase.purchase_date:
+            try:
+                if isinstance(purchase.purchase_date, datetime):
+                    purchase.purchase_date = purchase.purchase_date.date()
+                elif isinstance(purchase.purchase_date, str):
+                    # Parse string date
+                    if ' ' in purchase.purchase_date:  # Contains time part
+                        parsed_date = datetime.fromisoformat(purchase.purchase_date.replace(' ', 'T'))
+                        purchase.purchase_date = parsed_date.date()
+                    else:
+                        purchase.purchase_date = date.fromisoformat(purchase.purchase_date)
+            except (ValueError, TypeError, AttributeError):
+                # If we can't process the date, leave it as is or set to None
+                purchase.purchase_date = None
+
+        # Process return_deadline
+        if hasattr(purchase, 'return_deadline') and purchase.return_deadline:
+            try:
+                if isinstance(purchase.return_deadline, datetime):
+                    purchase.return_deadline = purchase.return_deadline.date()
+                elif isinstance(purchase.return_deadline, str):
+                    # Parse string date
+                    if ' ' in purchase.return_deadline:  # Contains time part
+                        parsed_date = datetime.fromisoformat(purchase.return_deadline.replace(' ', 'T'))
+                        purchase.return_deadline = parsed_date.date()
+                    else:
+                        purchase.return_deadline = date.fromisoformat(purchase.return_deadline)
+            except (ValueError, TypeError, AttributeError):
+                # If we can't process the date, leave it as is or set to None
+                purchase.return_deadline = None
+
     return purchases
 
 
@@ -298,8 +360,42 @@ async def get_recent_warranties(db: AsyncSession, limit: int = 10) -> List:
         .order_by(Warranty.created_at.desc())
         .limit(limit)
     )
-    
+
     result = await db.execute(stmt)
     warranties = result.scalars().all()
-    
+
+    # Ensure all date fields are properly handled for serialization
+    for warranty in warranties:
+        # Process warranty_start
+        if hasattr(warranty, 'warranty_start') and warranty.warranty_start:
+            try:
+                if isinstance(warranty.warranty_start, datetime):
+                    warranty.warranty_start = warranty.warranty_start.date()
+                elif isinstance(warranty.warranty_start, str):
+                    # Parse string date
+                    if ' ' in warranty.warranty_start:  # Contains time part
+                        parsed_date = datetime.fromisoformat(warranty.warranty_start.replace(' ', 'T'))
+                        warranty.warranty_start = parsed_date.date()
+                    else:
+                        warranty.warranty_start = date.fromisoformat(warranty.warranty_start)
+            except (ValueError, TypeError, AttributeError):
+                # If we can't process the date, leave it as is or set to None
+                warranty.warranty_start = None
+
+        # Process warranty_end
+        if hasattr(warranty, 'warranty_end') and warranty.warranty_end:
+            try:
+                if isinstance(warranty.warranty_end, datetime):
+                    warranty.warranty_end = warranty.warranty_end.date()
+                elif isinstance(warranty.warranty_end, str):
+                    # Parse string date
+                    if ' ' in warranty.warranty_end:  # Contains time part
+                        parsed_date = datetime.fromisoformat(warranty.warranty_end.replace(' ', 'T'))
+                        warranty.warranty_end = parsed_date.date()
+                    else:
+                        warranty.warranty_end = date.fromisoformat(warranty.warranty_end)
+            except (ValueError, TypeError, AttributeError):
+                # If we can't process the date, leave it as is or set to None
+                warranty.warranty_end = None
+
     return warranties
