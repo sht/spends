@@ -37,10 +37,10 @@ async function processTemplate(templateFile, pageData) {
     variables.content = cleanContent;
 
     // Render the template
-    const html = await ejs.render(layout, variables, {
+    const html = ejs.render(layout, variables, {
       filename: layoutPath,
-      async: true,
       rmWhitespace: false,
+      views: [COMPONENTS_DIR],
     });
 
     // Write to HTML file
