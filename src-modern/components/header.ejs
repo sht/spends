@@ -1,0 +1,74 @@
+<!-- Header -->
+<header class="admin-header">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+        <div class="container-fluid">
+            <!-- Logo/Brand -->
+            <a class="navbar-brand d-flex align-items-center" href="./index.html">
+                <img src="/assets/images/logo.svg" alt="Logo" height="32" class="d-inline-block align-text-top me-2">
+                <h1 class="h4 mb-0 fw-bold text-primary">Spends</h1>
+            </a>
+
+            <!-- Sidebar Toggle -->
+            <button class="hamburger-menu" type="button" data-sidebar-toggle aria-label="Toggle sidebar">
+                <i class="bi bi-list"></i>
+            </button>
+
+            <!-- Search Bar with Alpine.js -->
+            <div class="search-container flex-grow-1 mx-4" x-data="searchComponent">
+                <div class="position-relative">
+                    <input type="search"
+                           class="form-control"
+                           placeholder="Search... (Ctrl+K)"
+                           x-model="query"
+                           @input="search()"
+                           data-search-input
+                           aria-label="Search">
+                    <i class="bi bi-search position-absolute top-50 end-0 translate-middle-y me-3"></i>
+
+                    <!-- Search Results Dropdown -->
+                    <div x-show="results.length > 0"
+                         x-transition:enter="transition ease-out duration-100"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100"
+                         class="position-absolute top-100 start-0 w-100 bg-white border rounded-2 shadow-lg mt-1 z-3">
+                        <template x-for="result in results" :key="result.title">
+                            <a :href="result.url" class="d-block px-3 py-2 text-decoration-none text-dark border-bottom">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-file-text me-2 text-muted"></i>
+                                    <span x-text="result.title"></span>
+                                    <small class="ms-auto text-muted" x-text="result.type"></small>
+                                </div>
+                            </a>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side Icons -->
+            <div class="navbar-nav flex-row">
+                <!-- Theme Toggle with Alpine.js -->
+                <div x-data="themeSwitch">
+                    <button class="btn btn-outline-secondary me-2"
+                            type="button"
+                            @click="toggle()"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="bottom"
+                            title="Toggle theme">
+                        <i class="bi bi-sun-fill" x-show="currentTheme === 'light'"></i>
+                        <i class="bi bi-moon-fill" x-show="currentTheme === 'dark'"></i>
+                    </button>
+                </div>
+
+                <!-- Fullscreen Toggle (hidden on phones) -->
+                <button class="btn btn-outline-secondary me-2 d-none d-md-inline-block"
+                        type="button"
+                        data-fullscreen-toggle
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="bottom"
+                        title="Toggle fullscreen">
+                    <i class="bi bi-arrows-fullscreen icon-hover"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+</header>

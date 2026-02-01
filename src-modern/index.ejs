@@ -1,0 +1,384 @@
+<% const title = 'Dashboard'; %>
+<% const page = 'dashboard'; %>
+
+<!-- Page Header -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+    <div>
+        <h1 class="h3 mb-0">Dashboard</h1>
+        <p class="text-muted mb-0">Track your purchase, manage warranties, and analyze spendings.</p>
+    </div>
+    <div class="d-flex gap-2 flex-shrink-0">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newItemModal">
+            <i class="bi bi-plus-lg me-2"></i>
+            <span class="d-none d-sm-inline">Add New Purchase</span>
+        </button>
+        <button type="button" class="btn btn-outline-secondary"
+                data-bs-toggle="tooltip"
+                title="Refresh data"
+                onclick="window.dashboardManager && window.dashboardManager.loadDashboardData()">
+            <i class="bi bi-arrow-clockwise icon-hover"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-2 g-lg-3 mb-4" id="kpi-cards">
+    <div class="col-lg-4">
+        <div class="card stats-card" data-kpi="total-value">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="stats-icon bg-primary bg-opacity-10 text-primary">
+                            <i class="bi bi-wallet2"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-0 text-muted">Total Asset Value</h6>
+                        <h3 class="mb-0 kpi-value">$0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card stats-card" data-kpi="items-count">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="stats-icon bg-success bg-opacity-10 text-success">
+                            <i class="bi bi-box-seam"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-0 text-muted">Items Count</h6>
+                        <h3 class="mb-0 kpi-value">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card stats-card" data-kpi="avg-price">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="stats-icon bg-warning bg-opacity-10 text-warning">
+                            <i class="bi bi-tag"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-0 text-muted">Average Price</h6>
+                        <h3 class="mb-0 kpi-value">$0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card stats-card" data-kpi="active-warranties">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="stats-icon bg-info bg-opacity-10 text-info">
+                            <i class="bi bi-hourglass-split"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-0 text-muted">Active Warranties</h6>
+                        <h3 class="mb-0 kpi-value">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card stats-card" data-kpi="tax-deductible">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="stats-icon bg-info bg-opacity-10 text-info">
+                            <i class="bi bi-bank"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-0 text-muted">Tax Deductible</h6>
+                        <h3 class="mb-0 kpi-value">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card stats-card" data-kpi="expired-warranties">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="stats-icon bg-info bg-opacity-10 text-danger">
+                            <i class="bi bi-calendar-x"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-0 text-muted">Expired Warranties</h6>
+                        <h3 class="mb-0 kpi-value">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart Section -->
+
+<!-- Warranty Timeline - Full Width -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Warranty Timeline</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="warrantyChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Retailers and Brands - Side by Side -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Retailers</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="orderStatusChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Brands</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="orderStatusChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Spendings over time - Full Width -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Spendings over time</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="spendingChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Widgets Row -->
+<div class="row g-4 mb-4">
+    <!-- Top 10 Products -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Top 10 Products</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Item</th>
+                                <th>Price</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="top-products-table">
+                            <!-- Top 10 products will be injected here by dashboard.js -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Recent Orders -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Recent 10 items</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Item</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-orders-table">
+                            <!-- Orders will be injected here by dashboard.js -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Purchase Modal -->
+<div class="modal fade" id="newItemModal" tabindex="-1" aria-labelledby="newItemModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content" x-data="addPurchaseForm()">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title" id="newItemModalLabel">
+                    <i :class="isEditMode ? 'bi bi-pencil-circle' : 'bi bi-plus-circle'" class="text-primary me-2"></i>
+                    <span x-text="isEditMode ? 'Edit Purchase' : 'Add Purchase'"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Product Details Section -->
+                <div class="mb-4">
+                    <h6 class="text-muted text-uppercase small fw-semibold mb-3">Product Details</h6>
+
+                    <div class="mb-3">
+                        <label for="productName" class="form-label">Product Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="productName" x-model="form.productName" placeholder="e.g., iPhone 15 Pro Max">
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="retailer" class="form-label">Retailer <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="retailer" x-model="form.retailer" @change="onRetailerChange()" list="retailer-list" placeholder="e.g., Amazon">
+                            <datalist id="retailer-list">
+                                <template x-for="retailer in retailers" :key="retailer.id">
+                                    <option :value="retailer.name" x-text="retailer.name"></option>
+                                </template>
+                            </datalist>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="brand" class="form-label">Brand <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="brand" x-model="form.brand" :disabled="isBrandRetailer" list="brand-list" placeholder="e.g., Apple" :title="isBrandRetailer ? 'Brand is auto-filled from retailer' : ''">
+                            <datalist id="brand-list">
+                                <template x-for="brand in brands" :key="brand.id">
+                                    <option :value="brand.name" x-text="brand.name"></option>
+                                </template>
+                            </datalist>
+                            <small x-show="isBrandRetailer" class="text-info">Brand is auto-filled from retailer</small>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-0">
+                        <div class="col-md-6">
+                            <label for="modelNumber" class="form-label">Model Number</label>
+                            <input type="text" class="form-control" id="modelNumber" x-model="form.modelNumber" placeholder="e.g., A2847">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="serialNumber" class="form-label">Serial Number</label>
+                            <input type="text" class="form-control" id="serialNumber" x-model="form.serialNumber" placeholder="Enter serial number">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Purchase Details Section -->
+                <div class="mb-4">
+                    <h6 class="text-muted text-uppercase small fw-semibold mb-3">Purchase Details</h6>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="purchaseDate" class="form-label">Purchase Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="purchaseDate" x-model="form.purchaseDate">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="price" class="form-label">Price <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="price" x-model="form.price" placeholder="0.00" step="0.01">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-0">
+                        <div class="col-md-6">
+                            <label for="quantity" class="form-label">Quantity</label>
+                            <input type="number" class="form-control" id="quantity" x-model="form.quantity" placeholder="1" min="1">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="link" class="form-label">Product Link</label>
+                            <input type="url" class="form-control" id="link" x-model="form.link" placeholder="https://example.com/product">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Warranty & Returns Section -->
+                <div class="mb-4">
+                    <h6 class="text-muted text-uppercase small fw-semibold mb-3">Warranty & Returns</h6>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="warrantyExpiry" class="form-label">Warranty Expiry Date</label>
+                            <input type="date" class="form-control" id="warrantyExpiry" x-model="form.warrantyExpiry">
+                            <small class="text-muted">Leave blank if not applicable</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="returnDeadline" class="form-label">Return Deadline</label>
+                            <input type="date" class="form-control" id="returnDeadline" x-model="form.returnDeadline">
+                            <small class="text-muted">Leave blank if not applicable</small>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <label for="returnPolicy" class="form-label">Return Policy</label>
+                        <textarea class="form-control" id="returnPolicy" x-model="form.returnPolicy" rows="2" placeholder="e.g., 30-day money back guarantee"></textarea>
+                    </div>
+                </div>
+
+                <!-- Tax & Tags Section -->
+                <div class="mb-4">
+                    <h6 class="text-muted text-uppercase small fw-semibold mb-3">Additional Info</h6>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="taxDeductible" x-model="form.taxDeductible">
+                        <label class="form-check-label" for="taxDeductible">
+                            Tax Deductible
+                        </label>
+                    </div>
+
+                    <div>
+                        <label for="tags" class="form-label">Tags</label>
+                        <input type="text" class="form-control" id="tags" x-model="form.tags" placeholder="e.g., electronics, work, home">
+                    </div>
+                </div>
+
+                <!-- Notes Section -->
+                <div class="mb-4">
+                    <h6 class="text-muted text-uppercase small fw-semibold mb-3">Notes</h6>
+                    <textarea class="form-control" x-model="form.notes" rows="3" placeholder="Add any additional notes..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" @click="savePurchase()">
+                    <i class="bi bi-check-lg me-1"></i> <span x-text="isEditMode ? 'Update Purchase' : 'Save Purchase'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

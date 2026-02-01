@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <%- include('./meta.ejs', { title }) %>
+</head>
+
+<body data-page="<%= page %>" class="admin-layout">
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-spinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Wrapper -->
+    <div class="admin-wrapper" id="admin-wrapper">
+        <%- include('./header.ejs') %>
+        <%- include('./sidebar.ejs', { page }) %>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <div class="container-fluid p-4 p-lg-5">
+                <%- content %>
+            </div>
+        </main>
+
+        <%- include('./footer.ejs') %>
+    </div>
+
+    <!-- Toast Container -->
+    <div aria-live="polite" aria-atomic="true" class="position-fixed top-0 end-0 p-3" style="z-index: 9999; margin-top: 70px;">
+        <div id="toast-container"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="/scripts/main.js"></script>
+</body>
+</html>
