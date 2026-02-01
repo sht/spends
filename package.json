@@ -24,6 +24,7 @@
   ],
   "scripts": {
     "prebuild": "node scripts/build-ejs.js",
+    "predev": "node scripts/build-ejs.js",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",

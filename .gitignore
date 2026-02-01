@@ -96,3 +96,6 @@ TODO.md
 
 # Build output - regenerated during build process
 dist-modern/
+
+# Generated HTML files from EJS templates (source is .ejs files)
+src-modern/*.html
