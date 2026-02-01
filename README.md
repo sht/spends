@@ -60,7 +60,7 @@ spends/
 │   ├── .prettierrc.json          # Code formatting rules
 │   ├── postcss.config.js         # CSS processing
 │   └── .editorconfig             # Editor settings
-└── dist-modern/                  # Build output (generated)
+└── dist-modern/                  # Build output (generated, not in git)
 ```
 
 ## 🛠️ Technology Stack
@@ -120,10 +120,12 @@ npm run dev          # Start dev server with HMR (http://localhost:3000)
 
 ### Production Build
 ```bash
-npm run build        # Build for production to dist-modern/
+npm run build        # Build for production to dist-modern/ (auto-generated)
 npm run preview      # Preview production build (http://localhost:4173)
 npm run serve        # Build and preview in one command
 ```
+
+**Note:** `dist-modern/` is auto-generated during build and is not tracked in git. It will be created automatically when you run `npm run build`.
 
 ### Code Quality
 ```bash
