@@ -396,13 +396,41 @@ export function registerInventoryComponent() {
       inventoryModal.show();
     },
 
-    deleteItem(item) {
-      if (confirm(`Delete "${item.name}"?`)) {
-        this.items = this.items.filter(i => i.id !== item.id);
-        this.selectedItems = this.selectedItems.filter(id => id !== item.id);
-        this.filterInventory();
-        this.calculateStats();
-        console.log('Item deleted:', item);
+    async deleteItem(item) {
+      if (confirm(`Delete "${item.product_name || item.name}"?`)) {
+        try {
+          const apiUrl = window.APP_CONFIG?.API_URL || '/api';
+          const response = await fetch(`${apiUrl}/purchases/${item.id}`, {
+            method: 'DELETE'
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          // Only remove from UI after successful deletion
+          this.items = this.items.filter(i => i.id !== item.id);
+          this.selectedItems = this.selectedItems.filter(id => id !== item.id);
+          this.filterInventory();
+          this.calculateStats();
+
+          // Show success notification
+          if (window.AdminApp && window.AdminApp.notificationManager) {
+            window.AdminApp.notificationManager.success(`"${item.product_name || item.name}" deleted successfully!`);
+          }
+
+          console.log('Item deleted from database:', item);
+
+          // Refresh dashboard data if available
+          if (window.dashboardManager) {
+            await window.dashboardManager.loadDashboardData();
+          }
+        } catch (error) {
+          console.error('Error deleting item:', error);
+          if (window.AdminApp && window.AdminApp.notificationManager) {
+            window.AdminApp.notificationManager.error(`Failed to delete item: ${error.message}`);
+          }
+        }
       }
     }
   }));
