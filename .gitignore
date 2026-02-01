@@ -94,5 +94,5 @@ TODO.md
 .env.local
 .env.*.local
 
-# Build output (keep for version control)
-# dist-modern/
+# Build output - regenerated during build process
+dist-modern/
