@@ -368,8 +368,8 @@ export function registerInventoryComponent() {
       // Use purchaseDateISO for the date input (YYYY-MM-DD format)
       const detailedItem = {
         productName: freshItem.name,
-        retailer: freshItem.retailer || '',
-        brand: freshItem.brand || '',
+        retailer: typeof freshItem.retailer === 'object' ? freshItem.retailer.name : (freshItem.retailer || ''),
+        brand: typeof freshItem.brand === 'object' ? freshItem.brand.name : (freshItem.brand || ''),
         modelNumber: freshItem.modelNumber || '',
         serialNumber: freshItem.serialNumber || '',
         purchaseDate: freshItem.purchaseDateISO || freshItem.purchaseDate,

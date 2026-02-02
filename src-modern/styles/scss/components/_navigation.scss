@@ -235,7 +235,7 @@
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.5);
-  z-index: $zindex-modal-backdrop; // 1040
+  z-index: 500; // Lower than modal backdrop (1040)
   opacity: 0;
   transition: opacity 0.3s ease;
 
@@ -243,6 +243,15 @@
     display: block;
     opacity: 1;
   }
+}
+
+// Ensure modals are always on top
+.modal-backdrop {
+  z-index: 1040 !important;
+}
+
+.modal {
+  z-index: 1050 !important;
 }
 
 // ==========================================================================

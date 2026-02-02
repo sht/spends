@@ -18,64 +18,9 @@
 
                 <!-- Settings Container -->
                 <div x-data="settingsComponent" x-init="init()" class="settings-layout">
-                    <div class="row g-4">
 
-                        <!-- Settings Navigation Sidebar -->
-                        <div class="col-lg-3">
-                            <nav class="nav nav-pills flex-column gap-2" role="tablist">
-                                <button type="button"
-                                        class="nav-link text-start d-flex align-items-center"
-                                        :class="{ 'active': activeSection === 'general' }"
-                                        @click="setActiveSection('general')"
-                                        role="tab"
-                                        :aria-selected="activeSection === 'general'">
-                                    <i class="bi bi-sliders me-2"></i>
-                                    <span>General</span>
-                                </button>
-                                <button type="button"
-                                        class="nav-link text-start d-flex align-items-center"
-                                        :class="{ 'active': activeSection === 'dashboard' }"
-                                        @click="setActiveSection('dashboard')"
-                                        role="tab"
-                                        :aria-selected="activeSection === 'dashboard'">
-                                    <i class="bi bi-speedometer2 me-2"></i>
-                                    <span>Dashboard</span>
-                                </button>
-                                <button type="button"
-                                        class="nav-link text-start d-flex align-items-center"
-                                        :class="{ 'active': activeSection === 'notifications' }"
-                                        @click="setActiveSection('notifications')"
-                                        role="tab"
-                                        :aria-selected="activeSection === 'notifications'">
-                                    <i class="bi bi-bell me-2"></i>
-                                    <span>Notifications</span>
-                                </button>
-                                <button type="button"
-                                        class="nav-link text-start d-flex align-items-center"
-                                        :class="{ 'active': activeSection === 'retailer' }"
-                                        @click="setActiveSection('retailer')"
-                                        role="tab"
-                                        :aria-selected="activeSection === 'retailer'">
-                                    <i class="bi bi-shop me-2"></i>
-                                    <span>Retailer</span>
-                                </button>
-                                <button type="button"
-                                        class="nav-link text-start d-flex align-items-center"
-                                        :class="{ 'active': activeSection === 'dataManagement' }"
-                                        @click="setActiveSection('dataManagement')"
-                                        role="tab"
-                                        :aria-selected="activeSection === 'dataManagement'">
-                                    <i class="bi bi-database me-2"></i>
-                                    <span>Data Management</span>
-                                </button>
-                            </nav>
-                        </div>
-
-                        <!-- Settings Content -->
-                        <div class="col-lg-9">
-
-                            <!-- General Settings Tab -->
-                            <div x-show="activeSection === 'general'" class="settings-section" role="tabpanel">
+                            <!-- General Settings Section -->
+                            <div class="settings-section">
                                 <div class="card">
                                     <div class="card-header bg-body-secondary border-bottom rounded-top py-3">
                                         <h5 class="mb-0">
@@ -141,7 +86,8 @@
                             </div>
 
                             <!-- Dashboard Settings Tab -->
-                            <div x-show="activeSection === 'dashboard'" class="settings-section" role="tabpanel">
+                            <!-- Dashboard Settings Section -->
+                            <div class="settings-section">
                                 <div class="card">
                                     <div class="card-header bg-body-secondary border-bottom rounded-top py-3">
                                         <h5 class="mb-0">
@@ -209,7 +155,8 @@
                             </div>
 
                             <!-- Notifications Settings Tab -->
-                            <div x-show="activeSection === 'notifications'" class="settings-section" role="tabpanel">
+                            <!-- Notifications Settings Section -->
+                            <div class="settings-section">
                                 <div class="card">
                                     <div class="card-header bg-body-secondary border-bottom rounded-top py-3">
                                         <h5 class="mb-0">
@@ -276,7 +223,8 @@
                             </div>
 
                             <!-- Retailer Settings Tab -->
-                            <div x-show="activeSection === 'retailer'" class="settings-section" role="tabpanel">
+                            <!-- Retailer Settings Section -->
+                            <div class="settings-section">
 
                                 <!-- Add New Retailer Card -->
                                 <div class="card mb-4">
@@ -362,7 +310,8 @@
                             </div>
 
                             <!-- Data Management Settings Tab -->
-                            <div x-show="activeSection === 'dataManagement'" class="settings-section" role="tabpanel">
+                            <!-- Data Management Settings Section -->
+                            <div class="settings-section">
 
                                 <!-- Data Export Card -->
                                 <div class="card mb-4">
@@ -460,9 +409,6 @@
 
                             </div>
 
-                        </div>
-
-                    </div>
                 </div>
 
             </div>

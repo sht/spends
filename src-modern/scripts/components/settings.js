@@ -79,11 +79,13 @@ export function registerSettingsComponent() {
       const currentTheme = document.documentElement.getAttribute('data-bs-theme') ||
                           localStorage.getItem('theme') || 'light';
 
-      // Restore active section from URL hash if present
-      this.restoreActiveSection();
-      
       this.loadSettings();
       await this.loadRetailers();
+
+      // Restore active section from URL hash AFTER loading, with nextTick to ensure Alpine reactivity
+      this.$nextTick(() => {
+        this.restoreActiveSection();
+      });
 
       // Hide loading screen when settings page is ready
       setTimeout(() => {
@@ -94,16 +96,18 @@ export function registerSettingsComponent() {
     restoreActiveSection() {
       // Check URL hash for section (e.g., #retailer)
       const hash = window.location.hash.replace('#', '');
-      const validSections = ['general', 'dashboard', 'notifications', 'retailer', 'dataManagement'];
-      
+      const validSections = ['general', 'dashboard', 'notifications', 'retailer', 'data-management'];
+
       if (hash && validSections.includes(hash)) {
+        console.log('Setting activeSection to:', hash);
         this.activeSection = hash;
       }
-      
+
       // Listen for hash changes (browser back/forward buttons)
       window.addEventListener('hashchange', () => {
         const newHash = window.location.hash.replace('#', '');
         if (newHash && validSections.includes(newHash)) {
+          console.log('Hash changed, setting activeSection to:', newHash);
           this.activeSection = newHash;
         }
       });

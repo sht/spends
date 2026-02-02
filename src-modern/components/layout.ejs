@@ -34,6 +34,60 @@
         <div id="toast-container"></div>
     </div>
 
+    <!-- Command Palette -->
+    <div x-data="commandPalette()" @keydown="handleKeydown" style="z-index: 10000;">
+        <!-- Backdrop -->
+        <div x-show="isOpen" @click="close()" class="position-fixed top-0 start-0 w-100 h-100" style="background-color: rgba(0,0,0,0.5); display: none;"></div>
+
+        <!-- Palette Container -->
+        <div x-show="isOpen" class="position-fixed top-50 start-50 translate-middle" style="width: 90%; max-width: 600px; display: none;">
+            <div class="bg-white rounded-lg shadow-lg">
+                <!-- Search Input -->
+                <div class="p-3 border-bottom">
+                    <input
+                        type="text"
+                        data-command-input
+                        x-model="query"
+                        placeholder="Type a command or action..."
+                        class="form-control"
+                        style="border: none; outline: none; font-size: 1.1rem;"
+                    >
+                </div>
+
+                <!-- Commands List -->
+                <div style="max-height: 400px; overflow-y: auto;">
+                    <template x-for="(command, index) in filteredCommands" :key="index">
+                        <div
+                            @click="executeCommand(command)"
+                            :class="{ 'bg-light': selectedIndex === index }"
+                            class="p-3 border-bottom cursor-pointer transition"
+                            style="cursor: pointer;"
+                        >
+                            <div class="d-flex align-items-center gap-3">
+                                <i :class="['bi', command.icon]" style="font-size: 1.2rem; color: #6366f1;"></i>
+                                <div class="flex-grow-1">
+                                    <div class="fw-500" x-text="command.name"></div>
+                                    <small class="text-muted" x-text="command.category"></small>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template x-if="filteredCommands.length === 0">
+                        <div class="p-4 text-center text-muted">
+                            No commands found
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Footer Hint -->
+                <div class="p-2 text-center bg-light border-top" style="font-size: 0.85rem;">
+                    <span class="text-muted">↑ ↓ to navigate • Enter to execute • Esc to close</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script type="module" src="/scripts/main.js"></script>
 </body>

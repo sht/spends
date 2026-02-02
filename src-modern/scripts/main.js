@@ -189,14 +189,11 @@ class AdminApp {
 
   // Handle keyboard shortcuts
   handleKeyboardShortcuts(event) {
-    // Ctrl/Cmd + K for search
+    // Ctrl/Cmd + K for command palette
     if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
       event.preventDefault();
-      // Open search modal or focus search input
-      const searchInput = document.querySelector('[data-search-input]');
-      if (searchInput) {
-        searchInput.focus();
-      }
+      // Dispatch custom event to open command palette
+      window.dispatchEvent(new CustomEvent('open-command-palette'));
     }
   }
 
@@ -266,30 +263,101 @@ class AdminApp {
   // Initialize Alpine.js
   initAlpine() {
     // Register Alpine data components
-    Alpine.data('searchComponent', () => ({
+    Alpine.data('commandPalette', () => ({
+      isOpen: false,
       query: '',
-      results: [],
-      isLoading: false,
+      selectedIndex: 0,
 
-      async search() {
-        if (this.query.length < 2) {
-          this.results = [];
-          return;
-        }
+      commands: [
+        { name: 'Add New Purchase', icon: 'bi-plus-circle', action: 'addPurchase', category: 'Purchase' },
+        { name: 'Go to Dashboard', icon: 'bi-house', action: 'goDashboard', category: 'Navigation' },
+        { name: 'Go to Inventory', icon: 'bi-box', action: 'goInventory', category: 'Navigation' },
+        { name: 'Go to Settings', icon: 'bi-gear', action: 'goSettings', category: 'Navigation' },
+        { name: 'Export Data', icon: 'bi-download', action: 'exportData', category: 'Data' },
+        { name: 'Toggle Theme', icon: 'bi-moon', action: 'toggleTheme', category: 'Settings' },
+      ],
 
-        this.isLoading = true;
-        // Simulate API search
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        this.results = [
-          { title: 'Dashboard', url: 'index.html', type: 'page' },
-          { title: 'Inventory', url: 'inventory.html', type: 'page' },
-          { title: 'Settings', url: 'settings.html', type: 'page' }
-        ].filter(item =>
-          item.title.toLowerCase().includes(this.query.toLowerCase())
+      get filteredCommands() {
+        if (!this.query) return this.commands;
+        return this.commands.filter(cmd =>
+          cmd.name.toLowerCase().includes(this.query.toLowerCase()) ||
+          cmd.category.toLowerCase().includes(this.query.toLowerCase())
         );
+      },
 
-        this.isLoading = false;
+      init() {
+        window.addEventListener('open-command-palette', () => {
+          this.open();
+        });
+      },
+
+      open() {
+        this.isOpen = true;
+        this.query = '';
+        this.selectedIndex = 0;
+        this.$nextTick(() => {
+          const input = document.querySelector('[data-command-input]');
+          if (input) input.focus();
+        });
+      },
+
+      close() {
+        this.isOpen = false;
+        this.query = '';
+        this.selectedIndex = 0;
+      },
+
+      executeCommand(command) {
+        switch (command.action) {
+          case 'addPurchase':
+            // Check if we're on inventory page (modal exists)
+            const inventoryModal = document.getElementById('inventoryModal');
+            if (inventoryModal) {
+              // We're on inventory page, open modal directly
+              const modal = new window.bootstrap.Modal(inventoryModal);
+              modal.show();
+            } else {
+              // Navigate to inventory page with hash to open modal
+              window.location.href = 'inventory.html#addPurchase';
+            }
+            break;
+          case 'goDashboard':
+            window.location.href = 'index.html';
+            break;
+          case 'goInventory':
+            window.location.href = 'inventory.html';
+            break;
+          case 'goSettings':
+            window.location.href = 'settings.html';
+            break;
+          case 'exportData':
+            window.AdminApp.notificationManager.info('Export feature coming soon');
+            break;
+          case 'toggleTheme':
+            window.AdminApp.themeManager.toggle();
+            break;
+        }
+        this.close();
+      },
+
+      handleKeydown(e) {
+        if (!this.isOpen) return;
+
+        if (e.key === 'Escape') {
+          this.close();
+          e.preventDefault();
+        } else if (e.key === 'ArrowDown') {
+          this.selectedIndex = (this.selectedIndex + 1) % this.filteredCommands.length;
+          e.preventDefault();
+        } else if (e.key === 'ArrowUp') {
+          this.selectedIndex = (this.selectedIndex - 1 + this.filteredCommands.length) % this.filteredCommands.length;
+          e.preventDefault();
+        } else if (e.key === 'Enter') {
+          if (this.filteredCommands[this.selectedIndex]) {
+            this.executeCommand(this.filteredCommands[this.selectedIndex]);
+          }
+          e.preventDefault();
+        }
       }
     }));
 
@@ -419,10 +487,13 @@ class AdminApp {
       retailers: [],
       brands: [],
 
-      async init() {
+      init() {
         this.resetForm();
-        await this.loadRetailers();
-        await this.loadBrands();
+
+        // Load data without awaiting - this keeps init() synchronous
+        // so Alpine.js can properly initialize the component and attach event listeners
+        this.loadRetailers();
+        this.loadBrands();
 
         // Listen for edit-purchase event from inventory table
         window.addEventListener('edit-purchase', (e) => {

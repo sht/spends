@@ -34,7 +34,14 @@ async function processTemplate(templateFile, pageData) {
 
     // Remove variable declarations from page content
     const cleanContent = pageContent.replace(/<% const .* %>\n?/g, '').trim();
-    variables.content = cleanContent;
+
+    // Process the page content through EJS to handle includes
+    const processedContent = ejs.render(cleanContent, {}, {
+      filename: pagePath,
+      rmWhitespace: false,
+      views: [COMPONENTS_DIR],
+    });
+    variables.content = processedContent;
 
     // Render the template
     const html = ejs.render(layout, variables, {
