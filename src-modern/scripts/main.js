@@ -863,9 +863,11 @@ class AdminApp {
         this.item = { ...itemData };
       },
 
-      editItem() {
-        // This will open the edit modal with the item data
-        console.log('Edit item:', this.item);
+      editPurchaseItem() {
+        // Trigger edit from view modal
+        if (window.inventoryTable && window.inventoryTable.editItem) {
+          window.inventoryTable.editItem(this.item);
+        }
       }
     }));
 

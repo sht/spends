@@ -326,40 +326,37 @@ export function registerInventoryComponent() {
     },
 
     viewItem(item) {
-      console.log('View item:', item);
-      // Create detailed item object with all fields
-      const detailedItem = {
-        productName: item.name,
-        retailer: item.retailer || 'Amazon',
-        brand: item.brand,
-        modelNumber: item.modelNumber || '',
-        serialNumber: item.serialNumber || '',
-        purchaseDate: item.purchaseDate,
-        price: item.price,
-        quantity: item.quantity || 1,
-        link: item.link || '',
-        warrantyExpiry: item.warrantyExpiry || '',
-        returnDeadline: item.returnDeadline || '',
-        returnPolicy: item.returnPolicy || '',
-        taxDeductible: item.taxDeductible || false,
-        tags: item.tags || '',
-        notes: item.notes || ''
-      };
+      // Get the freshest item data
+      const freshItem = this.items.find(i => i.id === item.id) || item;
 
-      // Show the modal first
+      // Show the view modal
       const viewDetailsModal = new Modal(document.getElementById('viewDetailsModal'));
       viewDetailsModal.show();
 
-      // Then set the item data after a brief delay to ensure Alpine is ready
+      // Wait for modal to be shown, then set data
       setTimeout(() => {
-        const viewDetailsElement = document.querySelector('[x-data="viewPurchaseDetails()"]');
-        if (viewDetailsElement && viewDetailsElement.__x) {
-          viewDetailsElement.__x.$data.setItem(detailedItem);
-          console.log('Item data set:', detailedItem);
-        } else {
-          console.error('viewPurchaseDetails component not found');
+        const viewElement = document.querySelector('#viewDetailsModal [x-data="viewPurchaseDetails()"]');
+        if (viewElement && viewElement.__x) {
+          viewElement.__x.$data.setItem({
+            productName: freshItem.name,
+            retailer: freshItem.retailer || '',
+            brand: freshItem.brand || '',
+            modelNumber: freshItem.modelNumber || '',
+            serialNumber: freshItem.serialNumber || '',
+            purchaseDate: freshItem.purchaseDate,
+            price: freshItem.price,
+            quantity: freshItem.quantity || 1,
+            link: freshItem.link || '',
+            warrantyExpiry: freshItem.warrantyExpiry || '',
+            returnDeadline: freshItem.returnDeadline || '',
+            returnPolicy: freshItem.returnPolicy || '',
+            taxDeductible: freshItem.taxDeductible || false,
+            tags: freshItem.tags || '',
+            notes: freshItem.notes || '',
+            id: freshItem.id
+          });
         }
-      }, 100);
+      }, 200);
     },
 
     editItem(item) {

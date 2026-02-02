@@ -184,149 +184,69 @@
         </div>
     </div>
 
+            </div>
+        </div>
+    </div>
     <!-- View Purchase Details Modal -->
     <div class="modal fade" id="viewDetailsModal" tabindex="-1" aria-labelledby="viewDetailsModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content" x-data="viewPurchaseDetails()">
                 <div class="modal-header border-bottom">
-                    <div>
-                        <h5 class="modal-title mb-0" id="viewDetailsModalLabel">
-                            <i class="bi bi-eye text-primary me-2"></i>
-                            Purchase Details
-                        </h5>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal" @click="editItem()">
-                            <i class="bi bi-pencil me-1"></i> Edit
-                        </button>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
+                    <h5 class="modal-title" id="viewDetailsModalLabel">
+                        <i class="bi bi-eye text-primary me-2"></i>Purchase Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" style="padding: 2rem;">
-                    <!-- Product Hero Section -->
-                    <div class="mb-5 pb-4 border-bottom">
-                        <h3 class="fw-bold mb-2" x-text="item.productName" style="font-size: 1.75rem;"></h3>
-                        <div class="d-flex gap-3 flex-wrap">
-                            <div>
-                                <small class="text-muted">Brand</small>
-                                <div class="fw-semibold" x-text="item.brand || '—'"></div>
-                            </div>
-                            <div>
-                                <small class="text-muted">Retailer</small>
-                                <div class="fw-semibold" x-text="item.retailer || '—'"></div>
-                            </div>
-                            <div class="ms-auto text-end">
-                                <small class="text-muted">Price</small>
-                                <div class="fw-bold" style="font-size: 1.5rem; color: #28a745;" x-text="'$' + (item.price || '0.00')"></div>
-                            </div>
-                        </div>
+                    <!-- Product Name Hero -->
+                    <div class="mb-4 pb-4 border-bottom">
+                        <h3 class="fw-bold" x-text="item.productName" style="font-size: 1.5rem;"></h3>
                     </div>
 
-                    <!-- Product Details Section -->
-                    <div class="mb-5">
-                        <h6 class="fw-bold text-dark mb-3" style="border-bottom: 2px solid #f0f0f0; padding-bottom: 0.5rem;">
-                            <i class="bi bi-box text-primary me-2"></i>Product Details
-                        </h6>
-
-                        <div class="detail-row mb-3">
-                            <span class="text-muted fw-semibold" style="min-width: 150px;">Model Number:</span>
-                            <span class="fw-semibold" x-text="item.modelNumber || '—'"></span>
-                        </div>
-                        <div class="detail-row mb-3">
-                            <span class="text-muted fw-semibold" style="min-width: 150px;">Serial Number:</span>
-                            <span class="fw-semibold" x-text="item.serialNumber || '—'"></span>
-                        </div>
+                    <!-- Product Details -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-box text-primary me-2"></i>Product Details</h6>
+                        <div class="mb-2"><span class="text-muted">Brand:</span> <span class="fw-semibold" x-text="item.brand || '—'"></span></div>
+                        <div class="mb-2"><span class="text-muted">Retailer:</span> <span class="fw-semibold" x-text="item.retailer || '—'"></span></div>
+                        <div class="mb-2"><span class="text-muted">Model Number:</span> <span class="fw-semibold" x-text="item.modelNumber || '—'"></span></div>
+                        <div class="mb-2"><span class="text-muted">Serial Number:</span> <span class="fw-semibold" x-text="item.serialNumber || '—'"></span></div>
                     </div>
 
-                    <!-- Purchase Details Section -->
-                    <div class="mb-5">
-                        <h6 class="fw-bold text-dark mb-3" style="border-bottom: 2px solid #f0f0f0; padding-bottom: 0.5rem;">
-                            <i class="bi bi-calendar-event text-primary me-2"></i>Purchase Details
-                        </h6>
-
-                        <div class="detail-row mb-3">
-                            <span class="text-muted fw-semibold" style="min-width: 150px;">Purchase Date:</span>
-                            <span class="fw-semibold" x-text="item.purchaseDate"></span>
-                        </div>
-                        <div class="detail-row mb-3">
-                            <span class="text-muted fw-semibold" style="min-width: 150px;">Quantity:</span>
-                            <span class="fw-semibold" x-text="item.quantity || '1'"></span>
-                        </div>
-                        <div class="detail-row mb-3">
-                            <span class="text-muted fw-semibold" style="min-width: 150px;">Product Link:</span>
-                            <span x-show="item.link">
-                                <a :href="item.link" target="_blank" class="text-primary text-decoration-none">
-                                    <i class="bi bi-link-45deg me-1"></i><span x-text="item.link" style="word-break: break-all;"></span>
-                                </a>
-                            </span>
-                            <span x-show="!item.link" class="text-muted">—</span>
-                        </div>
+                    <!-- Purchase Details -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-calendar-event text-primary me-2"></i>Purchase Details</h6>
+                        <div class="mb-2"><span class="text-muted">Purchase Date:</span> <span class="fw-semibold" x-text="item.purchaseDate || '—'"></span></div>
+                        <div class="mb-2"><span class="text-muted">Price:</span> <span class="fw-bold" style="color: #28a745; font-size: 1.1rem;" x-text="'$' + (item.price || '0.00')"></span></div>
+                        <div class="mb-2"><span class="text-muted">Quantity:</span> <span class="fw-semibold" x-text="item.quantity || '1'"></span></div>
+                        <div x-show="item.link" class="mb-2"><span class="text-muted">Product Link:</span> <a :href="item.link" target="_blank" class="text-primary text-decoration-none"><i class="bi bi-link-45deg me-1"></i><span x-text="item.link"></span></a></div>
                     </div>
 
-                    <!-- Warranty & Returns Section -->
-                    <div class="mb-5">
-                        <h6 class="fw-bold text-dark mb-3" style="border-bottom: 2px solid #f0f0f0; padding-bottom: 0.5rem;">
-                            <i class="bi bi-hourglass-split text-primary me-2"></i>Warranty & Returns
-                        </h6>
-
-                        <div class="detail-row mb-3">
-                            <span class="text-muted fw-semibold" style="min-width: 150px;">Warranty Expiry:</span>
-                            <span x-show="item.warrantyExpiry">
-                                <span class="fw-semibold" x-text="item.warrantyExpiry"></span>
-                            </span>
-                            <span x-show="!item.warrantyExpiry" class="text-muted">—</span>
-                        </div>
-                        <div class="detail-row mb-3">
-                            <span class="text-muted fw-semibold" style="min-width: 150px;">Return Deadline:</span>
-                            <span x-show="item.returnDeadline">
-                                <span class="fw-semibold" x-text="item.returnDeadline"></span>
-                            </span>
-                            <span x-show="!item.returnDeadline" class="text-muted">—</span>
-                        </div>
-                        <div class="detail-row mb-3">
-                            <span class="text-muted fw-semibold" style="min-width: 150px;">Return Policy:</span>
-                            <span x-show="item.returnPolicy">
-                                <span class="fw-semibold" x-text="item.returnPolicy"></span>
-                            </span>
-                            <span x-show="!item.returnPolicy" class="text-muted">—</span>
-                        </div>
+                    <!-- Warranty & Returns -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-hourglass-split text-primary me-2"></i>Warranty & Returns</h6>
+                        <div class="mb-2"><span class="text-muted">Warranty Expiry:</span> <span class="fw-semibold" x-text="item.warrantyExpiry || '—'"></span></div>
+                        <div class="mb-2"><span class="text-muted">Return Deadline:</span> <span class="fw-semibold" x-text="item.returnDeadline || '—'"></span></div>
+                        <div class="mb-2"><span class="text-muted">Return Policy:</span> <span class="fw-semibold" x-text="item.returnPolicy || '—'"></span></div>
                     </div>
 
-                    <!-- Additional Info Section -->
-                    <div class="mb-5">
-                        <h6 class="fw-bold text-dark mb-3" style="border-bottom: 2px solid #f0f0f0; padding-bottom: 0.5rem;">
-                            <i class="bi bi-info-circle text-primary me-2"></i>Additional Info
-                        </h6>
-
-                        <div class="detail-row mb-3">
-                            <span class="text-muted fw-semibold" style="min-width: 150px;">Tax Deductible:</span>
-                            <span>
-                                <span x-show="item.taxDeductible" class="badge bg-success">
-                                    <i class="bi bi-check-circle me-1"></i>Yes
-                                </span>
-                                <span x-show="!item.taxDeductible" class="badge bg-light text-dark">
-                                    <i class="bi bi-x-circle me-1"></i>No
-                                </span>
-                            </span>
-                        </div>
-                        <div class="detail-row mb-3">
-                            <span class="text-muted fw-semibold" style="min-width: 150px;">Tags:</span>
-                            <span x-show="item.tags">
-                                <span class="fw-semibold" x-text="item.tags"></span>
-                            </span>
-                            <span x-show="!item.tags" class="text-muted">—</span>
-                        </div>
+                    <!-- Additional Info -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-info-circle text-primary me-2"></i>Additional Info</h6>
+                        <div class="mb-2"><span class="text-muted">Tax Deductible:</span> <span><span x-show="item.taxDeductible" class="badge bg-success">Yes</span><span x-show="!item.taxDeductible" class="badge bg-secondary">No</span></span></div>
+                        <div class="mb-2"><span class="text-muted">Tags:</span> <span class="fw-semibold" x-text="item.tags || '—'"></span></div>
                     </div>
 
-                    <!-- Notes Section -->
-                    <div class="mb-3">
-                        <h6 class="fw-bold text-dark mb-3" style="border-bottom: 2px solid #f0f0f0; padding-bottom: 0.5rem;">
-                            <i class="bi bi-chat-left-text text-primary me-2"></i>Notes
-                        </h6>
-                        <div class="p-3 bg-light rounded" style="min-height: 100px;">
-                            <p class="mb-0" x-text="item.notes || 'No notes added'"></p>
-                        </div>
+                    <!-- Notes -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-chat-left-text text-primary me-2"></i>Notes</h6>
+                        <div class="p-3 bg-light rounded"><p class="mb-0" x-text="item.notes || 'No notes'"></p></div>
                     </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="editPurchaseItem()">
+                        <i class="bi bi-pencil me-1"></i> Edit
+                    </button>
                 </div>
             </div>
         </div>
