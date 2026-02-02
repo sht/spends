@@ -172,6 +172,15 @@ class AdminApp {
       }
     });
 
+    // Command palette trigger (search bar click)
+    document.addEventListener('click', (e) => {
+      const commandPaletteTrigger = e.target.closest('#command-palette-trigger');
+      if (commandPaletteTrigger) {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent('open-command-palette'));
+      }
+    });
+
     // Full screen toggle
     document.addEventListener('click', (e) => {
       const fullscreenButton = e.target.closest('[data-fullscreen-toggle]');
