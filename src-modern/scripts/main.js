@@ -492,6 +492,7 @@ class AdminApp {
         notes: ''
       },
       isEditMode: false,
+      isViewMode: false,  // Added missing property
       editingItemId: null,
       retailers: [],
       brands: [],

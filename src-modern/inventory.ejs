@@ -78,24 +78,24 @@
                                 <table class="table table-hover mb-0">
                                     <thead class="table-light">
                                         <tr>
-                                            <th class="sortable">#</th>
-                                            <th>Product</th>
-                                            <th @click="sortBy('price')" class="sortable">Price</th>
-                                            <th>Status</th>
-                                            <th @click="sortBy('purchaseDate')" class="sortable">Date</th>
-                                            <th style="width: 100px;">Actions</th>
+                                            <th class="sortable align-middle text-center">#</th>
+                                            <th class="align-middle">Product</th>
+                                            <th @click="sortBy('price')" class="sortable align-middle">Price</th>
+                                            <th class="align-middle">Status</th>
+                                            <th @click="sortBy('purchaseDate')" class="sortable align-middle">Date</th>
+                                            <th style="width: 100px;" class="align-middle">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <template x-for="(item, index) in paginatedItems" :key="item.id">
                                             <tr>
-                                                <td class="fw-medium text-primary" x-text="(currentPage - 1) * itemsPerPage + index + 1"></td>
-                                                <td>
+                                                <td class="fw-medium text-primary align-middle text-center" x-text="(currentPage - 1) * itemsPerPage + index + 1"></td>
+                                                <td class="align-middle">
                                                     <div class="fw-medium" x-text="item.name"></div>
                                                     <small class="text-muted" x-text="item.brand"></small>
                                                 </td>
-                                                <td class="fw-medium" x-text="`$${item.price.toFixed(2)}`"></td>
-                                                <td>
+                                                <td class="fw-medium align-middle" x-text="`$${item.price.toFixed(2)}`"></td>
+                                                <td class="align-middle">
                                                     <span class="badge"
                                                           :class="{
                                                               'bg-primary': item.status === 'ordered',
@@ -103,8 +103,8 @@
                                                           }"
                                                           x-text="item.status.charAt(0).toUpperCase() + item.status.slice(1)"></span>
                                                 </td>
-                                                <td x-text="item.purchaseDate"></td>
-                                                <td>
+                                                <td class="align-middle" x-text="item.purchaseDate"></td>
+                                                <td class="align-middle">
                                                     <div class="btn-group btn-group-sm" role="group">
                                                         <button class="btn btn-outline-secondary"
                                                                 type="button"
