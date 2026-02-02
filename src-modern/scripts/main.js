@@ -857,7 +857,12 @@ class AdminApp {
       },
 
       init() {
-        // Item data will be set when modal is opened
+        // Listen for the custom event to set item data
+        window.addEventListener('show-view-details', (e) => {
+          if (e.detail && e.detail.item) {
+            this.setItem(e.detail.item);
+          }
+        });
       },
 
       setItem(itemData) {

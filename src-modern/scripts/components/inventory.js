@@ -329,34 +329,34 @@ export function registerInventoryComponent() {
       // Get the freshest item data
       const freshItem = this.items.find(i => i.id === item.id) || item;
 
+      // Prepare the detailed item object with all fields
+      const detailedItem = {
+        productName: freshItem.name,
+        retailer: typeof freshItem.retailer === 'object' ? freshItem.retailer.name : (freshItem.retailer || ''),
+        brand: typeof freshItem.brand === 'object' ? freshItem.brand.name : (freshItem.brand || ''),
+        modelNumber: freshItem.modelNumber || '',
+        serialNumber: freshItem.serialNumber || '',
+        purchaseDate: freshItem.purchaseDateISO || freshItem.purchaseDate || '',
+        price: freshItem.price,
+        quantity: freshItem.quantity || 1,
+        link: freshItem.link || '',
+        warrantyExpiry: freshItem.warrantyExpiry || '',
+        returnDeadline: freshItem.returnDeadline || '',
+        returnPolicy: freshItem.returnPolicy || '',
+        taxDeductible: freshItem.taxDeductible || false,
+        tags: freshItem.tags || '',
+        notes: freshItem.notes || '',
+        id: freshItem.id
+      };
+
+      // Dispatch custom event to notify viewPurchaseDetails component to show modal with data
+      window.dispatchEvent(new CustomEvent('show-view-details', {
+        detail: { item: detailedItem }
+      }));
+
       // Show the view modal
       const viewDetailsModal = new Modal(document.getElementById('viewDetailsModal'));
       viewDetailsModal.show();
-
-      // Wait for modal to be shown, then set data
-      setTimeout(() => {
-        const viewElement = document.querySelector('#viewDetailsModal [x-data="viewPurchaseDetails()"]');
-        if (viewElement && viewElement.__x) {
-          viewElement.__x.$data.setItem({
-            productName: freshItem.name,
-            retailer: freshItem.retailer || '',
-            brand: freshItem.brand || '',
-            modelNumber: freshItem.modelNumber || '',
-            serialNumber: freshItem.serialNumber || '',
-            purchaseDate: freshItem.purchaseDate,
-            price: freshItem.price,
-            quantity: freshItem.quantity || 1,
-            link: freshItem.link || '',
-            warrantyExpiry: freshItem.warrantyExpiry || '',
-            returnDeadline: freshItem.returnDeadline || '',
-            returnPolicy: freshItem.returnPolicy || '',
-            taxDeductible: freshItem.taxDeductible || false,
-            tags: freshItem.tags || '',
-            notes: freshItem.notes || '',
-            id: freshItem.id
-          });
-        }
-      }, 200);
     },
 
     editItem(item) {
