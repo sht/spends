@@ -14,11 +14,13 @@
             </button>
 
             <!-- Command Palette Hint -->
-            <div class="flex-grow-1 mx-4 d-flex align-items-center">
-                <div class="position-relative w-100">
-                    <div class="form-control text-muted" style="cursor: pointer; background-color: #f8f9fa;">
-                        <i class="bi bi-command me-2"></i>
-                        <span style="font-size: 0.9rem;">Press Cmd+K for commands...</span>
+            <div class="flex-grow-1 d-flex align-items-center justify-content-center">
+                <div class="position-relative" style="width: 300px; max-width: 100%;">
+                    <div class="form-control form-control-sm text-muted"
+                         style="cursor: pointer; background-color: #f8f9fa; font-size: 0.85rem;"
+                         @click="window.dispatchEvent(new CustomEvent('open-command-palette'))">
+                        <i class="bi bi-command me-2" style="font-size: 0.9rem;"></i>
+                        <span>Press Cmd+K...</span>
                     </div>
                 </div>
             </div>
