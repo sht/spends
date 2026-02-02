@@ -346,15 +346,20 @@ export function registerInventoryComponent() {
         notes: item.notes || ''
       };
 
-      // Get the Alpine component and set the item data
-      const viewDetailsElement = document.querySelector('[x-data="viewPurchaseDetails()"]');
-      if (viewDetailsElement && viewDetailsElement.__x) {
-        viewDetailsElement.__x.$data.setItem(detailedItem);
-      }
-
-      // Show the modal
+      // Show the modal first
       const viewDetailsModal = new Modal(document.getElementById('viewDetailsModal'));
       viewDetailsModal.show();
+
+      // Then set the item data after a brief delay to ensure Alpine is ready
+      setTimeout(() => {
+        const viewDetailsElement = document.querySelector('[x-data="viewPurchaseDetails()"]');
+        if (viewDetailsElement && viewDetailsElement.__x) {
+          viewDetailsElement.__x.$data.setItem(detailedItem);
+          console.log('Item data set:', detailedItem);
+        } else {
+          console.error('viewPurchaseDetails component not found');
+        }
+      }, 100);
     },
 
     editItem(item) {

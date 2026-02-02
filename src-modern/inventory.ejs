@@ -187,7 +187,7 @@
     <!-- View Purchase Details Modal -->
     <div class="modal fade" id="viewDetailsModal" tabindex="-1" aria-labelledby="viewDetailsModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
+            <div class="modal-content" x-data="viewPurchaseDetails()">
                 <div class="modal-header border-bottom">
                     <div>
                         <h5 class="modal-title mb-0" id="viewDetailsModalLabel">
@@ -202,7 +202,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                 </div>
-                <div class="modal-body" x-data="viewPurchaseDetails()" style="padding: 2rem;">
+                <div class="modal-body" style="padding: 2rem;">
                     <!-- Product Hero Section -->
                     <div class="mb-5 pb-4 border-bottom">
                         <h3 class="fw-bold mb-2" x-text="item.productName" style="font-size: 1.75rem;"></h3>
