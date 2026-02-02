@@ -88,6 +88,15 @@
         </div>
     </div>
 
+    <!-- Define APP_CONFIG before loading main script -->
+    <script>
+      // Use the backend API URL - defaults to relative path for proxy support
+      // In production, this can be overridden by setting window.APP_CONFIG before this script
+      window.APP_CONFIG = window.APP_CONFIG || {
+        API_URL: '/api'  // Default to relative path for proxy support
+      };
+    </script>
+
     <!-- Scripts -->
     <script type="module" src="/scripts/main.js"></script>
 </body>

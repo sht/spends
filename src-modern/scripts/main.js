@@ -871,9 +871,35 @@ class AdminApp {
 
       editPurchaseItem() {
         // Trigger edit from view modal
-        if (window.inventoryTable && window.inventoryTable.editItem) {
-          window.inventoryTable.editItem(this.item);
-        }
+        // First dispatch event to notify inventory table to enter edit mode
+        window.dispatchEvent(new CustomEvent('edit-purchase', {
+          detail: { item: this.item }
+        }));
+
+        // Then close the view modal and open the edit modal
+        setTimeout(() => {
+          const viewModalEl = document.getElementById('viewDetailsModal');
+          if (viewModalEl) {
+            // Use the imported Modal class instead of global bootstrap
+            const modal = Modal.getInstance(viewModalEl);
+            if (modal) {
+              modal.hide();
+            } else {
+              // Fallback: manually hide the modal
+              const bsModal = new Modal(viewModalEl);
+              bsModal.hide();
+            }
+
+            // Show the inventory modal for editing after a short delay
+            setTimeout(() => {
+              const inventoryModalEl = document.getElementById('inventoryModal');
+              if (inventoryModalEl) {
+                const inventoryModal = Modal.getInstance(inventoryModalEl) || new Modal(inventoryModalEl);
+                inventoryModal.show();
+              }
+            }, 300);
+          }
+        }, 150);
       }
     }));
 
