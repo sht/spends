@@ -115,105 +115,235 @@
 
 <!-- File Upload Section -->
 <div class="mb-4" x-show="!isViewMode">
-    <div class="border rounded p-4" style="border: 1px solid #dee2e6;">
-        <h6 class="text-center text-muted fw-semibold mb-4">Upload Files</h6>
+    <div class="border rounded p-3" style="border: 1px solid #dee2e6;">
+        <h6 class="text-center text-muted fw-semibold mb-3">Upload Files</h6>
 
-        <!-- Upload Receipts -->
+        <!-- Receipts Section -->
         <div class="mb-3">
-            <label for="uploadReceipts" class="d-block text-center p-4 rounded" style="background-color: #f0f4ff; border: 2px dashed #d0d8f2; cursor: pointer; transition: all 0.3s;">
-                <div class="mb-2">
-                    <i class="bi bi-file-earmark-text" style="font-size: 2.5rem; color: #6366f1;"></i>
+            <!-- Empty State - Large Upload Area -->
+            <template x-if="!hasFilesOfType('receipt')">
+                <label for="uploadReceipts" class="d-block text-center p-4 rounded" style="background-color: #f0f4ff; border: 2px dashed #d0d8f2; cursor: pointer; transition: all 0.3s;">
+                    <div class="mb-2">
+                        <i class="bi bi-file-earmark-text" style="font-size: 2.5rem; color: #6366f1;"></i>
+                    </div>
+                    <div class="text-dark fw-semibold">Upload Receipt(s)</div>
+                    <small class="text-muted">PDF or images</small>
+                    <input type="file" class="form-control d-none" id="uploadReceipts" multiple accept="image/*,.pdf" @change="handleFileUpload($event, 'receipt')">
+                </label>
+            </template>
+            
+            <!-- Compact State - Files Exist -->
+            <template x-if="hasFilesOfType('receipt')">
+                <div class="border rounded p-2" style="background-color: #f8f9ff; border-color: #d0d8f2 !important;">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-file-earmark-text me-2" style="color: #6366f1;"></i>
+                            <span class="fw-semibold small">Receipts</span>
+                            <span class="badge bg-primary ms-2" x-text="getFilesByType('receipt').length"></span>
+                        </div>
+                        <label for="uploadReceiptsMore" class="btn btn-sm btn-outline-primary py-0 px-2">
+                            <i class="bi bi-plus"></i>
+                            <input type="file" class="form-control d-none" id="uploadReceiptsMore" multiple accept="image/*,.pdf" @change="handleFileUpload($event, 'receipt')">
+                        </label>
+                    </div>
+                    <!-- File Thumbnails -->
+                    <div class="d-flex gap-2 flex-wrap">
+                        <template x-for="file in getFilesByType('receipt')" :key="file.id">
+                            <div class="position-relative" style="cursor: pointer;" @click="openFileViewer(file)">
+                                <!-- Image Preview -->
+                                <template x-if="isImageFile(file)">
+                                    <img :src="getFilePreviewUrl(file)" class="rounded" style="width: 60px; height: 60px; object-fit: cover; border: 1px solid #dee2e6;">
+                                </template>
+                                <!-- PDF Thumbnail or Icon -->
+                                <template x-if="!isImageFile(file)">
+                                    <div class="d-flex align-items-center justify-content-center rounded position-relative" style="width: 60px; height: 60px; background-color: #f8d7da; border: 1px solid #dee2e6; overflow: hidden;">
+                                        <!-- PDF Thumbnail (if available) -->
+                                        <template x-if="file.previewUrl && !file.previewUrl.includes('pdf-placeholder')">
+                                            <img :src="file.previewUrl" class="w-100 h-100" style="object-fit: cover;">
+                                        </template>
+                                        <!-- Loading Spinner -->
+                                        <template x-if="file.isGeneratingThumbnail">
+                                            <div class="spinner-border spinner-border-sm text-danger" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </template>
+                                        <!-- PDF Icon (fallback) -->
+                                        <template x-if="!file.previewUrl || (!file.isGeneratingThumbnail && file.previewUrl.includes('pdf-placeholder'))">
+                                            <i class="bi bi-file-earmark-pdf text-danger" style="font-size: 1.5rem;"></i>
+                                        </template>
+                                    </div>
+                                </template>
+                                <!-- Delete Button -->
+                                <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 p-0" style="width: 18px; height: 18px; font-size: 10px; line-height: 1; transform: translate(30%, -30%);" @click.stop="removeAnyFile(file)">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
+                        </template>
+                    </div>
                 </div>
-                <div class="text-dark fw-semibold">Upload Receipt(s)</div>
-                <input type="file" class="form-control d-none" id="uploadReceipts" multiple accept="image/*,.pdf" @change="handleFileUpload($event, 'receipt')">
-            </label>
+            </template>
         </div>
 
-        <!-- Upload Manuals -->
+        <!-- Manuals Section -->
         <div class="mb-3">
-            <label for="uploadManuals" class="d-block text-center p-4 rounded" style="background-color: #f0f4ff; border: 2px dashed #d0d8f2; cursor: pointer; transition: all 0.3s;">
-                <div class="mb-2">
-                    <i class="bi bi-book" style="font-size: 2.5rem; color: #6366f1;"></i>
+            <template x-if="!hasFilesOfType('manual')">
+                <label for="uploadManuals" class="d-block text-center p-4 rounded" style="background-color: #f0f4ff; border: 2px dashed #d0d8f2; cursor: pointer; transition: all 0.3s;">
+                    <div class="mb-2">
+                        <i class="bi bi-book" style="font-size: 2.5rem; color: #6366f1;"></i>
+                    </div>
+                    <div class="text-dark fw-semibold">Upload Manual(s)</div>
+                    <small class="text-muted">PDF, DOC, DOCX</small>
+                    <input type="file" class="form-control d-none" id="uploadManuals" multiple accept=".pdf,.doc,.docx" @change="handleFileUpload($event, 'manual')">
+                </label>
+            </template>
+            
+            <template x-if="hasFilesOfType('manual')">
+                <div class="border rounded p-2" style="background-color: #f8f9ff; border-color: #d0d8f2 !important;">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-book me-2" style="color: #6366f1;"></i>
+                            <span class="fw-semibold small">Manuals</span>
+                            <span class="badge bg-primary ms-2" x-text="getFilesByType('manual').length"></span>
+                        </div>
+                        <label for="uploadManualsMore" class="btn btn-sm btn-outline-primary py-0 px-2">
+                            <i class="bi bi-plus"></i>
+                            <input type="file" class="form-control d-none" id="uploadManualsMore" multiple accept=".pdf,.doc,.docx" @change="handleFileUpload($event, 'manual')">
+                        </label>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <template x-for="file in getFilesByType('manual')" :key="file.id">
+                            <div class="position-relative" style="cursor: pointer;" @click="openFileViewer(file)">
+                                <template x-if="isImageFile(file)">
+                                    <img :src="getFilePreviewUrl(file)" class="rounded" style="width: 60px; height: 60px; object-fit: cover; border: 1px solid #dee2e6;">
+                                </template>
+                                <template x-if="!isImageFile(file)">
+                                    <div class="d-flex align-items-center justify-content-center rounded position-relative" :style="`width: 60px; height: 60px; background-color: ${getFileColor(file)}; border: 1px solid #dee2e6; overflow: hidden;`">
+                                        <!-- PDF/Doc Thumbnail (if available) -->
+                                        <template x-if="file.previewUrl && !file.previewUrl.includes('pdf-placeholder') && (file.mimeType === 'application/pdf' || file.fileName?.toLowerCase().endsWith('.pdf'))">
+                                            <img :src="file.previewUrl" class="w-100 h-100" style="object-fit: cover;">
+                                        </template>
+                                        <!-- Loading Spinner -->
+                                        <template x-if="file.isGeneratingThumbnail">
+                                            <div class="spinner-border spinner-border-sm" :class="file.mimeType === 'application/pdf' ? 'text-danger' : 'text-primary'" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </template>
+                                        <!-- File Icon (fallback) -->
+                                        <template x-if="!file.previewUrl || file.isGeneratingThumbnail || (!file.previewUrl.includes('pdf-placeholder') && !(file.mimeType === 'application/pdf' || file.fileName?.toLowerCase().endsWith('.pdf')))">
+                                            <i :class="getFileIcon(file)" style="font-size: 1.5rem;"></i>
+                                        </template>
+                                    </div>
+                                </template>
+                                <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 p-0" style="width: 18px; height: 18px; font-size: 10px; line-height: 1; transform: translate(30%, -30%);" @click.stop="removeAnyFile(file)">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
+                        </template>
+                    </div>
                 </div>
-                <div class="text-dark fw-semibold">Upload Manual(s)</div>
-                <input type="file" class="form-control d-none" id="uploadManuals" multiple accept=".pdf,.doc,.docx" @change="handleFileUpload($event, 'manual')">
-            </label>
+            </template>
         </div>
 
-        <!-- Upload Photos -->
+        <!-- Photos Section -->
         <div class="mb-3">
-            <label for="uploadPhotos" class="d-block text-center p-4 rounded" style="background-color: #f0f4ff; border: 2px dashed #d0d8f2; cursor: pointer; transition: all 0.3s;">
-                <div class="mb-2">
-                    <i class="bi bi-camera" style="font-size: 2.5rem; color: #6366f1;"></i>
+            <template x-if="!hasFilesOfType('photo')">
+                <label for="uploadPhotos" class="d-block text-center p-4 rounded" style="background-color: #f0f4ff; border: 2px dashed #d0d8f2; cursor: pointer; transition: all 0.3s;">
+                    <div class="mb-2">
+                        <i class="bi bi-camera" style="font-size: 2.5rem; color: #6366f1;"></i>
+                    </div>
+                    <div class="text-dark fw-semibold">Upload Photo(s)</div>
+                    <small class="text-muted">Images only</small>
+                    <input type="file" class="form-control d-none" id="uploadPhotos" multiple accept="image/*" @change="handleFileUpload($event, 'photo')">
+                </label>
+            </template>
+            
+            <template x-if="hasFilesOfType('photo')">
+                <div class="border rounded p-2" style="background-color: #f8f9ff; border-color: #d0d8f2 !important;">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-camera me-2" style="color: #6366f1;"></i>
+                            <span class="fw-semibold small">Photos</span>
+                            <span class="badge bg-primary ms-2" x-text="getFilesByType('photo').length"></span>
+                        </div>
+                        <label for="uploadPhotosMore" class="btn btn-sm btn-outline-primary py-0 px-2">
+                            <i class="bi bi-plus"></i>
+                            <input type="file" class="form-control d-none" id="uploadPhotosMore" multiple accept="image/*" @change="handleFileUpload($event, 'photo')">
+                        </label>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <template x-for="file in getFilesByType('photo')" :key="file.id">
+                            <div class="position-relative" style="cursor: pointer;" @click="openFileViewer(file)">
+                                <img :src="getFilePreviewUrl(file)" class="rounded" style="width: 60px; height: 60px; object-fit: cover; border: 1px solid #dee2e6;">
+                                <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 p-0" style="width: 18px; height: 18px; font-size: 10px; line-height: 1; transform: translate(30%, -30%);" @click.stop="removeAnyFile(file)">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
+                        </template>
+                    </div>
                 </div>
-                <div class="text-dark fw-semibold">Upload Photo(s)</div>
-                <input type="file" class="form-control d-none" id="uploadPhotos" multiple accept="image/*" @change="handleFileUpload($event, 'photo')">
-            </label>
+            </template>
         </div>
 
-        <!-- Upload Warranty Documents -->
+        <!-- Warranty Documents Section -->
         <div>
-            <label for="uploadWarranty" class="d-block text-center p-4 rounded" style="background-color: #f0f4ff; border: 2px dashed #d0d8f2; cursor: pointer; transition: all 0.3s;">
-                <div class="mb-2">
-                    <i class="bi bi-shield-check" style="font-size: 2.5rem; color: #6366f1;"></i>
+            <template x-if="!hasFilesOfType('warranty')">
+                <label for="uploadWarranty" class="d-block text-center p-4 rounded" style="background-color: #f0f4ff; border: 2px dashed #d0d8f2; cursor: pointer; transition: all 0.3s;">
+                    <div class="mb-2">
+                        <i class="bi bi-shield-check" style="font-size: 2.5rem; color: #6366f1;"></i>
+                    </div>
+                    <div class="text-dark fw-semibold">Upload Warranty Doc(s)</div>
+                    <small class="text-muted">PDF or images</small>
+                    <input type="file" class="form-control d-none" id="uploadWarranty" multiple accept=".pdf,.doc,.docx,image/*" @change="handleFileUpload($event, 'warranty')">
+                </label>
+            </template>
+            
+            <template x-if="hasFilesOfType('warranty')">
+                <div class="border rounded p-2" style="background-color: #f8f9ff; border-color: #d0d8f2 !important;">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-shield-check me-2" style="color: #6366f1;"></i>
+                            <span class="fw-semibold small">Warranty Docs</span>
+                            <span class="badge bg-primary ms-2" x-text="getFilesByType('warranty').length"></span>
+                        </div>
+                        <label for="uploadWarrantyMore" class="btn btn-sm btn-outline-primary py-0 px-2">
+                            <i class="bi bi-plus"></i>
+                            <input type="file" class="form-control d-none" id="uploadWarrantyMore" multiple accept=".pdf,.doc,.docx,image/*" @change="handleFileUpload($event, 'warranty')">
+                        </label>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <template x-for="file in getFilesByType('warranty')" :key="file.id">
+                            <div class="position-relative" style="cursor: pointer;" @click="openFileViewer(file)">
+                                <template x-if="isImageFile(file)">
+                                    <img :src="getFilePreviewUrl(file)" class="rounded" style="width: 60px; height: 60px; object-fit: cover; border: 1px solid #dee2e6;">
+                                </template>
+                                <template x-if="!isImageFile(file)">
+                                    <div class="d-flex align-items-center justify-content-center rounded position-relative" :style="`width: 60px; height: 60px; background-color: ${getFileColor(file)}; border: 1px solid #dee2e6; overflow: hidden;`">
+                                        <!-- PDF/Doc Thumbnail (if available) -->
+                                        <template x-if="file.previewUrl && !file.previewUrl.includes('pdf-placeholder') && (file.mimeType === 'application/pdf' || file.fileName?.toLowerCase().endsWith('.pdf'))">
+                                            <img :src="file.previewUrl" class="w-100 h-100" style="object-fit: cover;">
+                                        </template>
+                                        <!-- Loading Spinner -->
+                                        <template x-if="file.isGeneratingThumbnail">
+                                            <div class="spinner-border spinner-border-sm" :class="file.mimeType === 'application/pdf' ? 'text-danger' : 'text-primary'" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </template>
+                                        <!-- File Icon (fallback) -->
+                                        <template x-if="!file.previewUrl || file.isGeneratingThumbnail || (!file.previewUrl.includes('pdf-placeholder') && !(file.mimeType === 'application/pdf' || file.fileName?.toLowerCase().endsWith('.pdf')))">
+                                            <i :class="getFileIcon(file)" style="font-size: 1.5rem;"></i>
+                                        </template>
+                                    </div>
+                                </template>
+                                <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 p-0" style="width: 18px; height: 18px; font-size: 10px; line-height: 1; transform: translate(30%, -30%);" @click.stop="removeAnyFile(file)">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
+                        </template>
+                    </div>
                 </div>
-                <div class="text-dark fw-semibold">Upload Warranty Document(s)</div>
-                <input type="file" class="form-control d-none" id="uploadWarranty" multiple accept=".pdf,.doc,.docx,image/*" @change="handleFileUpload($event, 'warranty')">
-            </label>
+            </template>
         </div>
     </div>
 </div>
 
-<!-- Temporary Files Preview (for files added before saving purchase) -->
-<div class="mb-4" x-show="tempFiles && tempFiles.length > 0">
-    <h6 class="text-muted text-uppercase small fw-semibold mb-3">Pending Files</h6>
-    <div class="row g-3">
-        <template x-for="file in tempFiles" :key="file.id">
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="flex-grow-1">
-                                <h6 class="card-title mb-1" x-text="file.fileName"></h6>
-                                <small class="text-muted" x-text="file.fileType.toUpperCase()"></small>
-                            </div>
-                            <button type="button" class="btn btn-sm btn-outline-danger" @click="removeTempFile(file.id)">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                        <small class="text-muted" x-text="formatFileSize(file.fileSize)"></small>
-                        <!-- Preview for images -->
-                        <div x-show="file.mimeType.startsWith('image/')">
-                            <img :src="file.previewUrl" class="img-thumbnail mt-2" style="max-height: 100px;" alt="Preview">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </template>
-    </div>
-</div>
-
-<!-- Uploaded Files Preview (for edit mode) -->
-<div class="mb-4" x-show="editingItemId && uploadedFiles.length > 0">
-    <h6 class="text-muted text-uppercase small fw-semibold mb-3">Uploaded Files</h6>
-    <div class="row g-3">
-        <template x-for="file in uploadedFiles" :key="file.id">
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="flex-grow-1">
-                                <h6 class="card-title mb-1" x-text="file.filename"></h6>
-                                <small class="text-muted" x-text="file.file_type.toUpperCase()"></small>
-                            </div>
-                            <button type="button" class="btn btn-sm btn-outline-danger" @click="removeFile(file.id)">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                        <small class="text-muted" x-text="formatFileSize(file.file_size)"></small>
-                    </div>
-                </div>
-            </div>
-        </template>
-    </div>
-</div>
+<!-- Note: Files open in browser's native viewer (new tab) -->

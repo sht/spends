@@ -25,12 +25,55 @@ import { iconManager } from './utils/icon-manager.js';
 // Import Alpine.js for reactive components
 import Alpine from 'alpinejs';
 
+// Import PDF.js for PDF thumbnail generation
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Set the worker source for PDF.js
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
 // Import styles (Bootstrap Icons are included in SCSS)
 import '../styles/scss/main.scss';
 
 // Import page-specific Alpine components
 import { registerSettingsComponent } from './components/settings.js';
 import { registerInventoryComponent } from './components/inventory.js';
+
+// Utility function to generate PDF thumbnail
+async function generatePDFThumbnail(file, maxWidth = 120, maxHeight = 120) {
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const page = await pdf.getPage(1); // Get first page
+
+    // Calculate scale to fit within maxWidth/maxHeight
+    const viewport = page.getViewport({ scale: 1 });
+    const scale = Math.min(maxWidth / viewport.width, maxHeight / viewport.height, 2);
+    const scaledViewport = page.getViewport({ scale });
+
+    // Create canvas
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.width = scaledViewport.width;
+    canvas.height = scaledViewport.height;
+
+    // Render PDF page to canvas
+    await page.render({
+      canvasContext: context,
+      viewport: scaledViewport
+    }).promise;
+
+    // Convert to data URL
+    const thumbnailUrl = canvas.toDataURL('image/png');
+    
+    // Cleanup
+    pdf.destroy();
+    
+    return thumbnailUrl;
+  } catch (error) {
+    console.error('Error generating PDF thumbnail:', error);
+    return null;
+  }
+}
 
 // Application Class
 class AdminApp {
@@ -504,6 +547,7 @@ class AdminApp {
         this.uploadedFiles = [];
         this.tempFiles = [];
         this.pendingFiles = [];
+        this.filesToDelete = []; // Track files marked for deletion (staged)
 
         // Load data without awaiting - this keeps init() synchronous
         // so Alpine.js can properly initialize the component and attach event listeners
@@ -551,6 +595,9 @@ class AdminApp {
 
         // Load existing files for this purchase
         await this.loadFilesForPurchase(item.id);
+        
+        // Clear any staged deletions from previous edit sessions
+        this.filesToDelete = [];
       },
 
       // Load files for a specific purchase
@@ -675,6 +722,7 @@ class AdminApp {
         this.editingItemId = null;
         this.uploadedFiles = [];
         this.pendingFiles = [];
+        this.filesToDelete = []; // Clear staged deletions
       },
 
       savePurchase() {
@@ -861,6 +909,19 @@ class AdminApp {
             this.tempFiles = []; // Clear temporary files
           }
 
+          // Delete files marked for deletion (staged deletions)
+          if (this.filesToDelete && this.filesToDelete.length > 0) {
+            console.log('Deleting staged files:', this.filesToDelete);
+            for (const fileToDelete of this.filesToDelete) {
+              try {
+                await this.removeFile(fileToDelete.id);
+              } catch (error) {
+                console.error(`Failed to delete file ${fileToDelete.id}:`, error);
+              }
+            }
+            this.filesToDelete = []; // Clear staged deletions
+          }
+
           // Refresh the data without page reload
           setTimeout(async () => {
             console.log('Refreshing data after purchase...');
@@ -896,7 +957,7 @@ class AdminApp {
       },
 
       // Handle file upload
-      handleFileUpload(event, fileType) {
+      async handleFileUpload(event, fileType) {
         const files = Array.from(event.target.files);
         if (files.length === 0) return;
 
@@ -909,9 +970,30 @@ class AdminApp {
             fileType: fileType,
             fileSize: file.size,
             mimeType: file.type,
-            previewUrl: URL.createObjectURL(file), // Create preview URL for images
+            previewUrl: null, // Will be set below
             uploadStatus: 'pending' // 'pending', 'uploading', 'uploaded', 'error'
           };
+
+          // Generate preview based on file type
+          if (file.type.startsWith('image/')) {
+            // For images, use object URL directly
+            filePreview.previewUrl = URL.createObjectURL(file);
+          } else if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+            // For PDFs, generate a thumbnail
+            filePreview.previewUrl = '/assets/pdf-placeholder.png'; // Temporary placeholder
+            filePreview.isGeneratingThumbnail = true;
+            
+            // Generate thumbnail asynchronously
+            generatePDFThumbnail(file, 120, 120).then(thumbnailUrl => {
+              if (thumbnailUrl) {
+                filePreview.previewUrl = thumbnailUrl;
+              } else {
+                // Fallback to PDF icon if thumbnail generation fails
+                filePreview.previewUrl = null;
+              }
+              filePreview.isGeneratingThumbnail = false;
+            });
+          }
 
           // Add to temporary files array
           if (!this.tempFiles) {
@@ -963,9 +1045,6 @@ class AdminApp {
             this.uploadedFiles = [];
           }
           this.uploadedFiles.push(uploadedFile);
-
-          window.AdminApp.notificationManager.success(`File "${file.name}" uploaded successfully!`);
-
           return uploadedFile;
         } catch (error) {
           console.error('Error uploading file:', error);
@@ -999,8 +1078,6 @@ class AdminApp {
 
           // Remove from local array
           this.uploadedFiles = this.uploadedFiles.filter(f => f.id !== fileId);
-
-          window.AdminApp.notificationManager.success(`File "${fileToRemove.filename}" deleted successfully!`);
         } catch (error) {
           console.error('Error removing file:', error);
           window.AdminApp.notificationManager.error(`Failed to remove file: ${error.message}`);
@@ -1028,7 +1105,111 @@ class AdminApp {
         const sizes = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-      }
+      },
+
+      // Get all files (both temp and uploaded) filtered by type
+      // Excludes files marked for deletion
+      getFilesByType(fileType) {
+        const type = fileType.toLowerCase();
+        const temp = (this.tempFiles || []).filter(f => f.fileType === type);
+        // Exclude uploaded files that are marked for deletion
+        const filesToDeleteIds = (this.filesToDelete || []).map(f => f.id);
+        const uploaded = (this.uploadedFiles || []).filter(f => f.file_type === type && !filesToDeleteIds.includes(f.id));
+        return [...temp, ...uploaded];
+      },
+
+      // Check if any files exist for a specific type
+      hasFilesOfType(fileType) {
+        return this.getFilesByType(fileType).length > 0;
+      },
+
+      // Check if file is an image
+      isImageFile(file) {
+        const mimeType = file.mimeType || file.mime_type || '';
+        return mimeType.startsWith('image/');
+      },
+
+      // Check if file is a PDF
+      isPdfFile(file) {
+        const mimeType = file.mimeType || file.mime_type || '';
+        const filename = file.filename || file.fileName || '';
+        return mimeType === 'application/pdf' || filename.toLowerCase().endsWith('.pdf');
+      },
+
+      // Get file icon class based on file type
+      getFileIcon(file) {
+        const mimeType = file.mimeType || file.mime_type || '';
+        const filename = file.filename || file.fileName || '';
+        
+        if (mimeType.startsWith('image/') || filename.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+          return 'bi bi-file-earmark-image text-success';
+        }
+        if (mimeType === 'application/pdf' || filename.toLowerCase().endsWith('.pdf')) {
+          return 'bi bi-file-earmark-pdf text-danger';
+        }
+        if (filename.match(/\.(doc|docx)$/i)) {
+          return 'bi bi-file-earmark-word text-primary';
+        }
+        if (filename.match(/\.(xls|xlsx)$/i)) {
+          return 'bi bi-file-earmark-excel text-success';
+        }
+        return 'bi bi-file-earmark text-secondary';
+      },
+
+      // Get background color for file icon
+      getFileColor(file) {
+        const mimeType = file.mimeType || file.mime_type || '';
+        const filename = file.filename || file.fileName || '';
+        
+        if (mimeType.startsWith('image/') || filename.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+          return '#d1e7dd'; // Light green for images
+        }
+        if (mimeType === 'application/pdf' || filename.toLowerCase().endsWith('.pdf')) {
+          return '#f8d7da'; // Light red for PDFs
+        }
+        if (filename.match(/\.(doc|docx)$/i)) {
+          return '#cfe2ff'; // Light blue for Word
+        }
+        return '#e2e3e5'; // Gray for others
+      },
+
+      // Get preview URL for a file
+      getFilePreviewUrl(file) {
+        // For temp files, use the previewUrl (object URL)
+        if (file.previewUrl) {
+          return file.previewUrl;
+        }
+        // For uploaded files, construct the download URL
+        if (file.id) {
+          const apiUrl = window.APP_CONFIG?.API_URL || '/api';
+          return `${apiUrl}/files/file/${file.id}/download/`;
+        }
+        return '';
+      },
+
+      // Open file in browser's native viewer (new tab)
+      openFileViewer(file) {
+        const fileUrl = this.getFilePreviewUrl(file);
+        if (fileUrl) {
+          window.open(fileUrl, '_blank');
+        }
+      },
+
+      // Remove any file (temp or uploaded)
+      // For uploaded files: mark for deletion (staged, will delete on save)
+      // For temp files: remove immediately (not saved yet)
+      removeAnyFile(file) {
+        if (file.id && !file.id.startsWith('temp_')) {
+          // This is an uploaded file - mark for deletion (staged)
+          if (!this.filesToDelete) {
+            this.filesToDelete = [];
+          }
+          this.filesToDelete.push(file);
+        } else {
+          // This is a temp file - remove immediately
+          this.removeTempFile(file.id);
+        }
+      },
     }));
 
     // View Purchase Details

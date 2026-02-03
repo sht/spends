@@ -38,7 +38,7 @@ async def list_purchases(
     )
 
 
-@router.get("/{purchase_id}", response_model=PurchaseResponse)
+@router.get("/{purchase_id}/", response_model=PurchaseResponse)
 async def get_single_purchase(purchase_id: str, db: AsyncSession = Depends(get_db)):
     purchase = await get_purchase(db, purchase_id)
     if not purchase:
@@ -51,7 +51,7 @@ async def create_new_purchase(purchase: PurchaseCreate, db: AsyncSession = Depen
     return await create_purchase(db, purchase)
 
 
-@router.put("/{purchase_id}", response_model=PurchaseResponse)
+@router.put("/{purchase_id}/", response_model=PurchaseResponse)
 async def update_existing_purchase(
     purchase_id: str, 
     purchase_update: PurchaseUpdate, 
@@ -63,7 +63,7 @@ async def update_existing_purchase(
     return updated_purchase
 
 
-@router.delete("/{purchase_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{purchase_id}/", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_existing_purchase(purchase_id: str, db: AsyncSession = Depends(get_db)):
     success = await delete_purchase(db, purchase_id)
     if not success:

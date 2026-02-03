@@ -213,7 +213,7 @@ async def delete_file(
     return {"message": "File deleted successfully"}
 
 
-@router.get("/download/{file_id}/")
+@router.get("/file/{file_id}/download/")
 async def download_file(
     file_id: str,
     db: AsyncSession = Depends(get_db)
@@ -247,8 +247,17 @@ async def download_file(
 
     # Return file for download
     from fastapi.responses import FileResponse
+    
+    # Set appropriate headers for inline display vs download
+    # For images and PDFs, show inline; for others, force download
+    inline_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf']
+    disposition = 'inline' if db_file.mime_type in inline_types else 'attachment'
+    
     return FileResponse(
         path=file_path,
         media_type=db_file.mime_type,
-        filename=db_file.filename
+        filename=db_file.filename,
+        headers={
+            'Content-Disposition': f'{disposition}; filename="{db_file.filename}"'
+        }
     )
