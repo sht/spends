@@ -25,55 +25,12 @@ import { iconManager } from './utils/icon-manager.js';
 // Import Alpine.js for reactive components
 import Alpine from 'alpinejs';
 
-// Import PDF.js for PDF thumbnail generation
-import * as pdfjsLib from 'pdfjs-dist';
-
-// Set the worker source for PDF.js
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
-
 // Import styles (Bootstrap Icons are included in SCSS)
 import '../styles/scss/main.scss';
 
 // Import page-specific Alpine components
 import { registerSettingsComponent } from './components/settings.js';
 import { registerInventoryComponent } from './components/inventory.js';
-
-// Utility function to generate PDF thumbnail
-async function generatePDFThumbnail(file, maxWidth = 120, maxHeight = 120) {
-  try {
-    const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    const page = await pdf.getPage(1); // Get first page
-
-    // Calculate scale to fit within maxWidth/maxHeight
-    const viewport = page.getViewport({ scale: 1 });
-    const scale = Math.min(maxWidth / viewport.width, maxHeight / viewport.height, 2);
-    const scaledViewport = page.getViewport({ scale });
-
-    // Create canvas
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    canvas.width = scaledViewport.width;
-    canvas.height = scaledViewport.height;
-
-    // Render PDF page to canvas
-    await page.render({
-      canvasContext: context,
-      viewport: scaledViewport
-    }).promise;
-
-    // Convert to data URL
-    const thumbnailUrl = canvas.toDataURL('image/png');
-    
-    // Cleanup
-    pdf.destroy();
-    
-    return thumbnailUrl;
-  } catch (error) {
-    console.error('Error generating PDF thumbnail:', error);
-    return null;
-  }
-}
 
 // Application Class
 class AdminApp {
@@ -957,7 +914,7 @@ class AdminApp {
       },
 
       // Handle file upload
-      async handleFileUpload(event, fileType) {
+      handleFileUpload(event, fileType) {
         const files = Array.from(event.target.files);
         if (files.length === 0) return;
 
@@ -978,22 +935,8 @@ class AdminApp {
           if (file.type.startsWith('image/')) {
             // For images, use object URL directly
             filePreview.previewUrl = URL.createObjectURL(file);
-          } else if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-            // For PDFs, generate a thumbnail
-            filePreview.previewUrl = '/assets/pdf-placeholder.png'; // Temporary placeholder
-            filePreview.isGeneratingThumbnail = true;
-            
-            // Generate thumbnail asynchronously
-            generatePDFThumbnail(file, 120, 120).then(thumbnailUrl => {
-              if (thumbnailUrl) {
-                filePreview.previewUrl = thumbnailUrl;
-              } else {
-                // Fallback to PDF icon if thumbnail generation fails
-                filePreview.previewUrl = null;
-              }
-              filePreview.isGeneratingThumbnail = false;
-            });
           }
+          // Note: PDF thumbnails not supported - shows icon instead
 
           // Add to temporary files array
           if (!this.tempFiles) {

@@ -141,7 +141,7 @@
                             <span class="fw-semibold small">Receipts</span>
                             <span class="badge bg-primary ms-2" x-text="getFilesByType('receipt').length"></span>
                         </div>
-                        <label for="uploadReceiptsMore" class="btn btn-sm btn-outline-primary py-0 px-2">
+                        <label for="uploadReceiptsMore" class="btn btn-sm btn-primary py-0 px-2 d-flex align-items-center justify-content-center">
                             <i class="bi bi-plus"></i>
                             <input type="file" class="form-control d-none" id="uploadReceiptsMore" multiple accept="image/*,.pdf" @change="handleFileUpload($event, 'receipt')">
                         </label>
@@ -154,23 +154,10 @@
                                 <template x-if="isImageFile(file)">
                                     <img :src="getFilePreviewUrl(file)" class="rounded" style="width: 60px; height: 60px; object-fit: cover; border: 1px solid #dee2e6;">
                                 </template>
-                                <!-- PDF Thumbnail or Icon -->
+                                <!-- PDF Icon -->
                                 <template x-if="!isImageFile(file)">
-                                    <div class="d-flex align-items-center justify-content-center rounded position-relative" style="width: 60px; height: 60px; background-color: #f8d7da; border: 1px solid #dee2e6; overflow: hidden;">
-                                        <!-- PDF Thumbnail (if available) -->
-                                        <template x-if="file.previewUrl && !file.previewUrl.includes('pdf-placeholder')">
-                                            <img :src="file.previewUrl" class="w-100 h-100" style="object-fit: cover;">
-                                        </template>
-                                        <!-- Loading Spinner -->
-                                        <template x-if="file.isGeneratingThumbnail">
-                                            <div class="spinner-border spinner-border-sm text-danger" role="status">
-                                                <span class="visually-hidden">Loading...</span>
-                                            </div>
-                                        </template>
-                                        <!-- PDF Icon (fallback) -->
-                                        <template x-if="!file.previewUrl || (!file.isGeneratingThumbnail && file.previewUrl.includes('pdf-placeholder'))">
-                                            <i class="bi bi-file-earmark-pdf text-danger" style="font-size: 1.5rem;"></i>
-                                        </template>
+                                    <div class="d-flex align-items-center justify-content-center rounded position-relative" style="width: 60px; height: 60px; background-color: #f8d7da; border: 1px solid #dee2e6;">
+                                        <i class="bi bi-file-earmark-pdf text-danger" style="font-size: 1.5rem;"></i>
                                     </div>
                                 </template>
                                 <!-- Delete Button -->
@@ -205,7 +192,7 @@
                             <span class="fw-semibold small">Manuals</span>
                             <span class="badge bg-primary ms-2" x-text="getFilesByType('manual').length"></span>
                         </div>
-                        <label for="uploadManualsMore" class="btn btn-sm btn-outline-primary py-0 px-2">
+                        <label for="uploadManualsMore" class="btn btn-sm btn-primary py-0 px-2 d-flex align-items-center justify-content-center">
                             <i class="bi bi-plus"></i>
                             <input type="file" class="form-control d-none" id="uploadManualsMore" multiple accept=".pdf,.doc,.docx" @change="handleFileUpload($event, 'manual')">
                         </label>
@@ -217,21 +204,8 @@
                                     <img :src="getFilePreviewUrl(file)" class="rounded" style="width: 60px; height: 60px; object-fit: cover; border: 1px solid #dee2e6;">
                                 </template>
                                 <template x-if="!isImageFile(file)">
-                                    <div class="d-flex align-items-center justify-content-center rounded position-relative" :style="`width: 60px; height: 60px; background-color: ${getFileColor(file)}; border: 1px solid #dee2e6; overflow: hidden;`">
-                                        <!-- PDF/Doc Thumbnail (if available) -->
-                                        <template x-if="file.previewUrl && !file.previewUrl.includes('pdf-placeholder') && (file.mimeType === 'application/pdf' || file.fileName?.toLowerCase().endsWith('.pdf'))">
-                                            <img :src="file.previewUrl" class="w-100 h-100" style="object-fit: cover;">
-                                        </template>
-                                        <!-- Loading Spinner -->
-                                        <template x-if="file.isGeneratingThumbnail">
-                                            <div class="spinner-border spinner-border-sm" :class="file.mimeType === 'application/pdf' ? 'text-danger' : 'text-primary'" role="status">
-                                                <span class="visually-hidden">Loading...</span>
-                                            </div>
-                                        </template>
-                                        <!-- File Icon (fallback) -->
-                                        <template x-if="!file.previewUrl || file.isGeneratingThumbnail || (!file.previewUrl.includes('pdf-placeholder') && !(file.mimeType === 'application/pdf' || file.fileName?.toLowerCase().endsWith('.pdf')))">
-                                            <i :class="getFileIcon(file)" style="font-size: 1.5rem;"></i>
-                                        </template>
+                                    <div class="d-flex align-items-center justify-content-center rounded position-relative" :style="`width: 60px; height: 60px; background-color: ${getFileColor(file)}; border: 1px solid #dee2e6;`">
+                                        <i :class="getFileIcon(file)" style="font-size: 1.5rem;"></i>
                                     </div>
                                 </template>
                                 <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 p-0" style="width: 18px; height: 18px; font-size: 10px; line-height: 1; transform: translate(30%, -30%);" @click.stop="removeAnyFile(file)">
@@ -265,7 +239,7 @@
                             <span class="fw-semibold small">Photos</span>
                             <span class="badge bg-primary ms-2" x-text="getFilesByType('photo').length"></span>
                         </div>
-                        <label for="uploadPhotosMore" class="btn btn-sm btn-outline-primary py-0 px-2">
+                        <label for="uploadPhotosMore" class="btn btn-sm btn-primary py-0 px-2 d-flex align-items-center justify-content-center">
                             <i class="bi bi-plus"></i>
                             <input type="file" class="form-control d-none" id="uploadPhotosMore" multiple accept="image/*" @change="handleFileUpload($event, 'photo')">
                         </label>
@@ -305,7 +279,7 @@
                             <span class="fw-semibold small">Warranty Docs</span>
                             <span class="badge bg-primary ms-2" x-text="getFilesByType('warranty').length"></span>
                         </div>
-                        <label for="uploadWarrantyMore" class="btn btn-sm btn-outline-primary py-0 px-2">
+                        <label for="uploadWarrantyMore" class="btn btn-sm btn-primary py-0 px-2 d-flex align-items-center justify-content-center">
                             <i class="bi bi-plus"></i>
                             <input type="file" class="form-control d-none" id="uploadWarrantyMore" multiple accept=".pdf,.doc,.docx,image/*" @change="handleFileUpload($event, 'warranty')">
                         </label>
@@ -317,21 +291,8 @@
                                     <img :src="getFilePreviewUrl(file)" class="rounded" style="width: 60px; height: 60px; object-fit: cover; border: 1px solid #dee2e6;">
                                 </template>
                                 <template x-if="!isImageFile(file)">
-                                    <div class="d-flex align-items-center justify-content-center rounded position-relative" :style="`width: 60px; height: 60px; background-color: ${getFileColor(file)}; border: 1px solid #dee2e6; overflow: hidden;`">
-                                        <!-- PDF/Doc Thumbnail (if available) -->
-                                        <template x-if="file.previewUrl && !file.previewUrl.includes('pdf-placeholder') && (file.mimeType === 'application/pdf' || file.fileName?.toLowerCase().endsWith('.pdf'))">
-                                            <img :src="file.previewUrl" class="w-100 h-100" style="object-fit: cover;">
-                                        </template>
-                                        <!-- Loading Spinner -->
-                                        <template x-if="file.isGeneratingThumbnail">
-                                            <div class="spinner-border spinner-border-sm" :class="file.mimeType === 'application/pdf' ? 'text-danger' : 'text-primary'" role="status">
-                                                <span class="visually-hidden">Loading...</span>
-                                            </div>
-                                        </template>
-                                        <!-- File Icon (fallback) -->
-                                        <template x-if="!file.previewUrl || file.isGeneratingThumbnail || (!file.previewUrl.includes('pdf-placeholder') && !(file.mimeType === 'application/pdf' || file.fileName?.toLowerCase().endsWith('.pdf')))">
-                                            <i :class="getFileIcon(file)" style="font-size: 1.5rem;"></i>
-                                        </template>
+                                    <div class="d-flex align-items-center justify-content-center rounded position-relative" :style="`width: 60px; height: 60px; background-color: ${getFileColor(file)}; border: 1px solid #dee2e6;`">
+                                        <i :class="getFileIcon(file)" style="font-size: 1.5rem;"></i>
                                     </div>
                                 </template>
                                 <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 p-0" style="width: 18px; height: 18px; font-size: 10px; line-height: 1; transform: translate(30%, -30%);" @click.stop="removeAnyFile(file)">
