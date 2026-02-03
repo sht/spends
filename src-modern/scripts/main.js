@@ -500,6 +500,11 @@ class AdminApp {
       init() {
         this.resetForm();
 
+        // Initialize files arrays
+        this.uploadedFiles = [];
+        this.tempFiles = [];
+        this.pendingFiles = [];
+
         // Load data without awaiting - this keeps init() synchronous
         // so Alpine.js can properly initialize the component and attach event listeners
         this.loadRetailers();
@@ -521,7 +526,7 @@ class AdminApp {
         });
       },
       
-      enterEditMode(item) {
+      async enterEditMode(item) {
         this.isEditMode = true;
         this.editingItemId = item.id;
         // Set each form field individually to ensure reactivity
@@ -543,6 +548,32 @@ class AdminApp {
         console.log('Entered edit mode with item:', item);
         console.log('Form retailer set to:', this.form.retailer);
         console.log('Form brand set to:', this.form.brand);
+
+        // Load existing files for this purchase
+        await this.loadFilesForPurchase(item.id);
+      },
+
+      // Load files for a specific purchase
+      async loadFilesForPurchase(purchaseId) {
+        try {
+          const apiUrl = window.APP_CONFIG?.API_URL || '/api';
+          const response = await fetch(`${apiUrl}/files/${purchaseId}/`);
+
+          if (!response.ok) {
+            if (response.status === 404) {
+              // If no files exist for this purchase, return empty array
+              this.uploadedFiles = [];
+              return;
+            }
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          this.uploadedFiles = data;
+        } catch (error) {
+          console.error('Error loading files for purchase:', error);
+          this.uploadedFiles = [];
+        }
       },
 
       // Check if selected retailer is also a brand (using is_brand flag from API)
@@ -642,6 +673,8 @@ class AdminApp {
         };
         this.isEditMode = false;
         this.editingItemId = null;
+        this.uploadedFiles = [];
+        this.pendingFiles = [];
       },
 
       savePurchase() {
@@ -792,6 +825,12 @@ class AdminApp {
           const savedPurchase = await response.json();
           console.log('Purchase saved to API:', savedPurchase);
 
+          // Update the editingItemId to the saved purchase ID if it's a new purchase
+          if (!isUpdate) {
+            this.editingItemId = savedPurchase.id;
+            this.isEditMode = true; // Now we're in edit mode since the purchase exists
+          }
+
           const message = isUpdate
             ? `Purchase "${this.form.productName}" updated successfully!`
             : `Purchase "${this.form.productName}" created successfully!`;
@@ -802,37 +841,193 @@ class AdminApp {
             const modal = Modal.getInstance(modalEl);
             if (modal) modal.hide();
           }
-          
-          this.resetForm();
 
           // Show success notification
           window.AdminApp.notificationManager.success(message);
 
+          // Upload any pending files after the purchase is saved
+          if (this.pendingFiles && this.pendingFiles.length > 0) {
+            for (const pendingFile of this.pendingFiles) {
+              await this.uploadFile(pendingFile.file, pendingFile.fileType);
+            }
+            this.pendingFiles = []; // Clear pending files
+          }
+
+          // Upload any temporary files that were added before the purchase was saved
+          if (this.tempFiles && this.tempFiles.length > 0) {
+            for (const tempFile of this.tempFiles) {
+              await this.uploadFile(tempFile.file, tempFile.fileType);
+            }
+            this.tempFiles = []; // Clear temporary files
+          }
+
           // Refresh the data without page reload
           setTimeout(async () => {
             console.log('Refreshing data after purchase...');
-            
+
             // Refresh dashboard data if on dashboard page
             const isDashboard = document.querySelector('[data-page="dashboard"]');
             console.log('Is dashboard:', !!isDashboard, 'dashboardManager:', !!window.dashboardManager);
-            
+
             if (window.dashboardManager && isDashboard) {
               console.log('Refreshing dashboard data...');
               await window.dashboardManager.loadDashboardData();
               console.log('Dashboard data refreshed');
             }
-            
+
             // Refresh inventory data if on inventory page
             if (window.location.pathname.includes('inventory')) {
               console.log('Refreshing inventory data...');
               // Dispatch event to trigger inventory refresh
               window.dispatchEvent(new CustomEvent('refresh-inventory'));
             }
+
+            // If we're in edit mode and have files to upload, upload them now
+            if (isUpdate && this.uploadedFiles.length > 0) {
+              console.log('Updating files for purchase...');
+              // Note: File uploads after purchase update would require a different approach
+              // since the files are already associated with the purchase during upload
+            }
           }, 1000);
         } catch (error) {
           console.error('Error saving purchase:', error);
           window.AdminApp.notificationManager.error(`Failed to save purchase: ${error.message}`);
         }
+      },
+
+      // Handle file upload
+      handleFileUpload(event, fileType) {
+        const files = Array.from(event.target.files);
+        if (files.length === 0) return;
+
+        for (const file of files) {
+          // Add file to temporary storage with preview
+          const filePreview = {
+            id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            file: file,
+            fileName: file.name,
+            fileType: fileType,
+            fileSize: file.size,
+            mimeType: file.type,
+            previewUrl: URL.createObjectURL(file), // Create preview URL for images
+            uploadStatus: 'pending' // 'pending', 'uploading', 'uploaded', 'error'
+          };
+
+          // Add to temporary files array
+          if (!this.tempFiles) {
+            this.tempFiles = [];
+          }
+          this.tempFiles.push(filePreview);
+        }
+
+        // Clear the input to allow re-uploading the same file
+        event.target.value = '';
+      },
+
+      // Upload a single file
+      async uploadFile(file, fileType) {
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('file_type', fileType);
+
+          const apiUrl = window.APP_CONFIG?.API_URL || '/api';
+
+          // Use the current editingItemId, which should be set after purchase is saved
+          const purchaseId = this.editingItemId;
+
+          if (!purchaseId) {
+            // If no purchase ID is available, we can't upload the file yet
+            // This should only happen if the function is called before the purchase is saved
+            window.AdminApp.notificationManager.warning('Purchase not saved yet. File will be uploaded after saving purchase.');
+            return;
+          }
+
+          const response = await fetch(`${apiUrl}/files/${purchaseId}/`, {
+            method: 'POST',
+            body: formData
+          });
+
+          if (!response.ok) {
+            if (response.status === 404) {
+              // If purchase doesn't exist, show a specific error
+              throw new Error(`Purchase not found. Please save the purchase first before uploading files.`);
+            }
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+          }
+
+          const uploadedFile = await response.json();
+          // Add to uploaded files if array exists
+          if (!this.uploadedFiles) {
+            this.uploadedFiles = [];
+          }
+          this.uploadedFiles.push(uploadedFile);
+
+          window.AdminApp.notificationManager.success(`File "${file.name}" uploaded successfully!`);
+
+          return uploadedFile;
+        } catch (error) {
+          console.error('Error uploading file:', error);
+          window.AdminApp.notificationManager.error(`Failed to upload file: ${error.message}`);
+          throw error;
+        }
+      },
+
+      // Remove a file
+      async removeFile(fileId) {
+        try {
+          const fileToRemove = this.uploadedFiles.find(f => f.id === fileId);
+          if (!fileToRemove) return;
+
+          const apiUrl = window.APP_CONFIG?.API_URL || '/api';
+          const purchaseId = this.editingItemId;
+
+          if (!purchaseId) {
+            window.AdminApp.notificationManager.warning('Purchase ID not available');
+            return;
+          }
+
+          const response = await fetch(`${apiUrl}/files/${purchaseId}/${fileId}/`, {
+            method: 'DELETE'
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+          }
+
+          // Remove from local array
+          this.uploadedFiles = this.uploadedFiles.filter(f => f.id !== fileId);
+
+          window.AdminApp.notificationManager.success(`File "${fileToRemove.filename}" deleted successfully!`);
+        } catch (error) {
+          console.error('Error removing file:', error);
+          window.AdminApp.notificationManager.error(`Failed to remove file: ${error.message}`);
+        }
+      },
+
+      // Remove a temporary file from preview
+      removeTempFile(fileId) {
+        if (this.tempFiles) {
+          // Revoke the preview URL to free memory
+          const fileToRemove = this.tempFiles.find(f => f.id === fileId);
+          if (fileToRemove && fileToRemove.previewUrl) {
+            URL.revokeObjectURL(fileToRemove.previewUrl);
+          }
+
+          // Remove from temp files array
+          this.tempFiles = this.tempFiles.filter(f => f.id !== fileId);
+        }
+      },
+
+      // Format file size for display
+      formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
       }
     }));
 
@@ -900,6 +1095,15 @@ class AdminApp {
             }, 300);
           }
         }, 150);
+      },
+
+      // Format file size for display
+      formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
       }
     }));
 

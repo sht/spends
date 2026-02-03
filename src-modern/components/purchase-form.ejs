@@ -114,7 +114,7 @@
 </div>
 
 <!-- File Upload Section -->
-<div class="mb-4">
+<div class="mb-4" x-show="!isViewMode">
     <div class="border rounded p-4" style="border: 1px solid #dee2e6;">
         <h6 class="text-center text-muted fw-semibold mb-4">Upload Files</h6>
 
@@ -125,7 +125,7 @@
                     <i class="bi bi-file-earmark-text" style="font-size: 2.5rem; color: #6366f1;"></i>
                 </div>
                 <div class="text-dark fw-semibold">Upload Receipt(s)</div>
-                <input type="file" class="form-control d-none" id="uploadReceipts" multiple accept="image/*,.pdf">
+                <input type="file" class="form-control d-none" id="uploadReceipts" multiple accept="image/*,.pdf" @change="handleFileUpload($event, 'receipt')">
             </label>
         </div>
 
@@ -136,19 +136,84 @@
                     <i class="bi bi-book" style="font-size: 2.5rem; color: #6366f1;"></i>
                 </div>
                 <div class="text-dark fw-semibold">Upload Manual(s)</div>
-                <input type="file" class="form-control d-none" id="uploadManuals" multiple accept=".pdf,.doc,.docx">
+                <input type="file" class="form-control d-none" id="uploadManuals" multiple accept=".pdf,.doc,.docx" @change="handleFileUpload($event, 'manual')">
             </label>
         </div>
 
         <!-- Upload Photos -->
-        <div>
+        <div class="mb-3">
             <label for="uploadPhotos" class="d-block text-center p-4 rounded" style="background-color: #f0f4ff; border: 2px dashed #d0d8f2; cursor: pointer; transition: all 0.3s;">
                 <div class="mb-2">
                     <i class="bi bi-camera" style="font-size: 2.5rem; color: #6366f1;"></i>
                 </div>
                 <div class="text-dark fw-semibold">Upload Photo(s)</div>
-                <input type="file" class="form-control d-none" id="uploadPhotos" multiple accept="image/*">
+                <input type="file" class="form-control d-none" id="uploadPhotos" multiple accept="image/*" @change="handleFileUpload($event, 'photo')">
             </label>
         </div>
+
+        <!-- Upload Warranty Documents -->
+        <div>
+            <label for="uploadWarranty" class="d-block text-center p-4 rounded" style="background-color: #f0f4ff; border: 2px dashed #d0d8f2; cursor: pointer; transition: all 0.3s;">
+                <div class="mb-2">
+                    <i class="bi bi-shield-check" style="font-size: 2.5rem; color: #6366f1;"></i>
+                </div>
+                <div class="text-dark fw-semibold">Upload Warranty Document(s)</div>
+                <input type="file" class="form-control d-none" id="uploadWarranty" multiple accept=".pdf,.doc,.docx,image/*" @change="handleFileUpload($event, 'warranty')">
+            </label>
+        </div>
+    </div>
+</div>
+
+<!-- Temporary Files Preview (for files added before saving purchase) -->
+<div class="mb-4" x-show="tempFiles && tempFiles.length > 0">
+    <h6 class="text-muted text-uppercase small fw-semibold mb-3">Pending Files</h6>
+    <div class="row g-3">
+        <template x-for="file in tempFiles" :key="file.id">
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="card-title mb-1" x-text="file.fileName"></h6>
+                                <small class="text-muted" x-text="file.fileType.toUpperCase()"></small>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-danger" @click="removeTempFile(file.id)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted" x-text="formatFileSize(file.fileSize)"></small>
+                        <!-- Preview for images -->
+                        <div x-show="file.mimeType.startsWith('image/')">
+                            <img :src="file.previewUrl" class="img-thumbnail mt-2" style="max-height: 100px;" alt="Preview">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+</div>
+
+<!-- Uploaded Files Preview (for edit mode) -->
+<div class="mb-4" x-show="editingItemId && uploadedFiles.length > 0">
+    <h6 class="text-muted text-uppercase small fw-semibold mb-3">Uploaded Files</h6>
+    <div class="row g-3">
+        <template x-for="file in uploadedFiles" :key="file.id">
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="card-title mb-1" x-text="file.filename"></h6>
+                                <small class="text-muted" x-text="file.file_type.toUpperCase()"></small>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-danger" @click="removeFile(file.id)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted" x-text="formatFileSize(file.file_size)"></small>
+                    </div>
+                </div>
+            </div>
+        </template>
     </div>
 </div>

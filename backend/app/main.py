@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.config import settings
-from app.routes import purchases, warranties, retailers, brands, analytics, exports, imports
+from app.routes import purchases, warranties, retailers, brands, analytics, exports, imports, files
 
 app = FastAPI(title="Spends Tracker API", version="0.1.0")
 
@@ -28,6 +28,7 @@ app.include_router(brands.router)
 app.include_router(analytics.router)
 app.include_router(exports.router)
 app.include_router(imports.router)
+app.include_router(files.router)
 
 
 @app.get("/api")

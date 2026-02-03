@@ -39,3 +39,4 @@ class Purchase(Base):
     retailer = relationship("Retailer", back_populates="purchases")
     brand = relationship("Brand", back_populates="purchases")
     warranty = relationship("Warranty", back_populates="purchase", uselist=False, cascade="all, delete-orphan")
+    files = relationship("File", back_populates="purchase", cascade="all, delete-orphan")
