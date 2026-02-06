@@ -45,12 +45,12 @@ export default defineConfig({
 
   server: {
     host: env.VITE_HOST || false,
-    port: env.VITE_PORT ? parseInt(env.VITE_PORT) : 3000,
+    port: env.VITE_PORT ? parseInt(env.VITE_PORT) : 3030,
     open: env.VITE_OPEN_BROWSER === 'true',
     // Proxy API requests to the FastAPI backend during development
     proxy: {
       '/api': {
-        target: env.VITE_API_URL || 'http://localhost:8000',
+        target: env.VITE_API_URL || 'http://localhost:3031',
         changeOrigin: true,
         ws: true,
         rewrite: (path) => path,

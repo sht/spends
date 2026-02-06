@@ -14,6 +14,11 @@ Track your purchases, manage warranties, and analyze spending patterns. Upload r
 | Bootstrap 5 | Pydantic | Hash-sharded files |
 | Chart.js | Uvicorn | Reference counting |
 
+## Documentation
+
+- [Backend Documentation](backend/README.md) - Detailed information about the backend API
+- [Development Plan](DEVELOPMENT.md) - Roadmap and development phases for the backend
+
 ## Quick Start
 
 ### Prerequisites
@@ -41,7 +46,7 @@ Default ports are **3030** (frontend) and **3031** (backend). To customize, edit
 **`.env`** (frontend):
 ```env
 VITE_PORT=3030
-VITE_API_URL=http://localhost:3031/api
+VITE_API_URL=http://localhost:3031
 ```
 
 **`backend/.env`** (backend):
