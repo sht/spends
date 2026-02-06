@@ -371,6 +371,72 @@ tests/
 
 ---
 
+### Phase 9: Backup & Disaster Recovery 💾
+**Objective:** Protect user data with reliable backup and restore capabilities
+
+**Background:**
+The app uses hash-sharded file storage (`uploads/{hash[:2]}/{hash[2:4]}/{hash}`) for scalability and automatic deduplication. This requires careful backup strategy to ensure data integrity and easy disaster recovery.
+
+#### Backup Components
+| Component | Location | Frequency | Notes |
+|-----------|----------|-----------|-------|
+| Database | `spends_tracker.db` | Daily | SQLite file, small size |
+| File Storage | `uploads/` | Weekly | Hash-sharded, can use incremental sync |
+| Config | `.env` | Once | Environment variables |
+
+#### Backup Strategy (3-2-1 Rule)
+- **3 copies**: Primary + Local Backup + Offsite Backup
+- **2 media**: Local disk + Cloud storage
+- **1 offsite**: Cloud storage (S3, B2, Dropbox, etc.)
+
+#### Backend Tasks
+- [ ] Create backup service (`app/services/backup_service.py`)
+  - [ ] Export database to temp location (handle locked DB gracefully)
+  - [ ] Collect all files from hash-sharded storage
+  - [ ] Create timestamped .zip archive
+  - [ ] Verify backup integrity (checksum validation)
+- [ ] Create restore service
+  - [ ] Validate backup structure before restore
+  - [ ] Create restore point (backup current state first)
+  - [ ] Extract and verify database
+  - [ ] Extract uploads (skip existing files to avoid re-download)
+  - [ ] Run post-restore integrity check
+- [ ] Support incremental backups using rsync-style sync
+- [ ] API endpoints:
+  - [ ] `POST /api/backup/create` - Trigger manual backup
+  - [ ] `GET /api/backup/status` - Check backup job status
+  - [ ] `POST /api/backup/restore` - Restore from uploaded backup
+  - [ ] `GET /api/backup/list` - List available backups
+
+#### Frontend Tasks
+- [ ] Settings page → "Data Management" tab
+  - [ ] Manual backup button (one-click download .zip)
+  - [ ] Restore from backup (upload .zip file)
+  - [ ] Backup configuration:
+    - [ ] Enable automatic backups toggle
+    - [ ] Frequency selector (Daily/Weekly/Monthly)
+    - [ ] Backup location (Local folder / Cloud storage)
+    - [ ] Retention policy (keep last N backups)
+  - [ ] Display backup status: "Last backup: 2 days ago, 45 files, 12MB"
+  - [ ] Show restore warnings and confirmation dialog
+
+#### Disaster Recovery Scenarios to Handle
+- [ ] Database corruption: Restore SQLite from backup, uploads intact
+- [ ] Uploads folder lost: Identify orphaned DB records, mark files unavailable
+- [ ] Complete system failure: Fresh install + restore DB + sync uploads
+
+#### Deliverables:
+- Users can create and download full backups
+- Users can restore from backups via UI
+- Automated backup scheduling (optional but recommended)
+- Clear disaster recovery documentation
+
+**References:**
+- Hash-sharded storage used by: Git, Docker, IPFS, Immich, Paperless-ngx
+- Backup patterns from: Home Assistant, Nextcloud, Photoprism
+
+---
+
 ## Key Considerations
 
 ### 1. **Money Handling** ⚠️
@@ -484,7 +550,8 @@ pytest tests/test_purchases.py::test_create_purchase
 | Phase 6: Testing | 2-3 hours | ⏳ Pending |
 | Phase 7: Frontend Integration | 2-3 hours | ⏳ Pending |
 | Phase 8: Deployment | 1-2 hours | ⏳ Pending |
-| **Total** | **16-22 hours** | |
+| Phase 9: Backup & Recovery | 2-3 hours | ⏳ Pending |
+| **Total** | **18-25 hours** | |
 
 ---
 
@@ -493,6 +560,7 @@ pytest tests/test_purchases.py::test_create_purchase
 - Start with Phase 1-3 for MVP (working CRUD API)
 - Phases 4-7 add features and polish
 - Phase 8 prepares for production
+- Phase 9 ensures data safety (critical for production use)
 - Each phase should include documentation updates
 - Consider starting with Phase 6 (testing framework) early
 

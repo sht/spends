@@ -99,3 +99,7 @@ dist-modern/
 
 # Generated HTML files from EJS templates (source is .ejs files)
 src-modern/*.html
+
+# Uploads folder - user files stored here
+backend/uploads/
+uploads/
