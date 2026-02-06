@@ -16,6 +16,21 @@ export function registerInventoryComponent() {
     endDate: '',
     sortField: 'id',
     sortDirection: 'asc',
+    visibleColumns: {
+      product: true,
+      retailer: true,
+      modelNumber: true,
+      price: true,
+      purchaseDate: true,
+      quantity: false,
+      warrantyExpiry: false,
+      serialNumber: false,
+      link: false,
+      taxDeductible: false,
+      tags: false,
+      notes: false
+    },
+    showColumnSelector: false,
 
     // Statistics
     stats: {
@@ -24,10 +39,16 @@ export function registerInventoryComponent() {
     },
 
     async init() {
+      // Initialize showColumnSelector to false
+      this.showColumnSelector = false;
+      
       await this.loadInventoryData();
       this.filterInventory();
       this.calculateStats();
       this.updatePagination();
+
+      // Initialize column selector functionality
+      this.initColumnSelector();
 
       // Setup modal event listener
       const inventoryModal = document.getElementById('inventoryModal');
@@ -61,6 +82,35 @@ export function registerInventoryComponent() {
       setTimeout(() => {
         this.hideLoadingScreen();
       }, 500);
+    },
+
+    updateColumnVisibility() {
+      // This method is called when column visibility changes
+      // The table will automatically update due to reactivity
+      console.log('Column visibility updated:', this.visibleColumns);
+    },
+
+    // Method to toggle the column selector
+    toggleColumnSelector() {
+      this.showColumnSelector = !this.showColumnSelector;
+      console.log('Column selector toggled:', this.showColumnSelector);
+    },
+
+    // Method to handle clicks outside the column selector
+    initColumnSelector() {
+      // Close the column selector when clicking outside
+      document.addEventListener('click', (event) => {
+        const columnSelectorButton = document.getElementById('columnSelectorDropdown');
+        const columnSelectorMenu = document.querySelector('[aria-labelledby="columnSelectorDropdown"]');
+        
+        if (this.showColumnSelector && 
+            columnSelectorButton && 
+            columnSelectorMenu &&
+            !columnSelectorButton.contains(event.target) && 
+            !columnSelectorMenu.contains(event.target)) {
+          this.showColumnSelector = false;
+        }
+      });
     },
 
     hideLoadingScreen() {
@@ -320,6 +370,13 @@ export function registerInventoryComponent() {
       this.filteredItems.sort((a, b) => {
         let aValue = a[this.sortField];
         let bValue = b[this.sortField];
+
+        // Handle boolean sorting for taxDeductible
+        if (this.sortField === 'taxDeductible') {
+          const aVal = aValue ? 1 : 0;
+          const bVal = bValue ? 1 : 0;
+          return this.sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+        }
 
         // Handle numeric sorting
         if (typeof aValue === 'number' && typeof bValue === 'number') {

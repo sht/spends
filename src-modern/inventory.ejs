@@ -54,14 +54,181 @@
                                         <!-- Custom Date Range Inputs (shown when custom is selected) -->
                                         <div x-bind:class="{'d-none': dateFilter !== 'custom', 'd-flex': dateFilter === 'custom'}"
                                              class="gap-2 ms-2 custom-date-range">
-                                            <input type="date" 
-                                                   class="form-control form-control-sm" 
-                                                   x-model="startDate" 
+                                            <input type="date"
+                                                   class="form-control form-control-sm"
+                                                   x-model="startDate"
                                                    @change="filterInventory()">
-                                            <input type="date" 
-                                                   class="form-control form-control-sm" 
-                                                   x-model="endDate" 
+                                            <input type="date"
+                                                   class="form-control form-control-sm"
+                                                   x-model="endDate"
                                                    @change="filterInventory()">
+                                        </div>
+                                        
+                                        <!-- Column Selector Dropdown -->
+                                        <div class="dropdown position-relative ms-2">
+                                            <button class="btn btn-outline-secondary btn-sm" 
+                                                    type="button" 
+                                                    id="columnSelectorDropdown"
+                                                    @click="toggleColumnSelector()"
+                                                    aria-expanded="false"
+                                                    title="Select columns to display">
+                                                <i class="bi bi-gear-fill"></i>
+                                            </button>
+                                            <div class="position-absolute bg-white border rounded shadow p-3 mt-1" 
+                                                 style="min-width: 250px; max-height: 400px; overflow-y: auto; z-index: 1000; right: 0;" 
+                                                 x-show="showColumnSelector"
+                                                 x-transition:enter="transition ease-out duration-100"
+                                                 x-transition:enter-start="transform opacity-0 scale-95"
+                                                 x-transition:enter-end="transform opacity-100 scale-100"
+                                                 x-transition:leave="transition ease-in duration-75"
+                                                 x-transition:leave-start="transform opacity-100 scale-100"
+                                                 x-transition:leave-end="transform opacity-0 scale-95">
+                                                <h6 class="dropdown-header">Select Columns to Display</h6>
+                                                <div class="mb-2">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" 
+                                                               type="checkbox" 
+                                                               id="colProduct"
+                                                               x-model="visibleColumns.product"
+                                                               @change="updateColumnVisibility()">
+                                                        <label class="form-check-label" for="colProduct">
+                                                            Product
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" 
+                                                               type="checkbox" 
+                                                               id="colRetailer"
+                                                               x-model="visibleColumns.retailer"
+                                                               @change="updateColumnVisibility()">
+                                                        <label class="form-check-label" for="colRetailer">
+                                                            Retailer
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" 
+                                                               type="checkbox" 
+                                                               id="colModel"
+                                                               x-model="visibleColumns.modelNumber"
+                                                               @change="updateColumnVisibility()">
+                                                        <label class="form-check-label" for="colModel">
+                                                            Model
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" 
+                                                               type="checkbox" 
+                                                               id="colPrice"
+                                                               x-model="visibleColumns.price"
+                                                               @change="updateColumnVisibility()">
+                                                        <label class="form-check-label" for="colPrice">
+                                                            Price
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" 
+                                                               type="checkbox" 
+                                                               id="colDate"
+                                                               x-model="visibleColumns.purchaseDate"
+                                                               @change="updateColumnVisibility()">
+                                                        <label class="form-check-label" for="colDate">
+                                                            Date
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" 
+                                                               type="checkbox" 
+                                                               id="colQuantity"
+                                                               x-model="visibleColumns.quantity"
+                                                               @change="updateColumnVisibility()">
+                                                        <label class="form-check-label" for="colQuantity">
+                                                            Quantity
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" 
+                                                               type="checkbox" 
+                                                               id="colWarranty"
+                                                               x-model="visibleColumns.warrantyExpiry"
+                                                               @change="updateColumnVisibility()">
+                                                        <label class="form-check-label" for="colWarranty">
+                                                            Warranty Expiry
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" 
+                                                               type="checkbox" 
+                                                               id="colSerial"
+                                                               x-model="visibleColumns.serialNumber"
+                                                               @change="updateColumnVisibility()">
+                                                        <label class="form-check-label" for="colSerial">
+                                                            Serial Number
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" 
+                                                               type="checkbox" 
+                                                               id="colLink"
+                                                               x-model="visibleColumns.link"
+                                                               @change="updateColumnVisibility()">
+                                                        <label class="form-check-label" for="colLink">
+                                                            Link
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" 
+                                                               type="checkbox" 
+                                                               id="colTax"
+                                                               x-model="visibleColumns.taxDeductible"
+                                                               @change="updateColumnVisibility()">
+                                                        <label class="form-check-label" for="colTax">
+                                                            Tax Deductible
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" 
+                                                               type="checkbox" 
+                                                               id="colTags"
+                                                               x-model="visibleColumns.tags"
+                                                               @change="updateColumnVisibility()">
+                                                        <label class="form-check-label" for="colTags">
+                                                            Tags
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" 
+                                                               type="checkbox" 
+                                                               id="colNotes"
+                                                               x-model="visibleColumns.notes"
+                                                               @change="updateColumnVisibility()">
+                                                        <label class="form-check-label" for="colNotes">
+                                                            Notes
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -83,11 +250,42 @@
                                     <thead class="table-light">
                                         <tr>
                                             <th class="sortable align-middle text-center">#</th>
-                                            <th class="align-middle">Product</th>
-                                            <th @click="sortBy('retailer')" class="sortable align-middle">Retailer</th>
-                                            <th @click="sortBy('modelNumber')" class="sortable align-middle">Model</th>
-                                            <th @click="sortBy('price')" class="sortable align-middle">Price</th>
-                                            <th @click="sortBy('purchaseDate')" class="sortable align-middle">Date</th>
+                                            <template x-if="visibleColumns.product">
+                                                <th class="align-middle">Product</th>
+                                            </template>
+                                            <template x-if="visibleColumns.retailer">
+                                                <th @click="sortBy('retailer')" class="sortable align-middle">Retailer</th>
+                                            </template>
+                                            <template x-if="visibleColumns.modelNumber">
+                                                <th @click="sortBy('modelNumber')" class="sortable align-middle">Model</th>
+                                            </template>
+                                            <template x-if="visibleColumns.price">
+                                                <th @click="sortBy('price')" class="sortable align-middle">Price</th>
+                                            </template>
+                                            <template x-if="visibleColumns.purchaseDate">
+                                                <th @click="sortBy('purchaseDate')" class="sortable align-middle">Date</th>
+                                            </template>
+                                            <template x-if="visibleColumns.quantity">
+                                                <th @click="sortBy('quantity')" class="sortable align-middle">Quantity</th>
+                                            </template>
+                                            <template x-if="visibleColumns.warrantyExpiry">
+                                                <th @click="sortBy('warrantyExpiry')" class="sortable align-middle">Warranty Expiry</th>
+                                            </template>
+                                            <template x-if="visibleColumns.serialNumber">
+                                                <th @click="sortBy('serialNumber')" class="sortable align-middle">Serial</th>
+                                            </template>
+                                            <template x-if="visibleColumns.link">
+                                                <th @click="sortBy('link')" class="sortable align-middle">Link</th>
+                                            </template>
+                                            <template x-if="visibleColumns.taxDeductible">
+                                                <th @click="sortBy('taxDeductible')" class="sortable align-middle">Tax</th>
+                                            </template>
+                                            <template x-if="visibleColumns.tags">
+                                                <th @click="sortBy('tags')" class="sortable align-middle">Tags</th>
+                                            </template>
+                                            <template x-if="visibleColumns.notes">
+                                                <th @click="sortBy('notes')" class="sortable align-middle">Notes</th>
+                                            </template>
                                             <th style="width: 100px;" class="align-middle">Actions</th>
                                         </tr>
                                     </thead>
@@ -95,14 +293,58 @@
                                         <template x-for="(item, index) in paginatedItems" :key="item.id">
                                             <tr>
                                                 <td class="fw-medium text-primary align-middle text-center" x-text="(currentPage - 1) * itemsPerPage + index + 1"></td>
-                                                <td class="align-middle">
-                                                    <div class="fw-medium" x-text="item.name"></div>
-                                                    <small class="text-muted" x-text="item.brand"></small>
-                                                </td>
-                                                <td class="align-middle" x-text="item.retailer || 'N/A'"></td>
-                                                <td class="align-middle" x-text="item.modelNumber || 'N/A'"></td>
-                                                <td class="fw-medium align-middle" x-text="`$${item.price.toFixed(2)}`"></td>
-                                                <td class="align-middle" x-text="item.purchaseDate"></td>
+                                                <template x-if="visibleColumns.product">
+                                                    <td class="align-middle">
+                                                        <div class="fw-medium" x-text="item.name"></div>
+                                                        <small class="text-muted" x-text="item.brand"></small>
+                                                    </td>
+                                                </template>
+                                                <template x-if="visibleColumns.retailer">
+                                                    <td class="align-middle" x-text="item.retailer || 'N/A'"></td>
+                                                </template>
+                                                <template x-if="visibleColumns.modelNumber">
+                                                    <td class="align-middle" x-text="item.modelNumber || 'N/A'"></td>
+                                                </template>
+                                                <template x-if="visibleColumns.price">
+                                                    <td class="fw-medium align-middle" x-text="`$${item.price.toFixed(2)}`"></td>
+                                                </template>
+                                                <template x-if="visibleColumns.purchaseDate">
+                                                    <td class="align-middle" x-text="item.purchaseDate"></td>
+                                                </template>
+                                                <template x-if="visibleColumns.quantity">
+                                                    <td class="align-middle" x-text="item.quantity || 'N/A'"></td>
+                                                </template>
+                                                <template x-if="visibleColumns.warrantyExpiry">
+                                                    <td class="align-middle" x-text="item.warrantyExpiry || 'N/A'"></td>
+                                                </template>
+                                                <template x-if="visibleColumns.serialNumber">
+                                                    <td class="align-middle" x-text="item.serialNumber || 'N/A'"></td>
+                                                </template>
+                                                <template x-if="visibleColumns.link">
+                                                    <td class="align-middle">
+                                                        <a x-show="item.link && item.link !== 'N/A'" 
+                                                           :href="item.link" 
+                                                           target="_blank" 
+                                                           class="text-primary text-decoration-none">
+                                                            <i class="bi bi-link"></i>
+                                                        </a>
+                                                        <span x-show="!item.link || item.link === 'N/A'" class="text-muted">N/A</span>
+                                                    </td>
+                                                </template>
+                                                <template x-if="visibleColumns.taxDeductible">
+                                                    <td class="align-middle">
+                                                        <span x-show="item.taxDeductible" 
+                                                              class="badge bg-success">Yes</span>
+                                                        <span x-show="!item.taxDeductible" 
+                                                              class="badge bg-secondary">No</span>
+                                                    </td>
+                                                </template>
+                                                <template x-if="visibleColumns.tags">
+                                                    <td class="align-middle" x-text="item.tags || 'N/A'"></td>
+                                                </template>
+                                                <template x-if="visibleColumns.notes">
+                                                    <td class="align-middle" x-text="item.notes || 'N/A'"></td>
+                                                </template>
                                                 <td class="align-middle">
                                                     <div class="btn-group btn-group-sm" role="group">
                                                         <button class="btn btn-outline-secondary"
