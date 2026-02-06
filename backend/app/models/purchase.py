@@ -4,12 +4,6 @@ from sqlalchemy.sql import func
 from app.database import Base
 from uuid import uuid4
 from datetime import datetime
-from enum import Enum as PyEnum
-
-
-class PurchaseStatus(PyEnum):
-    ORDERED = "ORDERED"
-    RECEIVED = "RECEIVED"
 
 
 class Purchase(Base):
@@ -21,7 +15,6 @@ class Purchase(Base):
     currency_code = Column(String(3), default="USD")
     retailer_id = Column(String, ForeignKey("retailers.id"))
     brand_id = Column(String, ForeignKey("brands.id"))
-    status = Column(Enum(PurchaseStatus), default=PurchaseStatus.RECEIVED)
     purchase_date = Column(Date, nullable=False)
     notes = Column(String, nullable=True)
     tax_deductible = Column(Integer, default=0)  # 0 = false, 1 = true

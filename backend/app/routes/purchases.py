@@ -16,12 +16,11 @@ router = APIRouter(prefix="/api/purchases", tags=["purchases"])
 async def list_purchases(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, le=100),
-    status: Optional[str] = Query(None),
     retailer_id: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db)
 ):
-    purchases, total = await get_purchases(db, skip, limit, status, retailer_id, search)
+    purchases, total = await get_purchases(db, skip, limit, retailer_id, search)
     
     # Convert SQLAlchemy models to Pydantic schemas
     purchase_responses = [PurchaseResponse.model_validate(p) for p in purchases]

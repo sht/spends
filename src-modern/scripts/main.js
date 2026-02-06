@@ -804,7 +804,6 @@ class AdminApp {
             purchase_date: purchase.purchaseDate,
             retailer_id: retailerId,
             brand_id: brandId,
-            status: 'RECEIVED',
             notes: purchase.notes,
             tax_deductible: this.ensureBoolean(purchase.taxDeductible) ? 1 : 0,
             warranty_expiry: purchase.warrantyExpiry || null,

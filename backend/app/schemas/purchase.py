@@ -2,13 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime, date
 from decimal import Decimal
-from enum import Enum
 from .common import BaseResponse
-
-
-class PurchaseStatus(str, Enum):
-    ORDERED = "ORDERED"
-    RECEIVED = "RECEIVED"
 
 
 class PurchaseBase(BaseModel):
@@ -17,7 +11,6 @@ class PurchaseBase(BaseModel):
     currency_code: Optional[str] = Field(default="USD", max_length=3)
     retailer_id: Optional[str] = None
     brand_id: Optional[str] = None
-    status: Optional[PurchaseStatus] = PurchaseStatus.RECEIVED
     purchase_date: date
     notes: Optional[str] = None
     tax_deductible: Optional[int] = Field(default=0, ge=0, le=1)
@@ -41,7 +34,6 @@ class PurchaseUpdate(BaseModel):
     currency_code: Optional[str] = Field(None, max_length=3)
     retailer_id: Optional[str] = None
     brand_id: Optional[str] = None
-    status: Optional[PurchaseStatus] = None
     purchase_date: Optional[date] = None
     notes: Optional[str] = None
     tax_deductible: Optional[int] = Field(None, ge=0, le=1)

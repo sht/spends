@@ -11,7 +11,6 @@ export function registerInventoryComponent() {
     itemsPerPage: 10,
     totalPages: 1,
     searchQuery: '',
-    statusFilter: '',
     dateFilter: '',
     sortField: 'id',
     sortDirection: 'asc',
@@ -19,8 +18,6 @@ export function registerInventoryComponent() {
     // Statistics
     stats: {
       total: 0,
-      ordered: 0,
-      received: 0,
       totalSpending: 0
     },
 
@@ -110,7 +107,6 @@ export function registerInventoryComponent() {
             brand: item.brand?.name || 'Unknown',
             retailer: item.retailer?.name || 'Unknown',
             price: parseFloat(item.price),
-            status: item.status?.toLowerCase() || 'ordered',
             // Formatted date for display
             purchaseDate: formatDateForDisplay(purchaseDateStr),
             // ISO date for edit form (YYYY-MM-DD) - use the string directly
@@ -181,7 +177,6 @@ export function registerInventoryComponent() {
           name: product.name,
           brand: product.brand,
           price: parseFloat(price.toFixed(2)),
-          status: Math.random() > 0.35 ? 'received' : 'ordered',
           purchaseDate: getRandomDate()
         };
       });
@@ -227,8 +222,6 @@ export function registerInventoryComponent() {
 
     calculateStats() {
       this.stats.total = this.items.length;
-      this.stats.ordered = this.items.filter(i => i.status === 'ordered').length;
-      this.stats.received = this.items.filter(i => i.status === 'received').length;
       this.stats.totalSpending = this.items.reduce((sum, i) => sum + i.price, 0);
     },
 
@@ -238,9 +231,7 @@ export function registerInventoryComponent() {
           item.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
           item.brand.toLowerCase().includes(this.searchQuery.toLowerCase());
 
-        const matchesStatus = !this.statusFilter || item.status === this.statusFilter;
-
-        return matchesSearch && matchesStatus;
+        return matchesSearch;
       });
 
       this.sortItems();

@@ -39,16 +39,6 @@
                                             <i class="bi bi-search position-absolute top-50 end-0 translate-middle-y me-2 text-muted"></i>
                                         </div>
 
-                                        <!-- Status Filter -->
-                                        <select class="form-select form-select-sm"
-                                                x-model="statusFilter"
-                                                @change="filterInventory()"
-                                                style="width: 150px; padding: 0.75rem 0.5rem;">
-                                            <option value="">All Status</option>
-                                            <option value="ordered">Ordered</option>
-                                            <option value="received">Received</option>
-                                        </select>
-
                                         <!-- Date Range -->
                                         <select class="form-select form-select-sm"
                                                 x-model="dateFilter"
@@ -81,7 +71,6 @@
                                             <th class="sortable align-middle text-center">#</th>
                                             <th class="align-middle">Product</th>
                                             <th @click="sortBy('price')" class="sortable align-middle">Price</th>
-                                            <th class="align-middle">Status</th>
                                             <th @click="sortBy('purchaseDate')" class="sortable align-middle">Date</th>
                                             <th style="width: 100px;" class="align-middle">Actions</th>
                                         </tr>
@@ -95,14 +84,6 @@
                                                     <small class="text-muted" x-text="item.brand"></small>
                                                 </td>
                                                 <td class="fw-medium align-middle" x-text="`$${item.price.toFixed(2)}`"></td>
-                                                <td class="align-middle">
-                                                    <span class="badge"
-                                                          :class="{
-                                                              'bg-primary': item.status === 'ordered',
-                                                              'bg-success': item.status === 'received'
-                                                          }"
-                                                          x-text="item.status.charAt(0).toUpperCase() + item.status.slice(1)"></span>
-                                                </td>
                                                 <td class="align-middle" x-text="item.purchaseDate"></td>
                                                 <td class="align-middle">
                                                     <div class="btn-group btn-group-sm" role="group">

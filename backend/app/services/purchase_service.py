@@ -24,15 +24,12 @@ async def get_purchases(
     db: AsyncSession,
     skip: int = 0,
     limit: int = 20,
-    status: Optional[str] = None,
     retailer_id: Optional[str] = None,
     search: Optional[str] = None
 ) -> tuple[List[Purchase], int]:
     query = select(Purchase).options(selectinload(Purchase.retailer)).options(selectinload(Purchase.brand)).options(selectinload(Purchase.warranty))
 
     # Apply filters
-    if status:
-        query = query.filter(Purchase.status == status)
     if retailer_id:
         query = query.filter(Purchase.retailer_id == retailer_id)
     if search:
@@ -40,8 +37,6 @@ async def get_purchases(
 
     # Get total count
     count_query = select(Purchase.id)
-    if status:
-        count_query = count_query.filter(Purchase.status == status)
     if retailer_id:
         count_query = count_query.filter(Purchase.retailer_id == retailer_id)
     if search:
