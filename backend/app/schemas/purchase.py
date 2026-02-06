@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 from datetime import datetime, date
 from decimal import Decimal
@@ -14,6 +14,13 @@ class PurchaseBase(BaseModel):
     purchase_date: date
     notes: Optional[str] = None
     tax_deductible: Optional[int] = Field(default=0, ge=0, le=1)
+    
+    @field_validator('purchase_date')
+    @classmethod
+    def validate_purchase_date_not_future(cls, v: date) -> date:
+        if v > date.today():
+            raise ValueError('Purchase date cannot be in the future')
+        return v
     warranty_expiry: Optional[date] = None
     model_number: Optional[str] = Field(default=None, max_length=100)
     serial_number: Optional[str] = Field(default=None, max_length=100)

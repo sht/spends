@@ -792,6 +792,15 @@ class AdminApp {
         try {
           const apiUrl = window.APP_CONFIG?.API_URL || '/api';
           
+          // Validate purchase date is not in the future
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const purchaseDate = new Date(purchase.purchaseDate);
+          if (purchaseDate > today) {
+            window.AdminApp.notificationManager.error('Purchase date cannot be in the future');
+            return;
+          }
+
           // Get or create retailer and brand IDs
           const retailerId = await this.getOrCreateRetailer(apiUrl, purchase.retailer);
           const brandId = await this.getOrCreateBrand(apiUrl, purchase.brand);
