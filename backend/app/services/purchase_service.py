@@ -50,8 +50,8 @@ async def get_purchases(
     total_result = await db.execute(count_query)
     total = len(total_result.scalars().all())
 
-    # Apply pagination
-    query = query.offset(skip).limit(limit)
+    # Apply ordering (newest first) and pagination
+    query = query.order_by(Purchase.created_at.desc()).offset(skip).limit(limit)
 
     result = await db.execute(query)
     purchases = result.scalars().all()

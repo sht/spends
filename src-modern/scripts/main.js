@@ -553,8 +553,10 @@ class AdminApp {
         // Load existing files for this purchase
         await this.loadFilesForPurchase(item.id);
         
-        // Clear any staged deletions from previous edit sessions
+        // Clear any staged deletions and temporary files from previous sessions
         this.filesToDelete = [];
+        this.tempFiles = [];
+        this.pendingFiles = [];
       },
 
       // Load files for a specific purchase

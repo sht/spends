@@ -30,6 +30,9 @@ class File(Base):
 
     # File integrity
     file_hash = Column(String, nullable=False)  # SHA-256 hash
+    
+    # Reference counting for shared files (same hash = same physical file)
+    reference_count = Column(Integer, default=1, nullable=False)
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())

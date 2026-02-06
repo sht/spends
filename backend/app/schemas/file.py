@@ -33,6 +33,7 @@ class FileUpdate(BaseModel):
 class FileResponse(FileBase):
     id: UUID
     purchase_id: str
+    reference_count: int = 0  # For tracking shared files
     created_at: datetime
     updated_at: Optional[datetime] = None
 
