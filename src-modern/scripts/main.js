@@ -1389,7 +1389,8 @@ class AdminApp {
         returnPolicy: '',
         taxDeductible: false,
         tags: '',
-        notes: ''
+        notes: '',
+        files: []  // Add files array
       },
 
       init() {
@@ -1397,12 +1398,123 @@ class AdminApp {
         window.addEventListener('show-view-details', (e) => {
           if (e.detail && e.detail.item) {
             this.setItem(e.detail.item);
+            // Load files for this purchase
+            if (e.detail.item.id) {
+              this.loadFiles(e.detail.item.id);
+            }
           }
         });
       },
 
       setItem(itemData) {
         this.item = { ...itemData };
+      },
+
+      async loadFiles(purchaseId) {
+        try {
+          const apiUrl = window.APP_CONFIG?.API_URL || '/api';
+          const response = await fetch(`${apiUrl}/files/${purchaseId}/`);
+
+          if (!response.ok) {
+            console.warn(`Files API returned status: ${response.status}`);
+            this.item.files = []; // Set to empty array if no files found
+            this.item.receipts = [];
+            this.item.manuals = [];
+            this.item.warranties = [];
+            return;
+          }
+
+          const data = await response.json();
+          // Ensure data has the expected structure
+          const allFiles = Array.isArray(data.items) ? data.items : (Array.isArray(data) ? data : []);
+          
+          // Store all files without filtering images
+          this.item.files = allFiles;
+          
+          // Create categorized file groups based on file_type only
+          this.item.receipts = this.item.files.filter(file => 
+            (file.file_type && file.file_type.toLowerCase() === 'receipt')
+          );
+          
+          this.item.manuals = this.item.files.filter(file => 
+            (file.file_type && file.file_type.toLowerCase() === 'manual')
+          );
+          
+          this.item.warranties = this.item.files.filter(file => 
+            (file.file_type && file.file_type.toLowerCase() === 'warranty')
+          );
+          
+          console.log('Loaded files for purchase:', this.item.files);
+          console.log('Categorized files - Receipts:', this.item.receipts, 'Manuals:', this.item.manuals, 'Warranties:', this.item.warranties);
+        } catch (error) {
+          console.error('Error loading files:', error);
+          this.item.files = []; // Ensure files array is empty if there's an error
+          this.item.receipts = [];
+          this.item.manuals = [];
+          this.item.warranties = [];
+        }
+      },
+
+      // Format file name to show first 8 chars + .. + extension
+      getShortenedFileName(filename) {
+        if (!filename) return '';
+        
+        const lastDotIndex = filename.lastIndexOf('.');
+        if (lastDotIndex === -1) {
+          // No extension, just truncate to 8 chars and add ..
+          return filename.length > 8 ? filename.substring(0, 8) + '..' : filename;
+        }
+        
+        const namePart = filename.substring(0, lastDotIndex);
+        const extension = filename.substring(lastDotIndex);
+        
+        if (namePart.length > 8) {
+          return namePart.substring(0, 8) + '..' + extension;
+        }
+        
+        return filename;
+      },
+
+      // Open image preview in a modal
+      openImagePreview(file) {
+        // Create a modal to show the full-size image
+        const modalHtml = `
+          <div class="modal fade" id="imagePreviewModal" tabindex="-1" style="display: none;" aria-modal="true" role="dialog">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">${file.filename}</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                  <img src="/api/files/${file.id}/preview/" 
+                       alt="${file.filename}"
+                       class="img-fluid"
+                       style="max-height: 80vh; object-fit: contain;">
+                </div>
+                <div class="modal-footer">
+                  <a href="/api/files/${file.id}/download/" class="btn btn-primary">
+                    <i class="bi bi-download me-2"></i>Download
+                  </a>
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        // Remove any existing preview modal
+        const existingModal = document.getElementById('imagePreviewModal');
+        if (existingModal) {
+          existingModal.remove();
+        }
+        
+        // Add the new modal to the body
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // Show the modal
+        const imagePreviewModal = new Modal(document.getElementById('imagePreviewModal'));
+        imagePreviewModal.show();
       },
 
       editPurchaseItem() {
