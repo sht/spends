@@ -496,15 +496,21 @@ class AdminApp {
       editingItemId: null,
       retailers: [],
       brands: [],
+      
+      // Initialize files arrays with defaults to prevent undefined errors
+      uploadedFiles: [],
+      tempFiles: [],
+      pendingFiles: [],
+      filesToDelete: [],
 
       init() {
         this.resetForm();
 
-        // Initialize files arrays
-        this.uploadedFiles = [];
-        this.tempFiles = [];
-        this.pendingFiles = [];
-        this.filesToDelete = []; // Track files marked for deletion (staged)
+        // Ensure files arrays are initialized
+        this.uploadedFiles = this.uploadedFiles || [];
+        this.tempFiles = this.tempFiles || [];
+        this.pendingFiles = this.pendingFiles || [];
+        this.filesToDelete = this.filesToDelete || [];
 
         // Load data without awaiting - this keeps init() synchronous
         // so Alpine.js can properly initialize the component and attach event listeners
@@ -869,9 +875,15 @@ class AdminApp {
           }
 
           // Close the modal programmatically
-          const modalEl = document.getElementById('newItemModal');
-          if (modalEl) {
-            const modal = Modal.getInstance(modalEl);
+          // Try inventoryModal first (inventory page), then newItemModal (dashboard)
+          const inventoryModalEl = document.getElementById('inventoryModal');
+          const newItemModalEl = document.getElementById('newItemModal');
+          
+          if (inventoryModalEl) {
+            const modal = Modal.getInstance(inventoryModalEl);
+            if (modal) modal.hide();
+          } else if (newItemModalEl) {
+            const modal = Modal.getInstance(newItemModalEl);
             if (modal) modal.hide();
           }
 
@@ -891,34 +903,32 @@ class AdminApp {
             this.filesToDelete = []; // Clear staged deletions
           }
 
-          // Refresh the data without page reload
-          setTimeout(async () => {
-            console.log('Refreshing data after purchase...');
+          // Refresh the data without page reload (immediate)
+          console.log('Refreshing data after purchase...');
 
-            // Refresh dashboard data if on dashboard page
-            const isDashboard = document.querySelector('[data-page="dashboard"]');
-            console.log('Is dashboard:', !!isDashboard, 'dashboardManager:', !!window.dashboardManager);
+          // Refresh dashboard data if on dashboard page
+          const isDashboard = document.querySelector('[data-page="dashboard"]');
+          console.log('Is dashboard:', !!isDashboard, 'dashboardManager:', !!window.dashboardManager);
 
-            if (window.dashboardManager && isDashboard) {
-              console.log('Refreshing dashboard data...');
-              await window.dashboardManager.loadDashboardData();
-              console.log('Dashboard data refreshed');
-            }
+          if (window.dashboardManager && isDashboard) {
+            console.log('Refreshing dashboard data...');
+            await window.dashboardManager.loadDashboardData();
+            console.log('Dashboard data refreshed');
+          }
 
-            // Refresh inventory data if on inventory page
-            if (window.location.pathname.includes('inventory')) {
-              console.log('Refreshing inventory data...');
-              // Dispatch event to trigger inventory refresh
-              window.dispatchEvent(new CustomEvent('refresh-inventory'));
-            }
+          // Refresh inventory data if on inventory page
+          if (window.location.pathname.includes('inventory')) {
+            console.log('Refreshing inventory data...');
+            // Dispatch event to trigger inventory refresh
+            window.dispatchEvent(new CustomEvent('refresh-inventory'));
+          }
 
-            // If we're in edit mode and have files to upload, upload them now
-            if (isUpdate && this.uploadedFiles.length > 0) {
-              console.log('Updating files for purchase...');
-              // Note: File uploads after purchase update would require a different approach
-              // since the files are already associated with the purchase during upload
-            }
-          }, 1000);
+          // If we're in edit mode and have files to upload, upload them now
+          if (isUpdate && this.uploadedFiles.length > 0) {
+            console.log('Updating files for purchase...');
+            // Note: File uploads after purchase update would require a different approach
+            // since the files are already associated with the purchase during upload
+          }
         } catch (error) {
           console.error('Error saving purchase:', error);
           window.AdminApp.notificationManager.error(`Failed to save purchase: ${error.message}`);
@@ -1080,11 +1090,17 @@ class AdminApp {
       // Get all files (both temp and uploaded) filtered by type
       // Excludes files marked for deletion
       getFilesByType(fileType) {
+        if (!fileType) return [];
         const type = fileType.toLowerCase();
-        const temp = (this.tempFiles || []).filter(f => f.fileType === type);
+        // Ensure arrays exist and filter safely
+        const tempFiles = Array.isArray(this.tempFiles) ? this.tempFiles : [];
+        const uploadedFiles = Array.isArray(this.uploadedFiles) ? this.uploadedFiles : [];
+        const filesToDelete = Array.isArray(this.filesToDelete) ? this.filesToDelete : [];
+        
+        const temp = tempFiles.filter(f => f && f.fileType === type);
         // Exclude uploaded files that are marked for deletion
-        const filesToDeleteIds = (this.filesToDelete || []).map(f => f.id);
-        const uploaded = (this.uploadedFiles || []).filter(f => f.file_type === type && !filesToDeleteIds.includes(f.id));
+        const filesToDeleteIds = filesToDelete.map(f => f && f.id).filter(Boolean);
+        const uploaded = uploadedFiles.filter(f => f && f.file_type === type && !filesToDeleteIds.includes(f.id));
         return [...temp, ...uploaded];
       },
 

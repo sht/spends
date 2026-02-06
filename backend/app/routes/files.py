@@ -57,7 +57,20 @@ async def upload_file(
         # Calculate file hash for deduplication
         file_hash = hashlib.sha256(contents).hexdigest()
 
-        # Check if file already exists (based on hash) - using async query
+        # Check if this purchase already has this file (same hash) - prevent duplicates within same purchase
+        result = await db.execute(
+            select(FileModel).filter(
+                FileModel.file_hash == file_hash,
+                FileModel.purchase_id == purchase_id
+            )
+        )
+        existing_in_purchase = result.scalar_one_or_none()
+        if existing_in_purchase:
+            # Same file already exists in this purchase - return the existing file
+            # Don't create a duplicate record
+            return FileResponse.model_validate(existing_in_purchase, from_attributes=True)
+
+        # Check if file already exists anywhere (based on hash) - using async query
         # Use .first() instead of .one_or_none() because multiple records may have same hash
         result = await db.execute(
             select(FileModel).filter(FileModel.file_hash == file_hash)
