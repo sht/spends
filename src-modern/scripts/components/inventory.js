@@ -12,6 +12,8 @@ export function registerInventoryComponent() {
     totalPages: 1,
     searchQuery: '',
     dateFilter: '',
+    startDate: '',
+    endDate: '',
     sortField: 'id',
     sortDirection: 'asc',
 
@@ -231,12 +233,76 @@ export function registerInventoryComponent() {
           item.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
           item.brand.toLowerCase().includes(this.searchQuery.toLowerCase());
 
-        return matchesSearch;
+        const matchesDate = this.checkDateFilter(item);
+
+        return matchesSearch && matchesDate;
       });
 
       this.sortItems();
       this.currentPage = 1;
       this.updatePagination();
+    },
+
+    checkDateFilter(item) {
+      if (!this.dateFilter) return true; // No date filter applied
+
+      // Convert the purchaseDate back to a Date object for comparison
+      // The purchaseDate is in format like "Jan 30, 2026", so we need to parse it
+      // But we have purchaseDateISO which is in YYYY-MM-DD format, which is easier to work with
+      const purchaseDateStr = item.purchaseDateISO || item.purchaseDate;
+      
+      if (!purchaseDateStr) return true; // If no date, include the item
+
+      // Try to parse the date - it might be in different formats
+      let purchaseDate;
+      if (item.purchaseDateISO) {
+        // If we have the ISO format (YYYY-MM-DD), parse it directly
+        const [year, month, day] = item.purchaseDateISO.split('-').map(Number);
+        purchaseDate = new Date(year, month - 1, day);
+      } else {
+        // If we only have the formatted date string, try to parse it
+        purchaseDate = new Date(purchaseDateStr);
+      }
+
+      // If parsing failed, include the item
+      if (isNaN(purchaseDate.getTime())) return true;
+
+      // Get today's date for comparison
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Reset time part for accurate comparison
+
+      const itemDate = new Date(purchaseDate);
+      itemDate.setHours(0, 0, 0, 0);
+
+      switch (this.dateFilter) {
+        case 'week':
+          // Calculate the start of the week (Monday)
+          const startOfWeek = new Date(today);
+          const day = today.getDay();
+          const diff = today.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+          startOfWeek.setDate(diff);
+          startOfWeek.setHours(0, 0, 0, 0);
+          
+          return itemDate >= startOfWeek && itemDate <= today;
+        case 'month':
+          return itemDate.getMonth() === today.getMonth() && 
+                 itemDate.getFullYear() === today.getFullYear();
+        case 'year':
+          return itemDate.getFullYear() === today.getFullYear();
+        case 'custom':
+          // For custom date range, check if startDate and endDate are set
+          if (!this.startDate || !this.endDate) return true; // If dates not set, show all
+          
+          // Parse the custom date range
+          const startRange = new Date(this.startDate);
+          const endRange = new Date(this.endDate);
+          startRange.setHours(0, 0, 0, 0);
+          endRange.setHours(23, 59, 59, 999); // End of the day
+          
+          return itemDate >= startRange && itemDate <= endRange;
+        default:
+          return true; // No filter applied
+      }
     },
 
     sortItems() {

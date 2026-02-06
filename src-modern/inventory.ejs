@@ -45,10 +45,24 @@
                                                 @change="filterInventory()"
                                                 style="width: 150px; padding: 0.75rem 0.5rem;">
                                             <option value="">All Dates</option>
-                                            <option value="today">Today</option>
                                             <option value="week">This Week</option>
                                             <option value="month">This Month</option>
+                                            <option value="year">This Year</option>
+                                            <option value="custom">Custom Range</option>
                                         </select>
+                                        
+                                        <!-- Custom Date Range Inputs (shown when custom is selected) -->
+                                        <div x-bind:class="{'d-none': dateFilter !== 'custom', 'd-flex': dateFilter === 'custom'}"
+                                             class="gap-2 ms-2 custom-date-range">
+                                            <input type="date" 
+                                                   class="form-control form-control-sm" 
+                                                   x-model="startDate" 
+                                                   @change="filterInventory()">
+                                            <input type="date" 
+                                                   class="form-control form-control-sm" 
+                                                   x-model="endDate" 
+                                                   @change="filterInventory()">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -421,5 +435,6 @@
         </div>
     </div>
 
+    
     <!-- Main Scripts -->
     <script type="module" src="./scripts/main.js"></script>
