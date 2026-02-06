@@ -795,7 +795,16 @@ class AdminApp {
           // Validate purchase date is not in the future
           const today = new Date();
           today.setHours(0, 0, 0, 0);
-          const purchaseDate = new Date(purchase.purchaseDate);
+          // Ensure purchaseDate is in the correct format (YYYY-MM-DD)
+          let purchaseDateInput = purchase.purchaseDate;
+          if (purchaseDateInput && typeof purchaseDateInput === 'string' && purchaseDateInput.includes('/')) {
+            // Convert MM/DD/YYYY to YYYY-MM-DD format if needed
+            const dateParts = purchaseDateInput.split('/');
+            if (dateParts.length === 3) {
+              purchaseDateInput = `${dateParts[2]}-${dateParts[0].padStart(2, '0')}-${dateParts[1].padStart(2, '0')}`;
+            }
+          }
+          const purchaseDate = new Date(purchaseDateInput);
           if (purchaseDate > today) {
             window.AdminApp.notificationManager.error('Purchase date cannot be in the future');
             return;
@@ -809,21 +818,23 @@ class AdminApp {
           // Dates are sent as YYYY-MM-DD strings without time component
           const payload = {
             product_name: purchase.productName,
-            price: purchase.price,
-            purchase_date: purchase.purchaseDate,
+            price: Math.abs(parseFloat(purchase.price)) || 1,
+            purchase_date: purchaseDateInput, // Use the properly formatted date
             retailer_id: retailerId,
             brand_id: brandId,
-            notes: purchase.notes,
+            notes: (purchase.notes && purchase.notes !== 'N/A' && purchase.notes.trim() !== '') ? purchase.notes : null,
             tax_deductible: this.ensureBoolean(purchase.taxDeductible) ? 1 : 0,
-            warranty_expiry: purchase.warrantyExpiry || null,
-            model_number: purchase.modelNumber || null,
-            serial_number: purchase.serialNumber || null,
+            warranty_expiry: (purchase.warrantyExpiry && purchase.warrantyExpiry !== 'N/A' && purchase.warrantyExpiry.trim() !== '') ? purchase.warrantyExpiry : null,
+            model_number: (purchase.modelNumber && purchase.modelNumber !== 'N/A' && purchase.modelNumber.trim() !== '') ? purchase.modelNumber : null,
+            serial_number: (purchase.serialNumber && purchase.serialNumber !== 'N/A' && purchase.serialNumber.trim() !== '') ? purchase.serialNumber : null,
             quantity: parseInt(purchase.quantity) || 1,
-            link: purchase.link || null,
-            return_deadline: purchase.returnDeadline || null,
-            return_policy: purchase.returnPolicy || null,
-            tags: purchase.tags || null
+            link: (purchase.link && purchase.link !== 'N/A' && purchase.link.trim() !== '') ? purchase.link : null,
+            return_deadline: (purchase.returnDeadline && purchase.returnDeadline !== 'N/A' && purchase.returnDeadline.trim() !== '') ? purchase.returnDeadline : null,
+            return_policy: (purchase.returnPolicy && purchase.returnPolicy !== 'N/A' && purchase.returnPolicy.trim() !== '') ? purchase.returnPolicy : null,
+            tags: (purchase.tags && purchase.tags !== 'N/A' && purchase.tags.trim() !== '') ? purchase.tags : null
           };
+          
+          console.log('Submitting purchase payload:', payload);
 
           const isUpdate = this.isEditMode && this.editingItemId;
           const url = isUpdate
@@ -840,8 +851,68 @@ class AdminApp {
           });
 
           if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+            let errorData = {};
+            try {
+              errorData = await response.json();
+            } catch (e) {
+              // If response is not JSON, try to get text
+              try {
+                const errorText = await response.text();
+                console.error('Error response text:', errorText);
+                throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+              } catch (textError) {
+                // If we can't parse response at all, just use status
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+            }
+
+            // Safely handle the error data to avoid [object Object] errors
+            try {
+              // Handle the case where errorData is an array of validation errors
+              if (Array.isArray(errorData)) {
+                const validationErrors = errorData.map(err => {
+                  // Handle different possible structures of validation errors
+                  if (typeof err === 'string') return err;
+                  if (err.msg) return err.msg;
+                  if (err.detail) return err.detail;
+                  if (err.input) return err.input;
+                  if (err.loc && err.type) return `${err.loc.join('.')}: ${err.type}`;
+                  if (typeof err === 'object') {
+                    // Try to extract meaningful information from the error object
+                    const keys = Object.keys(err);
+                    if (keys.length > 0) {
+                      return keys.map(key => `${key}: ${JSON.stringify(err[key])}`).join(', ');
+                    }
+                    return JSON.stringify(err);
+                  }
+                  return String(err);
+                }).join('; ');
+                throw new Error(`Validation error: ${validationErrors}`);
+              }
+
+              // Handle errorData if it's an object with different possible properties
+              if (typeof errorData === 'object' && errorData !== null) {
+                // Check if errorData has a detail property that might be an array
+                if (errorData.detail && Array.isArray(errorData.detail)) {
+                  const detailErrors = errorData.detail.map(detailErr => {
+                    if (typeof detailErr === 'string') return detailErr;
+                    if (detailErr.msg) return detailErr.msg;
+                    if (detailErr.loc && detailErr.type) return `${detailErr.loc.join('.')}: ${detailErr.type}`;
+                    return JSON.stringify(detailErr);
+                  }).join('; ');
+                  throw new Error(`Validation error: ${detailErrors}`);
+                }
+                
+                throw new Error(errorData.detail || errorData.message || errorData.error || JSON.stringify(errorData) || `HTTP error! status: ${response.status}`);
+              }
+              
+              // If errorData is a string or other primitive
+              throw new Error(errorData || `HTTP error! status: ${response.status}`);
+            } catch (errorProcessingError) {
+              // If there's an error processing the error data, fall back to basic error
+              console.error('Error processing error response:', errorProcessingError);
+              throw new Error(`Error processing response: ${JSON.stringify(errorData)} | Status: ${response.status}`);
+            }
           }
 
           const savedPurchase = await response.json();
@@ -1022,8 +1093,43 @@ class AdminApp {
               // If purchase doesn't exist, show a specific error
               throw new Error(`Purchase not found. Please save the purchase first before uploading files.`);
             }
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+            let errorData = {};
+            try {
+              errorData = await response.json();
+            } catch (e) {
+              // If response is not JSON, try to get text
+              try {
+                const errorText = await response.text();
+                console.error('Error response text:', errorText);
+                throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+              } catch (textError) {
+                // If we can't parse response at all, just use status
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+            }
+
+            // Handle the case where errorData is an array of validation errors
+            if (Array.isArray(errorData)) {
+              const validationErrors = errorData.map(err => {
+                // Handle different possible structures of validation errors
+                if (typeof err === 'string') return err;
+                if (err.msg) return err.msg;
+                if (err.detail) return err.detail;
+                if (err.input) return err.input;
+                if (err.loc && err.type) return `${err.loc.join('.')}: ${err.type}`;
+                if (typeof err === 'object') return JSON.stringify(err);
+                return String(err);
+              }).join('; ');
+              throw new Error(`Validation error: ${validationErrors}`);
+            }
+
+            // Handle errorData if it's an object with different possible properties
+            if (typeof errorData === 'object' && errorData !== null) {
+              throw new Error(errorData.detail || errorData.message || errorData.error || JSON.stringify(errorData) || `HTTP error! status: ${response.status}`);
+            }
+            
+            // If errorData is a string or other primitive
+            throw new Error(errorData || `HTTP error! status: ${response.status}`);
           }
 
           const uploadedFile = await response.json();
@@ -1060,8 +1166,68 @@ class AdminApp {
           });
 
           if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+            let errorData = {};
+            try {
+              errorData = await response.json();
+            } catch (e) {
+              // If response is not JSON, try to get text
+              try {
+                const errorText = await response.text();
+                console.error('Error response text:', errorText);
+                throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+              } catch (textError) {
+                // If we can't parse response at all, just use status
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+            }
+
+            // Safely handle the error data to avoid [object Object] errors
+            try {
+              // Handle the case where errorData is an array of validation errors
+              if (Array.isArray(errorData)) {
+                const validationErrors = errorData.map(err => {
+                  // Handle different possible structures of validation errors
+                  if (typeof err === 'string') return err;
+                  if (err.msg) return err.msg;
+                  if (err.detail) return err.detail;
+                  if (err.input) return err.input;
+                  if (err.loc && err.type) return `${err.loc.join('.')}: ${err.type}`;
+                  if (typeof err === 'object') {
+                    // Try to extract meaningful information from the error object
+                    const keys = Object.keys(err);
+                    if (keys.length > 0) {
+                      return keys.map(key => `${key}: ${JSON.stringify(err[key])}`).join(', ');
+                    }
+                    return JSON.stringify(err);
+                  }
+                  return String(err);
+                }).join('; ');
+                throw new Error(`Validation error: ${validationErrors}`);
+              }
+
+              // Handle errorData if it's an object with different possible properties
+              if (typeof errorData === 'object' && errorData !== null) {
+                // Check if errorData has a detail property that might be an array
+                if (errorData.detail && Array.isArray(errorData.detail)) {
+                  const detailErrors = errorData.detail.map(detailErr => {
+                    if (typeof detailErr === 'string') return detailErr;
+                    if (detailErr.msg) return detailErr.msg;
+                    if (detailErr.loc && detailErr.type) return `${detailErr.loc.join('.')}: ${detailErr.type}`;
+                    return JSON.stringify(detailErr);
+                  }).join('; ');
+                  throw new Error(`Validation error: ${detailErrors}`);
+                }
+                
+                throw new Error(errorData.detail || errorData.message || errorData.error || JSON.stringify(errorData) || `HTTP error! status: ${response.status}`);
+              }
+              
+              // If errorData is a string or other primitive
+              throw new Error(errorData || `HTTP error! status: ${response.status}`);
+            } catch (errorProcessingError) {
+              // If there's an error processing the error data, fall back to basic error
+              console.error('Error processing error response:', errorProcessingError);
+              throw new Error(`Error processing response: ${JSON.stringify(errorData)} | Status: ${response.status}`);
+            }
           }
 
           // Remove from local array

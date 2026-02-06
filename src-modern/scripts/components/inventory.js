@@ -106,8 +106,8 @@ export function registerInventoryComponent() {
           return {
             id: item.id,
             name: item.product_name,
-            brand: item.brand?.name || 'Unknown',
-            retailer: item.retailer?.name || 'Unknown',
+            brand: item.brand?.name || '',
+            retailer: item.retailer?.name || '',
             price: parseFloat(item.price),
             // Formatted date for display
             purchaseDate: formatDateForDisplay(purchaseDateStr),
@@ -178,8 +178,19 @@ export function registerInventoryComponent() {
           id: index + 1,
           name: product.name,
           brand: product.brand,
+          retailer: ['Amazon', 'Best Buy', 'Walmart', 'Target', 'Costco', 'Newegg'][index % 6],
+          modelNumber: `MODEL-${String(index + 1001).padStart(4, '0')}`,
           price: parseFloat(price.toFixed(2)),
-          purchaseDate: getRandomDate()
+          purchaseDate: getRandomDate(),
+          warrantyExpiry: '',
+          notes: '',
+          taxDeductible: false,
+          serialNumber: '',
+          quantity: 1,
+          link: '',
+          returnDeadline: '',
+          returnPolicy: '',
+          tags: ''
         };
       });
     },
@@ -431,7 +442,7 @@ export function registerInventoryComponent() {
         brand: typeof freshItem.brand === 'object' ? freshItem.brand.name : (freshItem.brand || ''),
         modelNumber: freshItem.modelNumber || '',
         serialNumber: freshItem.serialNumber || '',
-        purchaseDate: freshItem.purchaseDateISO || freshItem.purchaseDate,
+        purchaseDate: freshItem.purchaseDateISO || freshItem.purchaseDate || '',
         price: freshItem.price,
         quantity: freshItem.quantity || 1,
         link: freshItem.link || '',

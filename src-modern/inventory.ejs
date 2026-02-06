@@ -84,6 +84,8 @@
                                         <tr>
                                             <th class="sortable align-middle text-center">#</th>
                                             <th class="align-middle">Product</th>
+                                            <th @click="sortBy('retailer')" class="sortable align-middle">Retailer</th>
+                                            <th @click="sortBy('modelNumber')" class="sortable align-middle">Model</th>
                                             <th @click="sortBy('price')" class="sortable align-middle">Price</th>
                                             <th @click="sortBy('purchaseDate')" class="sortable align-middle">Date</th>
                                             <th style="width: 100px;" class="align-middle">Actions</th>
@@ -97,6 +99,8 @@
                                                     <div class="fw-medium" x-text="item.name"></div>
                                                     <small class="text-muted" x-text="item.brand"></small>
                                                 </td>
+                                                <td class="align-middle" x-text="item.retailer || 'N/A'"></td>
+                                                <td class="align-middle" x-text="item.modelNumber || 'N/A'"></td>
                                                 <td class="fw-medium align-middle" x-text="`$${item.price.toFixed(2)}`"></td>
                                                 <td class="align-middle" x-text="item.purchaseDate"></td>
                                                 <td class="align-middle">

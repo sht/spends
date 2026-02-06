@@ -93,7 +93,10 @@
       // Use the backend API URL - defaults to relative path for proxy support
       // In production, this can be overridden by setting window.APP_CONFIG before this script
       window.APP_CONFIG = window.APP_CONFIG || {
-        API_URL: '/api'  // Default to relative path for proxy support
+        // Determine API URL based on current host to support external access
+        API_URL: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+          ? '/api'  // Use relative path for proxy support during development
+          : 'http://' + window.location.hostname + ':3031/api'  // Direct backend access for external IPs
       };
     </script>
 
