@@ -21,14 +21,14 @@ BASE_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = BASE_DIR.parent.parent
 
 # Include API routers (all under /api prefix)
-app.include_router(purchases.router)
-app.include_router(warranties.router)
-app.include_router(retailers.router)
-app.include_router(brands.router)
-app.include_router(analytics.router)
-app.include_router(exports.router)
-app.include_router(imports.router)
-app.include_router(files.router)
+app.include_router(purchases)
+app.include_router(warranties)
+app.include_router(retailers)
+app.include_router(brands)
+app.include_router(analytics)
+app.include_router(exports)
+app.include_router(imports)
+app.include_router(files)
 
 
 @app.get("/api")

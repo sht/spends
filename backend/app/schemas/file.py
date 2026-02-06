@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, field_serializer
 from typing import Optional, List
 from uuid import UUID
 from datetime import datetime
@@ -36,8 +36,11 @@ class FileResponse(FileBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_serializer('id')
+    def serialize_id(self, id: UUID) -> str:
+        return str(id)
 
 
 class FileListResponse(BaseModel):

@@ -678,6 +678,7 @@ class AdminApp {
         this.isEditMode = false;
         this.editingItemId = null;
         this.uploadedFiles = [];
+        this.tempFiles = []; // Clear temp files (new files not yet saved)
         this.pendingFiles = [];
         this.filesToDelete = []; // Clear staged deletions
       },
@@ -840,6 +841,31 @@ class AdminApp {
             ? `Purchase "${this.form.productName}" updated successfully!`
             : `Purchase "${this.form.productName}" created successfully!`;
 
+          // Upload any pending files BEFORE closing modal (modal close destroys Alpine component)
+          console.log('Uploading pending files:', this.pendingFiles?.length || 0);
+          if (this.pendingFiles && this.pendingFiles.length > 0) {
+            for (const pendingFile of this.pendingFiles) {
+              console.log('Uploading pending file:', pendingFile.fileName);
+              await this.uploadFile(pendingFile.file, pendingFile.fileType);
+            }
+            this.pendingFiles = []; // Clear pending files
+          }
+
+          // Upload any temporary files that were added before the purchase was saved
+          console.log('Uploading temp files:', this.tempFiles?.length || 0, 'for purchase:', this.editingItemId);
+          console.log('Temp files details:', this.tempFiles?.map(f => ({name: f.fileName, size: f.fileSize, hasFileObj: !!f.file})));
+          if (this.tempFiles && this.tempFiles.length > 0) {
+            for (const tempFile of this.tempFiles) {
+              console.log('Uploading temp file:', tempFile.fileName, 'type:', tempFile.fileType, 'fileObj:', tempFile.file?.name, tempFile.file?.size);
+              if (!tempFile.file) {
+                console.error('No file object found for:', tempFile.fileName);
+                continue;
+              }
+              await this.uploadFile(tempFile.file, tempFile.fileType);
+            }
+            this.tempFiles = []; // Clear temporary files
+          }
+
           // Close the modal programmatically
           const modalEl = document.getElementById('newItemModal');
           if (modalEl) {
@@ -849,22 +875,6 @@ class AdminApp {
 
           // Show success notification
           window.AdminApp.notificationManager.success(message);
-
-          // Upload any pending files after the purchase is saved
-          if (this.pendingFiles && this.pendingFiles.length > 0) {
-            for (const pendingFile of this.pendingFiles) {
-              await this.uploadFile(pendingFile.file, pendingFile.fileType);
-            }
-            this.pendingFiles = []; // Clear pending files
-          }
-
-          // Upload any temporary files that were added before the purchase was saved
-          if (this.tempFiles && this.tempFiles.length > 0) {
-            for (const tempFile of this.tempFiles) {
-              await this.uploadFile(tempFile.file, tempFile.fileType);
-            }
-            this.tempFiles = []; // Clear temporary files
-          }
 
           // Delete files marked for deletion (staged deletions)
           if (this.filesToDelete && this.filesToDelete.length > 0) {
@@ -916,6 +926,7 @@ class AdminApp {
       // Handle file upload
       handleFileUpload(event, fileType) {
         const files = Array.from(event.target.files);
+        console.log('Files selected:', files.length, 'type:', fileType);
         if (files.length === 0) return;
 
         for (const file of files) {
@@ -943,27 +954,40 @@ class AdminApp {
             this.tempFiles = [];
           }
           this.tempFiles.push(filePreview);
+          console.log('Added to tempFiles:', file.name, 'tempFiles count:', this.tempFiles.length);
         }
 
         // Clear the input to allow re-uploading the same file
         event.target.value = '';
       },
 
+      // Sanitize filename for upload
+      sanitizeFileName(name) {
+        return name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      },
+
       // Upload a single file
       async uploadFile(file, fileType) {
         try {
+          console.log('uploadFile called:', file?.name, 'type:', fileType, 'size:', file?.size);
+          
+          // Create a new File object with sanitized name (like DumbSpends does)
+          const sanitizedName = this.sanitizeFileName(file.name);
+          const fileToUpload = new File([file], sanitizedName, { type: file.type });
+          console.log('Created sanitized file:', fileToUpload.name, 'size:', fileToUpload.size);
+          
           const formData = new FormData();
-          formData.append('file', file);
+          formData.append('file', fileToUpload);
           formData.append('file_type', fileType);
 
           const apiUrl = window.APP_CONFIG?.API_URL || '/api';
 
           // Use the current editingItemId, which should be set after purchase is saved
           const purchaseId = this.editingItemId;
+          console.log('Uploading to purchase:', purchaseId);
 
           if (!purchaseId) {
-            // If no purchase ID is available, we can't upload the file yet
-            // This should only happen if the function is called before the purchase is saved
+            console.error('No purchaseId available for file upload');
             window.AdminApp.notificationManager.warning('Purchase not saved yet. File will be uploaded after saving purchase.');
             return;
           }
@@ -983,6 +1007,7 @@ class AdminApp {
           }
 
           const uploadedFile = await response.json();
+          console.log('File uploaded successfully:', uploadedFile);
           // Add to uploaded files if array exists
           if (!this.uploadedFiles) {
             this.uploadedFiles = [];

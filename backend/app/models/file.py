@@ -24,7 +24,7 @@ class File(Base):
     # Original file information
     filename = Column(String, nullable=False)  # Original filename
     stored_filename = Column(String, nullable=False)  # Hash-based filename
-    file_type = Column(Enum(FileType), nullable=False)  # Category of file
+    file_type = Column(Enum(FileType, values_callable=lambda obj: [e.value for e in obj]), nullable=False)  # Category of file
     mime_type = Column(String, nullable=False)  # MIME type
     file_size = Column(BigInteger, nullable=False)  # Size in bytes
 

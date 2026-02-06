@@ -34,13 +34,16 @@ async def upload_file(
     if not purchase:
         raise HTTPException(status_code=404, detail="Purchase not found")
 
-    # Validate file type
+    # Validate file type and convert to enum
     valid_types = ["receipt", "manual", "photo", "warranty", "other"]
     if file_type.lower() not in valid_types:
         raise HTTPException(
             status_code=400,
             detail=f"Invalid file type. Valid types: {valid_types}"
         )
+    
+    # Convert string file_type to FileType enum (lookup by value)
+    file_type_enum = FileType(file_type.lower())
 
     # Read file contents and validate size (max 10MB)
     contents = await file.read()
@@ -57,7 +60,21 @@ async def upload_file(
     )
     existing_file = result.scalar_one_or_none()
     if existing_file:
-        return FileResponse.model_validate(existing_file)
+        # File content already exists, but we need to create a NEW record for this purchase
+        # (same stored file can be referenced by multiple purchases)
+        db_file = FileModel(
+            purchase_id=purchase_id,
+            filename=file.filename,
+            stored_filename=existing_file.stored_filename,
+            file_type=file_type_enum,
+            mime_type=file.content_type,
+            file_size=len(contents),
+            file_hash=file_hash
+        )
+        db.add(db_file)
+        await db.commit()
+        await db.refresh(db_file)
+        return FileResponse.model_validate(db_file, from_attributes=True)
 
     # Generate unique filename
     _, ext = os.path.splitext(file.filename)
@@ -74,8 +91,7 @@ async def upload_file(
     async with aiofiles.open(file_path, 'wb') as f:
         await f.write(contents)
 
-    # Convert string file_type to FileType enum
-    file_type_enum = FileType(file_type.lower())
+
     
     # Create file record in database
     db_file = FileModel(
@@ -92,7 +108,7 @@ async def upload_file(
     await db.commit()
     await db.refresh(db_file)
 
-    return FileResponse.model_validate(db_file)
+    return FileResponse.model_validate(db_file, from_attributes=True)
 
 
 @router.get("/{purchase_id}/")
@@ -116,7 +132,7 @@ async def get_files_for_purchase(
         select(FileModel).filter(FileModel.purchase_id == purchase_id)
     )
     files = result.scalars().all()
-    return [FileResponse.model_validate(f) for f in files]
+    return [FileResponse.model_validate(f, from_attributes=True) for f in files]
 
 
 @router.get("/{purchase_id}/{file_id}/")
@@ -154,7 +170,7 @@ async def get_file_by_id(
     if not db_file:
         raise HTTPException(status_code=404, detail="File not found")
 
-    return FileResponse.model_validate(db_file)
+    return FileResponse.model_validate(db_file, from_attributes=True)
 
 
 @router.delete("/{purchase_id}/{file_id}/")

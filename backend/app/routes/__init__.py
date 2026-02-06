@@ -1,9 +1,10 @@
-from .purchases import router as purchases_router
-from .warranties import router as warranties_router
-from .retailers import router as retailers_router
-from .brands import router as brands_router
-from .analytics import router as analytics_router
-from .exports import router as exports_router
-from .imports import router as imports_router
+from .purchases import router as purchases
+from .warranties import router as warranties
+from .retailers import router as retailers
+from .brands import router as brands
+from .analytics import router as analytics
+from .exports import router as exports
+from .imports import router as imports
+from .files import router as files
 
-__all__ = ["purchases_router", "warranties_router", "retailers_router", "brands_router", "analytics_router", "exports_router", "imports_router"]
+__all__ = ["purchases", "warranties", "retailers", "brands", "analytics", "exports", "imports", "files"]
