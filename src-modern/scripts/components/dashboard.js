@@ -236,10 +236,6 @@ export class DashboardManager {
         id: item.id.substring(0, 8) + '...',
         customer: item.product_name,
         amount: '$' + parseFloat(item.price).toLocaleString(),
-        status: {
-          class: item.status === 'RECEIVED' ? 'bg-success' : 'bg-warning',
-          text: item.status
-        },
         date: new Date(item.purchase_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
       }));
     } catch (error) {
@@ -301,17 +297,12 @@ export class DashboardManager {
   }
 
   calculateOrderData(recentOrdersData) {
-    // Calculate order statistics based on recent orders
-    const completed = recentOrdersData.filter(order => order.status === 'RECEIVED').length;
-    const processing = recentOrdersData.filter(order => order.status === 'ORDERED').length;
-    const pending = recentOrdersData.filter(order => order.status === 'PENDING').length;
-    const cancelled = recentOrdersData.length - (completed + processing + pending);
-
+    // Order status tracking removed - return empty stats
     return {
-      completed,
-      processing,
-      pending,
-      cancelled
+      completed: 0,
+      processing: 0,
+      pending: 0,
+      cancelled: 0
     };
   }
 
@@ -827,7 +818,6 @@ export class DashboardManager {
             <td><strong>${order.id}</strong></td>
             <td>${order.customer}</td>
             <td>${order.amount}</td>
-            <td><span class="badge ${order.status.class}">${order.status.text}</span></td>
             <td>${order.date}</td>
         </tr>
     `).join('');
