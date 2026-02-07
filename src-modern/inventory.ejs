@@ -447,37 +447,24 @@
                 <div class="modal-body pt-0 pb-4 px-4">
                     <div class="row g-4">
                         <!-- Product Images/Attachments -->
-                        <div class="col-lg-4">
+                        <div class="col-lg-4" x-show="item.files && item.files.some(f => f.file_type && f.file_type.toLowerCase().startsWith('image/'))">
                             <div class="card h-100 border-0 bg-light-subtle">
                                 <div class="card-body" style="min-height: 250px;">
-                                    <!-- Show images if available -->
-                                    <template x-if="item.files && item.files.some(f => f.file_type && f.file_type.toLowerCase().startsWith('image/'))">
-                                        <div class="d-flex flex-wrap gap-2">
-                                            <template x-for="file in item.files.filter(f => f.file_type && f.file_type.toLowerCase().startsWith('image/'))" :key="file.id">
-                                                <img :src="`/api/files/${file.id}/preview/`"
-                                                     :alt="file.filename"
-                                                     class="img-thumbnail"
-                                                     style="max-width: 100px; max-height: 100px; object-fit: cover; cursor: pointer;"
-                                                     @click="openImagePreview(file)">
-                                            </template>
-                                        </div>
-                                    </template>
-                                    
-                                    <!-- Show placeholder if no images -->
-                                    <template x-if="!(item.files && item.files.some(f => f.file_type.toLowerCase().startsWith('image/')))">
-                                        <div class="d-flex align-items-center justify-content-center h-100">
-                                            <div class="text-center">
-                                                <i class="bi bi-cart fs-1 text-muted"></i>
-                                                <p class="mt-2 mb-0 text-muted">Product Image</p>
-                                            </div>
-                                        </div>
-                                    </template>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <template x-for="file in item.files ? item.files.filter(f => f.file_type && f.file_type.toLowerCase().startsWith('image/')) : []" :key="file.id">
+                                            <img :src="`/api/files/${file.id}/preview/`" 
+                                                 :alt="file.filename"
+                                                 class="img-thumbnail"
+                                                 style="max-width: 100px; max-height: 100px; object-fit: cover; cursor: pointer;"
+                                                 @click="openImagePreview(file)">
+                                        </template>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Product Details -->
-                        <div class="col-lg-8">
+                        <div class="col-lg" :class="{'col-lg-8': item.files && item.files.some(f => f.file_type && f.file_type.toLowerCase().startsWith('image/')), 'col-lg-12': !(item.files && item.files.some(f => f.file_type && f.file_type.toLowerCase().startsWith('image/')))}">
                             <div class="card border-0 bg-light-subtle">
                                 <div class="card-body p-3">
                                     <h3 class="fw-bold text-dark mb-4" x-text="`${item.brand || ''} ${item.productName || ''} ${item.modelNumber || ''}`.trim()"></h3>
@@ -485,7 +472,7 @@
                                     <div class="row g-3">
                                         <!-- Product Information -->
                                         <div class="col-md-6">
-                                            <div class="card h-100 border shadow-sm" x-show="item.brand || item.retailer || item.modelNumber || item.serialNumber">
+                                            <div class="card h-100 border shadow-sm" x-show="item.brand || item.retailer || (item.modelNumber && item.modelNumber !== 'N/A' && item.modelNumber.trim() !== '') || (item.serialNumber && item.serialNumber !== 'N/A' && item.serialNumber.trim() !== '')">
                                                 <div class="card-header bg-transparent border-0 pb-0">
                                                     <h6 class="fw-semibold text-primary mb-0">
                                                         <i class="bi bi-box-seam me-2"></i>Product Info
@@ -500,11 +487,11 @@
                                                         <span class="text-muted">Retailer</span>
                                                         <span class="fw-medium" x-text="item.retailer"></span>
                                                     </div>
-                                                    <div class="d-flex justify-content-between border-bottom pb-2 mb-2" x-show="item.modelNumber">
+                                                    <div class="d-flex justify-content-between border-bottom pb-2 mb-2" x-show="item.modelNumber && item.modelNumber !== 'N/A' && item.modelNumber.trim() !== ''">
                                                         <span class="text-muted">Model</span>
                                                         <span class="fw-medium" x-text="item.modelNumber"></span>
                                                     </div>
-                                                    <div class="d-flex justify-content-between" x-show="item.serialNumber">
+                                                    <div class="d-flex justify-content-between" x-show="item.serialNumber && item.serialNumber !== 'N/A' && item.serialNumber.trim() !== ''">
                                                         <span class="text-muted">Serial</span>
                                                         <span class="fw-medium" x-text="item.serialNumber"></span>
                                                     </div>
@@ -514,7 +501,7 @@
 
                                         <!-- Purchase Information -->
                                         <div class="col-md-6">
-                                            <div class="card h-100 border shadow-sm" x-show="item.purchaseDate || item.price || item.quantity || item.link">
+                                            <div class="card h-100 border shadow-sm" x-show="item.purchaseDate || item.price || item.quantity || (item.link && item.link !== 'N/A' && item.link.trim() !== '')">
                                                 <div class="card-header bg-transparent border-0 pb-0">
                                                     <h6 class="fw-semibold text-primary mb-0">
                                                         <i class="bi bi-calendar-check me-2"></i>Purchase Info
@@ -533,7 +520,7 @@
                                                         <span class="text-muted">Quantity</span>
                                                         <span class="fw-medium" x-text="item.quantity"></span>
                                                     </div>
-                                                    <div class="d-flex justify-content-between" x-show="item.link">
+                                                    <div class="d-flex justify-content-between" x-show="item.link && item.link !== 'N/A' && item.link.trim() !== ''">
                                                         <span class="text-muted">Link</span>
                                                         <a :href="item.link" target="_blank" class="text-primary text-decoration-none">
                                                             <i class="bi bi-box-arrow-up-right me-1"></i>View
@@ -586,8 +573,8 @@
                                     </div>
 
                                     <!-- Additional Info -->
-                                    <div class="row mt-3" x-show="item.tags || item.taxDeductible !== undefined">
-                                        <div class="col-md-6" x-show="item.tags">
+                                    <div class="row mt-3" x-show="(item.tags && item.tags !== 'N/A' && item.tags.trim() !== '') || (item.taxDeductible !== undefined && item.taxDeductible !== null)">
+                                        <div class="col-md-6" x-show="item.tags && item.tags !== 'N/A' && item.tags.trim() !== ''">
                                             <div class="card border shadow-sm">
                                                 <div class="card-header bg-transparent border-0 pb-0">
                                                     <h6 class="fw-semibold text-primary mb-0">
@@ -599,7 +586,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-6" x-show="item.taxDeductible !== undefined">
+                                        <div class="col-md-6" x-show="item.taxDeductible">
                                             <div class="card border shadow-sm">
                                                 <div class="card-header bg-transparent border-0 pb-0">
                                                     <h6 class="fw-semibold text-primary mb-0">
@@ -608,7 +595,6 @@
                                                 </div>
                                                 <div class="card-body pt-0">
                                                     <span x-show="item.taxDeductible" class="badge bg-success">Tax Deductible</span>
-                                                    <span x-show="!item.taxDeductible" class="badge bg-secondary">Not Tax Deductible</span>
                                                 </div>
                                             </div>
                                         </div>

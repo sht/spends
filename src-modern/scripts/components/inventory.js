@@ -455,22 +455,23 @@ export function registerInventoryComponent() {
       const freshItem = this.items.find(i => i.id === item.id) || item;
 
       // Prepare the detailed item object with all fields
+      // Only set defaults for undefined/null values, preserve actual values like 'N/A'
       const detailedItem = {
         productName: freshItem.name,
-        retailer: typeof freshItem.retailer === 'object' ? freshItem.retailer.name : (freshItem.retailer || ''),
-        brand: typeof freshItem.brand === 'object' ? freshItem.brand.name : (freshItem.brand || ''),
-        modelNumber: freshItem.modelNumber || '',
-        serialNumber: freshItem.serialNumber || '',
-        purchaseDate: freshItem.purchaseDateISO || freshItem.purchaseDate || '',
+        retailer: typeof freshItem.retailer === 'object' ? freshItem.retailer.name : (freshItem.retailer !== undefined ? freshItem.retailer : undefined),
+        brand: typeof freshItem.brand === 'object' ? freshItem.brand.name : (freshItem.brand !== undefined ? freshItem.brand : undefined),
+        modelNumber: freshItem.modelNumber !== undefined ? freshItem.modelNumber : undefined,
+        serialNumber: freshItem.serialNumber !== undefined ? freshItem.serialNumber : undefined,
+        purchaseDate: freshItem.purchaseDateISO || freshItem.purchaseDate,
         price: freshItem.price,
         quantity: freshItem.quantity || 1,
-        link: freshItem.link || '',
-        warrantyExpiry: freshItem.warrantyExpiry || '',
-        returnDeadline: freshItem.returnDeadline || '',
-        returnPolicy: freshItem.returnPolicy || '',
-        taxDeductible: freshItem.taxDeductible || false,
-        tags: freshItem.tags || '',
-        notes: freshItem.notes || '',
+        link: freshItem.link !== undefined ? freshItem.link : undefined,
+        warrantyExpiry: freshItem.warrantyExpiry !== undefined ? freshItem.warrantyExpiry : undefined,
+        returnDeadline: freshItem.returnDeadline !== undefined ? freshItem.returnDeadline : undefined,
+        returnPolicy: freshItem.returnPolicy !== undefined ? freshItem.returnPolicy : undefined,
+        taxDeductible: freshItem.taxDeductible !== undefined ? freshItem.taxDeductible : undefined,
+        tags: freshItem.tags !== undefined ? freshItem.tags : undefined,
+        notes: freshItem.notes !== undefined ? freshItem.notes : undefined,
         id: freshItem.id
       };
 
@@ -495,20 +496,20 @@ export function registerInventoryComponent() {
       // Use purchaseDateISO for the date input (YYYY-MM-DD format)
       const detailedItem = {
         productName: freshItem.name,
-        retailer: typeof freshItem.retailer === 'object' ? freshItem.retailer.name : (freshItem.retailer || ''),
-        brand: typeof freshItem.brand === 'object' ? freshItem.brand.name : (freshItem.brand || ''),
-        modelNumber: freshItem.modelNumber || '',
-        serialNumber: freshItem.serialNumber || '',
-        purchaseDate: freshItem.purchaseDateISO || freshItem.purchaseDate || '',
+        retailer: typeof freshItem.retailer === 'object' ? freshItem.retailer.name : (freshItem.retailer !== undefined ? freshItem.retailer : undefined),
+        brand: typeof freshItem.brand === 'object' ? freshItem.brand.name : (freshItem.brand !== undefined ? freshItem.brand : undefined),
+        modelNumber: freshItem.modelNumber !== undefined ? freshItem.modelNumber : undefined,
+        serialNumber: freshItem.serialNumber !== undefined ? freshItem.serialNumber : undefined,
+        purchaseDate: freshItem.purchaseDateISO || freshItem.purchaseDate,
         price: freshItem.price,
         quantity: freshItem.quantity || 1,
-        link: freshItem.link || '',
-        warrantyExpiry: freshItem.warrantyExpiry || '',
-        returnDeadline: freshItem.returnDeadline || '',
-        returnPolicy: freshItem.returnPolicy || '',
-        taxDeductible: freshItem.taxDeductible || false,
-        tags: freshItem.tags || '',
-        notes: freshItem.notes || '',
+        link: freshItem.link !== undefined ? freshItem.link : undefined,
+        warrantyExpiry: freshItem.warrantyExpiry !== undefined ? freshItem.warrantyExpiry : undefined,
+        returnDeadline: freshItem.returnDeadline !== undefined ? freshItem.returnDeadline : undefined,
+        returnPolicy: freshItem.returnPolicy !== undefined ? freshItem.returnPolicy : undefined,
+        taxDeductible: freshItem.taxDeductible !== undefined ? freshItem.taxDeductible : undefined,
+        tags: freshItem.tags !== undefined ? freshItem.tags : undefined,
+        notes: freshItem.notes !== undefined ? freshItem.notes : undefined,
         id: freshItem.id
       };
 

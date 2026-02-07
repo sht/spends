@@ -1387,10 +1387,13 @@ class AdminApp {
         warrantyExpiry: '',
         returnDeadline: '',
         returnPolicy: '',
-        taxDeductible: false,
+        taxDeductible: undefined,  // Change to undefined to properly hide the section
         tags: '',
         notes: '',
-        files: []  // Add files array
+        files: [],  // Add files array
+        receipts: [],
+        manuals: [],
+        warranties: []
       },
 
       init() {
