@@ -7,15 +7,15 @@ export function registerSettingsComponent() {
     activeSection: 'general',
     confirmReset: false,
 
-    // Settings Data
+    // Settings Data (maintains original structure for backward compatibility)
     settings: {
-      // General Settings
+      // General Settings (DB-persisted: currencyCode, dateFormat, timezone)
       language: 'en',
       timezone: 'America/New_York',
       dateFormat: 'MM/DD/YYYY',
       currencyCode: 'USD',
 
-      // Dashboard Card Visibility
+      // Dashboard Card Visibility (localStorage only)
       cardVisibility: {
         totalAssetsValue: true,
         itemsCount: true,
@@ -25,7 +25,7 @@ export function registerSettingsComponent() {
         expiredWarranties: true
       },
 
-      // Notifications Settings
+      // Notifications Settings (localStorage only)
       notifications: {
         desktop: true,
         email: true,
@@ -33,7 +33,7 @@ export function registerSettingsComponent() {
         marketing: false
       },
 
-      // Retailer Settings
+      // Retailer Settings (localStorage only)
       retailers: []
     },
 
@@ -79,7 +79,8 @@ export function registerSettingsComponent() {
       const currentTheme = document.documentElement.getAttribute('data-bs-theme') ||
                           localStorage.getItem('theme') || 'light';
 
-      this.loadSettings();
+      // Load settings: DB settings from API (primary), UI settings from localStorage
+      await this.loadSettings();
       await this.loadRetailers();
 
       // Restore active section from URL hash AFTER loading, with nextTick to ensure Alpine reactivity
@@ -125,8 +126,10 @@ export function registerSettingsComponent() {
     },
 
     // Settings Management
-    loadSettings() {
-      // Load settings from localStorage if available
+    async loadSettings() {
+      const apiUrl = window.APP_CONFIG?.API_URL || '/api';
+
+      // 1. First load from localStorage as base
       const savedSettings = localStorage.getItem('appSettings');
       if (savedSettings) {
         try {
@@ -136,16 +139,58 @@ export function registerSettingsComponent() {
           console.warn('Failed to load saved settings:', error);
         }
       }
+
+      // 2. Override DB-persisted settings from API (API is the source of truth)
+      try {
+        const response = await fetch(`${apiUrl}/settings/`);
+        if (response.ok) {
+          const apiSettings = await response.json();
+          // API returns snake_case, convert to camelCase
+          this.settings.currencyCode = apiSettings.currency_code || this.settings.currencyCode;
+          this.settings.dateFormat = apiSettings.date_format || this.settings.dateFormat;
+          this.settings.timezone = apiSettings.timezone || this.settings.timezone;
+          console.log('Loaded DB settings from API:', apiSettings);
+        }
+      } catch (error) {
+        console.warn('Failed to load settings from API:', error);
+      }
     },
 
-    saveSettings() {
+    async saveSettings() {
+      const apiUrl = window.APP_CONFIG?.API_URL || '/api';
+
+      // 1. Save DB-persisted settings to API
+      try {
+        const response = await fetch(`${apiUrl}/settings/`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            currency_code: this.settings.currencyCode,
+            date_format: this.settings.dateFormat,
+            timezone: this.settings.timezone
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        console.log('Saved DB settings to API');
+      } catch (error) {
+        console.error('Failed to save DB settings to API:', error);
+        this.showNotification('Failed to save settings to server', 'error');
+        return;
+      }
+
+      // 2. Save all settings to localStorage (for other components to access)
       try {
         localStorage.setItem('appSettings', JSON.stringify(this.settings));
-        this.showNotification('Settings saved successfully!', 'success');
+        console.log('Saved settings to localStorage');
       } catch (error) {
-        this.showNotification('Failed to save settings', 'error');
-        console.error('Failed to save settings:', error);
+        console.error('Failed to save to localStorage:', error);
       }
+
+      this.showNotification('Settings saved successfully!', 'success');
     },
 
     setActiveSection(sectionId) {
@@ -403,7 +448,7 @@ export function registerSettingsComponent() {
       if (!file) return;
 
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         try {
           const content = e.target.result;
           let importedData;
@@ -412,7 +457,7 @@ export function registerSettingsComponent() {
             importedData = JSON.parse(content);
             if (importedData.settings) {
               this.settings = { ...this.settings, ...importedData.settings };
-              this.saveSettings();
+              await this.saveSettings();
               this.showNotification('Data imported successfully from JSON!', 'success');
             }
           } else if (file.name.endsWith('.csv')) {
@@ -430,7 +475,17 @@ export function registerSettingsComponent() {
       this.confirmReset = true;
     },
 
-    confirmResetData() {
+    async confirmResetData() {
+      const apiUrl = window.APP_CONFIG?.API_URL || '/api';
+
+      // Reset DB settings via API
+      try {
+        await fetch(`${apiUrl}/settings/reset`, { method: 'POST' });
+      } catch (error) {
+        console.warn('Failed to reset DB settings:', error);
+      }
+
+      // Reset all settings to defaults
       localStorage.removeItem('appSettings');
       this.settings = {
         language: 'en',
@@ -461,6 +516,26 @@ export function registerSettingsComponent() {
     // Notification Helper
     showNotification(message, type) {
       console.log(`[${type.toUpperCase()}] ${message}`);
+      
+      // Show actual toast notification if available
+      if (window.AdminApp && window.AdminApp.notificationManager) {
+        switch (type) {
+          case 'success':
+            window.AdminApp.notificationManager.success(message);
+            break;
+          case 'error':
+            window.AdminApp.notificationManager.error(message);
+            break;
+          case 'warning':
+            window.AdminApp.notificationManager.warning(message);
+            break;
+          case 'info':
+            window.AdminApp.notificationManager.info(message);
+            break;
+          default:
+            window.AdminApp.notificationManager.info(message);
+        }
+      }
     }
   }));
 }

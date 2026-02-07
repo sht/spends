@@ -1,6 +1,6 @@
 # Architecture - Spends Tracker
 
-**Last Updated:** January 31, 2026
+**Last Updated:** February 7, 2026
 **Architecture:** Static Frontend + REST API Backend (Decoupled)
 
 ---
@@ -104,7 +104,8 @@ spends-tracker/
 │   │   │   ├── purchase.py
 │   │   │   ├── warranty.py
 │   │   │   ├── retailer.py
-│   │   │   └── brand.py
+│   │   │   ├── brand.py
+│   │   │   └── setting.py        # User settings (DB-persisted)
 │   │   ├── schemas/              # Pydantic schemas
 │   │   │   ├── purchase.py
 │   │   │   ├── warranty.py
@@ -117,7 +118,8 @@ spends-tracker/
 │   │   │   ├── brands.py         # /api/brands
 │   │   │   ├── analytics.py      # /api/analytics
 │   │   │   ├── exports.py        # /api/export
-│   │   │   └── imports.py        # /api/import
+│   │   │   ├── imports.py        # /api/import
+│   │   │   └── settings.py       # /api/settings
 │   │   ├── services/             # Business logic
 │   │   │   ├── purchase_service.py
 │   │   │   ├── warranty_service.py
@@ -320,6 +322,79 @@ All API endpoints are under `/api/` prefix:
   "total": 50,
   "skip": 0,
   "limit": 20
+}
+```
+
+### Settings API
+
+The Settings API uses a **hybrid storage approach** - database-persisted settings for cross-device consistency, and localStorage for device-specific preferences.
+
+**Endpoints:**
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/settings/` | Get all settings with defaults |
+| PUT | `/api/settings/` | Update settings (partial updates supported) |
+| GET | `/api/settings/{key}` | Get a specific setting by key |
+| POST | `/api/settings/reset` | Reset all settings to defaults |
+
+**Settings Storage Strategy:**
+
+| Setting | Storage | Reason |
+|---------|---------|--------|
+| `currency_code` | Database + localStorage | Cross-device consistency |
+| `date_format` | Database + localStorage | Cross-device consistency |
+| `timezone` | Database + localStorage | Cross-device consistency |
+| `language` | localStorage only | Device preference |
+| `cardVisibility` | localStorage only | Device preference |
+| `notifications` | localStorage only | Device preference |
+| `theme` | localStorage only | Device preference |
+
+**Data Flow:**
+
+```
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│   Settings   │────▶│  Backend API │────▶│   Database   │
+│    Page      │     │  /api/settings│     │   (SQLite)   │
+└──────────────┘     └──────────────┘     └──────────────┘
+       │                                           ▲
+       │ localStorage (sync)                       │
+       ▼                                           │
+┌──────────────┐     ┌──────────────┐            │
+│ localStorage │◀────│  Other Pages │────────────┘
+│  (cache)     │     │(read-only)   │
+└──────────────┘     └──────────────┘
+```
+
+**Request/Response Examples:**
+
+```bash
+# Get settings
+GET /api/settings/
+Response:
+{
+  "currency_code": "USD",
+  "date_format": "MM/DD/YYYY",
+  "timezone": "America/New_York"
+}
+
+# Update settings
+PUT /api/settings/
+Body: {"currency_code": "EUR", "date_format": "DD/MM/YYYY"}
+Response:
+{
+  "currency_code": "EUR",
+  "date_format": "DD/MM/YYYY",
+  "timezone": "America/New_York"
+}
+
+# Reset to defaults
+POST /api/settings/reset
+Response:
+{
+  "currency_code": "USD",
+  "date_format": "MM/DD/YYYY",
+  "timezone": "America/New_York"
 }
 ```
 
@@ -636,6 +711,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
 
 ---
 
-**Architecture Version:** 2.0
-**Last Updated:** January 31, 2026
+**Architecture Version:** 2.1
+**Last Updated:** February 7, 2026
 **Status:** ✅ Production Ready

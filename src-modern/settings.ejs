@@ -1,7 +1,8 @@
 <% const title = 'Settings'; %>
 <% const page = 'settings'; %>
 
-            <div class="container-fluid p-4 p-lg-4">
+            <!-- Settings Container -->
+            <div x-data="settingsComponent" x-init="init()" class="settings-layout container-fluid p-4 p-lg-4">
 
                 <!-- Page Header -->
                 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -15,9 +16,6 @@
                         </button>
                     </div>
                 </div>
-
-                <!-- Settings Container -->
-                <div x-data="settingsComponent" x-init="init()" class="settings-layout">
 
                             <!-- General Settings Section -->
                             <div class="settings-section">

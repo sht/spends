@@ -215,7 +215,7 @@ export class DashboardManager {
       return (data.top_products || []).map((item, index) => ({
         rank: index + 1,
         name: item.product_name,
-        price: '$' + parseFloat(item.avg_price).toLocaleString(),
+        price: window.formatPrice(item.avg_price),
         date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
       }));
     } catch (error) {
@@ -235,7 +235,7 @@ export class DashboardManager {
       return (data || []).map(item => ({
         id: item.id.substring(0, 8) + '...',
         customer: item.product_name,
-        amount: '$' + parseFloat(item.price).toLocaleString(),
+        amount: window.formatPrice(item.price),
         date: new Date(item.purchase_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
       }));
     } catch (error) {
@@ -262,7 +262,7 @@ export class DashboardManager {
     // Update Total Asset Value
     const totalValueEl = document.querySelector('[data-kpi="total-value"] .kpi-value');
     if (totalValueEl && summaryData.total_spent !== undefined) {
-      totalValueEl.textContent = '$' + parseFloat(summaryData.total_spent).toLocaleString();
+      totalValueEl.textContent = window.formatPrice(summaryData.total_spent);
     }
     
     // Update Items Count
@@ -274,7 +274,7 @@ export class DashboardManager {
     // Update Average Price
     const avgPriceEl = document.querySelector('[data-kpi="avg-price"] .kpi-value');
     if (avgPriceEl && summaryData.avg_price !== undefined) {
-      avgPriceEl.textContent = '$' + Math.round(parseFloat(summaryData.avg_price)).toLocaleString();
+      avgPriceEl.textContent = window.formatPrice(summaryData.avg_price);
     }
     
     // Update Active Warranties
@@ -433,7 +433,7 @@ export class DashboardManager {
     return productNames.map((name, index) => ({
       rank: index + 1,
       name,
-      price: `$${(Math.random() * 2000 + 100).toFixed(2)}`,
+      price: window.formatPrice(Math.random() * 2000 + 100),
       date: getRandomDate()
     }));
   }
@@ -662,7 +662,7 @@ export class DashboardManager {
                   callbacks: {
                     label: function(context) {
                       if (context.datasetIndex === 0) {
-                        return `${context.dataset.label}: $${context.parsed.y.toLocaleString()}`;
+                        return `${context.dataset.label}: ${window.formatPrice(context.parsed.y)}`;
                       } else {
                         return `${context.dataset.label}: ${context.parsed.y} items`;
                       }
@@ -692,12 +692,12 @@ export class DashboardManager {
                   },
                   ticks: {
                     callback: function(value) {
-                      return '$' + value.toLocaleString();
+                      return window.formatPrice(value);
                     }
                   },
                   title: {
                     display: true,
-                    text: 'Total Spending ($)',
+                    text: `Total Spending (${window.getCurrencySymbol()})`,
                     color: 'rgb(59, 130, 246)'
                   }
                 },

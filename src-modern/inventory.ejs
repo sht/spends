@@ -306,7 +306,7 @@
                                                     <td class="align-middle" x-text="item.modelNumber || 'N/A'"></td>
                                                 </template>
                                                 <template x-if="visibleColumns.price">
-                                                    <td class="fw-medium align-middle" x-text="`$${item.price.toFixed(2)}`"></td>
+                                                    <td class="fw-medium align-middle" x-text="window.formatPrice(item.price)"></td>
                                                 </template>
                                                 <template x-if="visibleColumns.purchaseDate">
                                                     <td class="align-middle" x-text="item.purchaseDate"></td>
@@ -548,7 +548,7 @@
                                                     </div>
                                                     <div class="d-flex justify-content-between border-bottom pb-2 mb-2" x-show="item.price">
                                                         <span class="text-muted">Price</span>
-                                                        <span class="fw-bold text-success fs-6" x-text="'$' + (item.price || '0.00')"></span>
+                                                        <span class="fw-bold text-success fs-6" x-text="window.formatPrice(item.price)"></span>
                                                     </div>
                                                     <div class="d-flex justify-content-between border-bottom pb-2 mb-2" x-show="item.quantity && item.quantity != 1">
                                                         <span class="text-muted">Quantity</span>

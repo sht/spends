@@ -32,6 +32,104 @@ import '../styles/scss/main.scss';
 import { registerSettingsComponent } from './components/settings.js';
 import { registerInventoryComponent } from './components/inventory.js';
 
+// ==========================================================================
+// Currency Utilities
+// ==========================================================================
+
+// Currency symbols mapping
+const CURRENCY_SYMBOLS = {
+  'USD': '$',
+  'EUR': '€',
+  'GBP': '£',
+  'JPY': '¥',
+  'CAD': 'C$',
+  'AUD': 'A$',
+  'CHF': 'CHF',
+  'CNY': '¥',
+  'INR': '₹'
+};
+
+// Cached settings from API
+let cachedSettings = null;
+
+// Fetch settings from API and update localStorage
+async function fetchSettingsFromAPI() {
+  const apiUrl = window.APP_CONFIG?.API_URL || '/api';
+  try {
+    const response = await fetch(`${apiUrl}/settings/`);
+    if (response.ok) {
+      const apiSettings = await response.json();
+      cachedSettings = apiSettings;
+      
+      // Merge with existing localStorage settings
+      const savedSettings = localStorage.getItem('appSettings');
+      let existing = {};
+      if (savedSettings) {
+        try {
+          existing = JSON.parse(savedSettings);
+        } catch (e) {
+          // ignore
+        }
+      }
+      
+      // Update with API values (API is source of truth for these)
+      const merged = {
+        ...existing,
+        currencyCode: apiSettings.currency_code || existing.currencyCode || 'USD',
+        dateFormat: apiSettings.date_format || existing.dateFormat || 'MM/DD/YYYY',
+        timezone: apiSettings.timezone || existing.timezone || 'America/New_York'
+      };
+      
+      localStorage.setItem('appSettings', JSON.stringify(merged));
+      console.log('Synced settings from API:', apiSettings);
+      return apiSettings;
+    }
+  } catch (error) {
+    console.warn('Failed to fetch settings from API:', error);
+  }
+  return null;
+}
+
+// Get current currency code from settings
+function getCurrencyCode() {
+  // If we have cached settings from API, use those
+  if (cachedSettings) {
+    return cachedSettings.currency_code || 'USD';
+  }
+  
+  // Fallback to localStorage
+  const savedSettings = localStorage.getItem('appSettings');
+  if (savedSettings) {
+    try {
+      const parsed = JSON.parse(savedSettings);
+      return parsed.currencyCode || 'USD';
+    } catch (error) {
+      console.warn('Failed to parse settings for currency:', error);
+    }
+  }
+  return 'USD';
+}
+
+// Get currency symbol for display
+function getCurrencySymbol() {
+  const code = getCurrencyCode();
+  return CURRENCY_SYMBOLS[code] || '$';
+}
+
+// Format price with currency symbol
+function formatPrice(price) {
+  const symbol = getCurrencySymbol();
+  const numPrice = parseFloat(price);
+  if (isNaN(numPrice)) return `${symbol}0.00`;
+  return `${symbol}${numPrice.toFixed(2)}`;
+}
+
+// Make utilities available globally
+window.getCurrencyCode = getCurrencyCode;
+window.getCurrencySymbol = getCurrencySymbol;
+window.formatPrice = formatPrice;
+window.fetchSettingsFromAPI = fetchSettingsFromAPI;
+
 // Application Class
 class AdminApp {
   constructor() {
@@ -50,6 +148,9 @@ class AdminApp {
           document.addEventListener('DOMContentLoaded', resolve);
         });
       }
+
+      // Fetch settings from API first (before any rendering)
+      await fetchSettingsFromAPI();
 
       // Initialize core managers
       this.themeManager = new ThemeManager();

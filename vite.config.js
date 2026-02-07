@@ -47,6 +47,11 @@ export default defineConfig({
     host: env.VITE_HOST || false,
     port: env.VITE_PORT ? parseInt(env.VITE_PORT) : 3030,
     open: env.VITE_OPEN_BROWSER === 'true',
+    // Ensure file watching works properly
+    watch: {
+      usePolling: true,
+      interval: 100,
+    },
     // Proxy API requests to the FastAPI backend during development
     proxy: {
       '/api': {
