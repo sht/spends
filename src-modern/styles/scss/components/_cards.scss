@@ -19,6 +19,24 @@
   }
 }
 
+// Specific style for inventory card to make it more distinct
+.inventory-card {
+  border: 1px solid rgba(var(--bs-primary-rgb), 0.2);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(var(--bs-primary-rgb), 0.1);
+  background-color: var(--bs-body-bg);
+  margin-bottom: 1.5rem;
+  
+  .card-header {
+    background: linear-gradient(135deg, rgba(var(--bs-primary-rgb), 0.03), transparent);
+    border-bottom: 1px solid rgba(var(--bs-primary-rgb), 0.1) !important;
+  }
+  
+  &:hover {
+    border: 1px solid rgba(var(--bs-primary-rgb), 0.3);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(var(--bs-primary-rgb), 0.2);
+  }
+}
+
 // Stats Cards
 .stats-card {
   .card-body {
