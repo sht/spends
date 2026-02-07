@@ -1387,13 +1387,14 @@ class AdminApp {
         warrantyExpiry: '',
         returnDeadline: '',
         returnPolicy: '',
-        taxDeductible: undefined,  // Change to undefined to properly hide the section
+        taxDeductible: undefined,
         tags: '',
         notes: '',
-        files: [],  // Add files array
+        files: [],
         receipts: [],
         manuals: [],
-        warranties: []
+        warranties: [],
+        photos: []
       },
 
       init() {
@@ -1433,22 +1434,26 @@ class AdminApp {
           
           // Store all files without filtering images
           this.item.files = allFiles;
-          
+
           // Create categorized file groups based on file_type only
-          this.item.receipts = this.item.files.filter(file => 
+          this.item.receipts = this.item.files.filter(file =>
             (file.file_type && file.file_type.toLowerCase() === 'receipt')
           );
-          
-          this.item.manuals = this.item.files.filter(file => 
+
+          this.item.manuals = this.item.files.filter(file =>
             (file.file_type && file.file_type.toLowerCase() === 'manual')
           );
-          
-          this.item.warranties = this.item.files.filter(file => 
+
+          this.item.warranties = this.item.files.filter(file =>
             (file.file_type && file.file_type.toLowerCase() === 'warranty')
           );
-          
+
+          this.item.photos = this.item.files.filter(file =>
+            (file.file_type && file.file_type.toLowerCase() === 'photo')
+          );
+
           console.log('Loaded files for purchase:', this.item.files);
-          console.log('Categorized files - Receipts:', this.item.receipts, 'Manuals:', this.item.manuals, 'Warranties:', this.item.warranties);
+          console.log('Categorized files - Receipts:', this.item.receipts, 'Manuals:', this.item.manuals, 'Warranties:', this.item.warranties, 'Photos:', this.item.photos);
         } catch (error) {
           console.error('Error loading files:', error);
           this.item.files = []; // Ensure files array is empty if there's an error

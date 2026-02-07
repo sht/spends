@@ -20,7 +20,7 @@ class PurchaseBase(BaseModel):
     quantity: Optional[int] = Field(default=1, ge=1)
     link: Optional[str] = Field(default=None, max_length=500)
     return_deadline: Optional[date] = None
-    return_policy: Optional[str] = Field(default=None, max_length=50)
+    return_policy: Optional[str] = Field(default=None, max_length=200)
     tags: Optional[str] = Field(default=None, max_length=255)
 
 
@@ -48,7 +48,7 @@ class PurchaseUpdate(BaseModel):
     quantity: Optional[int] = Field(None, ge=1)
     link: Optional[str] = Field(None, max_length=500)
     return_deadline: Optional[date] = None
-    return_policy: Optional[str] = Field(None, max_length=50)
+    return_policy: Optional[str] = Field(None, max_length=200)
     tags: Optional[str] = Field(None, max_length=255)
 
 
