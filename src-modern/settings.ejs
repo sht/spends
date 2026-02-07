@@ -32,10 +32,11 @@
                                                 <label for="dateFormat" class="form-label fw-500">Date Format</label>
                                                 <select id="dateFormat" class="form-select" x-model="settings.dateFormat">
                                                     <option value="">Select a format...</option>
-                                                    <option value="MM/DD/YYYY">MM/DD/YYYY (US)</option>
-                                                    <option value="DD/MM/YYYY">DD/MM/YYYY (UK)</option>
-                                                    <option value="YYYY-MM-DD">YYYY-MM-DD (ISO)</option>
-                                                    <option value="DD.MM.YYYY">DD.MM.YYYY (Europe)</option>
+                                                    <option value="short">Jan 30, 2026 (Short)</option>
+                                                    <option value="MM/DD/YYYY">01/30/2026 (US)</option>
+                                                    <option value="DD/MM/YYYY">30/01/2026 (UK)</option>
+                                                    <option value="YYYY-MM-DD">2026-01-30 (ISO)</option>
+                                                    <option value="DD.MM.YYYY">30.01.2026 (Europe)</option>
                                                 </select>
                                                 <small class="text-muted d-block mt-1">Choose how dates are displayed throughout the application</small>
                                             </div>
@@ -56,27 +57,6 @@
                                                     <option value="INR">INR - Indian Rupee</option>
                                                 </select>
                                                 <small class="text-muted d-block mt-1">Set your preferred currency for financial displays</small>
-                                            </div>
-
-                                            <!-- Timezone -->
-                                            <div class="col-md-6">
-                                                <label for="timezone" class="form-label fw-500">Timezone</label>
-                                                <select id="timezone" class="form-select" x-model="settings.timezone">
-                                                    <option value="">Select a timezone...</option>
-                                                    <option value="UTC">UTC (Coordinated Universal Time)</option>
-                                                    <option value="America/New_York">Eastern Time (ET)</option>
-                                                    <option value="America/Chicago">Central Time (CT)</option>
-                                                    <option value="America/Denver">Mountain Time (MT)</option>
-                                                    <option value="America/Los_Angeles">Pacific Time (PT)</option>
-                                                    <option value="Europe/London">London (GMT)</option>
-                                                    <option value="Europe/Paris">Paris (CET)</option>
-                                                    <option value="Europe/Berlin">Berlin (CET)</option>
-                                                    <option value="Asia/Tokyo">Tokyo (JST)</option>
-                                                    <option value="Asia/Shanghai">Shanghai (CST)</option>
-                                                    <option value="Asia/Singapore">Singapore (SGT)</option>
-                                                    <option value="Australia/Sydney">Sydney (AEDT)</option>
-                                                </select>
-                                                <small class="text-muted d-block mt-1">Set your local timezone for accurate timestamps</small>
                                             </div>
                                         </div>
                                     </div>

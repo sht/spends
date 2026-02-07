@@ -28,6 +28,10 @@ import Alpine from 'alpinejs';
 // Import styles (Bootstrap Icons are included in SCSS)
 import '../styles/scss/main.scss';
 
+// Import Flatpickr for custom date formatting
+import flatpickr from 'flatpickr';
+import 'flatpickr/dist/flatpickr.min.css';
+
 // Import page-specific Alpine components
 import { registerSettingsComponent } from './components/settings.js';
 import { registerInventoryComponent } from './components/inventory.js';
@@ -76,8 +80,7 @@ async function fetchSettingsFromAPI() {
       const merged = {
         ...existing,
         currencyCode: apiSettings.currency_code || existing.currencyCode || 'USD',
-        dateFormat: apiSettings.date_format || existing.dateFormat || 'MM/DD/YYYY',
-        timezone: apiSettings.timezone || existing.timezone || 'America/New_York'
+        dateFormat: apiSettings.date_format || existing.dateFormat || 'MM/DD/YYYY'
       };
       
       localStorage.setItem('appSettings', JSON.stringify(merged));
@@ -124,10 +127,136 @@ function formatPrice(price) {
   return `${symbol}${numPrice.toFixed(2)}`;
 }
 
+// Get date format from settings
+function getDateFormat() {
+  const savedSettings = localStorage.getItem('appSettings');
+  if (savedSettings) {
+    try {
+      const parsed = JSON.parse(savedSettings);
+      return parsed.dateFormat || 'MM/DD/YYYY';
+    } catch (error) {
+      console.warn('Failed to parse settings for date format:', error);
+    }
+  }
+  return 'MM/DD/YYYY';
+}
+
+// Get an example date string showing the user's preferred format
+function getDateFormatExample() {
+  const format = getDateFormat();
+  const exampleDate = new Date(2026, 0, 30); // Jan 30, 2026
+  
+  if (format === 'short') {
+    return 'Jan 30, 2026';
+  }
+  
+  const day = '30';
+  const month = '01';
+  const year = '2026';
+  
+  switch (format) {
+    case 'DD/MM/YYYY':
+      return `${day}/${month}/${year}`;
+    case 'YYYY-MM-DD':
+      return `${year}-${month}-${day}`;
+    case 'DD.MM.YYYY':
+      return `${day}.${month}.${year}`;
+    case 'MM/DD/YYYY':
+    default:
+      return `${month}/${day}/${year}`;
+  }
+}
+
+// Format date according to user preference
+// dateInput can be: Date object, ISO string (YYYY-MM-DD), or Date string
+// formatStyle: 'auto' = use user preference | 'short' = "Jan 30, 2026" | 'numeric' = user numeric format
+function formatDate(dateInput, formatStyle = 'auto') {
+  if (!dateInput) return '';
+  
+  // Parse input to Date object
+  let date;
+  if (dateInput instanceof Date) {
+    date = dateInput;
+  } else if (typeof dateInput === 'string') {
+    // Handle YYYY-MM-DD format (from API)
+    if (dateInput.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = dateInput.split('-').map(Number);
+      date = new Date(year, month - 1, day); // Use local time
+    } else {
+      date = new Date(dateInput);
+    }
+  } else {
+    return '';
+  }
+  
+  if (isNaN(date.getTime())) return '';
+  
+  // Get user preference
+  const dateFormat = getDateFormat();
+  
+  // If user prefers short format, or formatStyle is 'short'
+  if (dateFormat === 'short' || formatStyle === 'short') {
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+  
+  // Format per user preference
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  const yearShort = String(year).slice(-2);
+  
+  switch (dateFormat) {
+    case 'DD/MM/YYYY':
+      return `${day}/${month}/${year}`;
+    case 'YYYY-MM-DD':
+      return `${year}-${month}-${day}`;
+    case 'DD.MM.YYYY':
+      return `${day}.${month}.${year}`;
+    case 'MM/DD/YYYY':
+    default:
+      return `${month}/${day}/${year}`;
+  }
+}
+
+// Initialize Flatpickr on a date input with user's preferred format
+// Usage: initDatePicker(element, { onChange: (date) => {...} })
+function initDatePicker(element, options = {}) {
+  if (!element) return null;
+  
+  const userFormat = getDateFormat();
+  
+  // Map our format to flatpickr format
+  const formatMap = {
+    'short': 'M d, Y',        // Jan 30, 2026
+    'MM/DD/YYYY': 'm/d/Y',    // 01/30/2026
+    'DD/MM/YYYY': 'd/m/Y',    // 30/01/2026
+    'YYYY-MM-DD': 'Y-m-d',    // 2026-01-30
+    'DD.MM.YYYY': 'd.m.Y'     // 30.01.2026
+  };
+  
+  const flatpickrFormat = formatMap[userFormat] || 'm/d/Y';
+  
+  // Default options
+  const defaultOptions = {
+    dateFormat: flatpickrFormat,
+    altInput: true,
+    altFormat: flatpickrFormat,
+    allowInput: true,
+    maxDate: 'today',
+    ...options
+  };
+  
+  return flatpickr(element, defaultOptions);
+}
+
 // Make utilities available globally
 window.getCurrencyCode = getCurrencyCode;
 window.getCurrencySymbol = getCurrencySymbol;
 window.formatPrice = formatPrice;
+window.getDateFormat = getDateFormat;
+window.getDateFormatExample = getDateFormatExample;
+window.formatDate = formatDate;
+window.initDatePicker = initDatePicker;
 window.fetchSettingsFromAPI = fetchSettingsFromAPI;
 
 // Application Class
@@ -635,6 +764,74 @@ class AdminApp {
             this.validateDatesAfterPurchaseDateChange();
           }
         });
+
+        // Initialize flatpickr date pickers after DOM is ready
+        this.$nextTick(() => {
+          this.initDatePickers();
+        });
+      },
+
+      // Initialize flatpickr date pickers with user preferred format
+      initDatePickers() {
+        if (!window.initDatePicker) return;
+
+        // Destroy existing instances first
+        if (this.purchaseDatePicker) this.purchaseDatePicker.destroy();
+        if (this.warrantyExpiryPicker) this.warrantyExpiryPicker.destroy();
+        if (this.returnDeadlinePicker) this.returnDeadlinePicker.destroy();
+
+        // Initialize purchase date picker
+        if (this.$refs.purchaseDateInput) {
+          this.purchaseDatePicker = window.initDatePicker(this.$refs.purchaseDateInput, {
+            onChange: (selectedDates, dateStr) => {
+              // Convert flatpickr format to ISO format (YYYY-MM-DD) for storage
+              if (selectedDates[0]) {
+                const date = selectedDates[0];
+                this.form.purchaseDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+              } else {
+                this.form.purchaseDate = '';
+              }
+            }
+          });
+          // Set initial value if exists
+          if (this.form.purchaseDate) {
+            this.purchaseDatePicker.setDate(this.form.purchaseDate);
+          }
+        }
+
+        // Initialize warranty expiry picker
+        if (this.$refs.warrantyExpiryInput) {
+          this.warrantyExpiryPicker = window.initDatePicker(this.$refs.warrantyExpiryInput, {
+            onChange: (selectedDates, dateStr) => {
+              if (selectedDates[0]) {
+                const date = selectedDates[0];
+                this.form.warrantyExpiry = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+              } else {
+                this.form.warrantyExpiry = '';
+              }
+            }
+          });
+          if (this.form.warrantyExpiry) {
+            this.warrantyExpiryPicker.setDate(this.form.warrantyExpiry);
+          }
+        }
+
+        // Initialize return deadline picker
+        if (this.$refs.returnDeadlineInput) {
+          this.returnDeadlinePicker = window.initDatePicker(this.$refs.returnDeadlineInput, {
+            onChange: (selectedDates, dateStr) => {
+              if (selectedDates[0]) {
+                const date = selectedDates[0];
+                this.form.returnDeadline = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+              } else {
+                this.form.returnDeadline = '';
+              }
+            }
+          });
+          if (this.form.returnDeadline) {
+            this.returnDeadlinePicker.setDate(this.form.returnDeadline);
+          }
+        }
       },
       
       async enterEditMode(item) {
@@ -662,6 +859,13 @@ class AdminApp {
 
         // Initialize tags array from form data
         this.initTagsFromForm();
+
+        // Update date pickers with the new values
+        this.$nextTick(() => {
+          if (this.purchaseDatePicker) this.purchaseDatePicker.setDate(this.form.purchaseDate || '');
+          if (this.warrantyExpiryPicker) this.warrantyExpiryPicker.setDate(this.form.warrantyExpiry || '');
+          if (this.returnDeadlinePicker) this.returnDeadlinePicker.setDate(this.form.returnDeadline || '');
+        });
 
         // Load existing files for this purchase
         await this.loadFilesForPurchase(item.id);
@@ -799,6 +1003,12 @@ class AdminApp {
         // Reset tag input
         this.tagsArray = [];
         this.currentTagInput = '';
+        // Clear date pickers
+        this.$nextTick(() => {
+          if (this.purchaseDatePicker) this.purchaseDatePicker.clear();
+          if (this.warrantyExpiryPicker) this.warrantyExpiryPicker.clear();
+          if (this.returnDeadlinePicker) this.returnDeadlinePicker.clear();
+        });
       },
 
       // Tag input methods

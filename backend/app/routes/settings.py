@@ -12,19 +12,16 @@ router = APIRouter(prefix="/api/settings", tags=["settings"])
 class SettingsResponse(BaseModel):
     currency_code: str = "USD"
     date_format: str = "MM/DD/YYYY"
-    timezone: str = "America/New_York"
 
 
 class SettingsUpdate(BaseModel):
     currency_code: Optional[str] = None
     date_format: Optional[str] = None
-    timezone: Optional[str] = None
 
 
 DEFAULT_SETTINGS = {
     "currency_code": "USD",
-    "date_format": "MM/DD/YYYY",
-    "timezone": "America/New_York"
+    "date_format": "MM/DD/YYYY"
 }
 
 

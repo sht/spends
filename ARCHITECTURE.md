@@ -344,7 +344,11 @@ The Settings API uses a **hybrid storage approach** - database-persisted setting
 |---------|---------|--------|
 | `currency_code` | Database + localStorage | Cross-device consistency |
 | `date_format` | Database + localStorage | Cross-device consistency |
-| `timezone` | Database + localStorage | Cross-device consistency |
+|   - `short` |   | "Jan 30, 2026" format |
+|   - `MM/DD/YYYY` |   | 01/30/2026 format |
+|   - `DD/MM/YYYY` |   | 30/01/2026 format |
+|   - `YYYY-MM-DD` |   | 2026-01-30 format |
+|   - `DD.MM.YYYY` |   | 30.01.2026 format |
 | `language` | localStorage only | Device preference |
 | `cardVisibility` | localStorage only | Device preference |
 | `notifications` | localStorage only | Device preference |
@@ -374,8 +378,7 @@ GET /api/settings/
 Response:
 {
   "currency_code": "USD",
-  "date_format": "MM/DD/YYYY",
-  "timezone": "America/New_York"
+  "date_format": "MM/DD/YYYY"
 }
 
 # Update settings
@@ -393,10 +396,17 @@ POST /api/settings/reset
 Response:
 {
   "currency_code": "USD",
-  "date_format": "MM/DD/YYYY",
-  "timezone": "America/New_York"
+  "date_format": "MM/DD/YYYY"
 }
 ```
+
+**Date Format Usage:**
+
+All date displays respect the user's preferred format:
+- **Inventory table** - Uses user preference
+- **Dashboard** - Uses user preference
+- **Date inputs** - Show format hint below field (e.g., "Format: 30.01.2026")
+- **API** - Always uses ISO `YYYY-MM-DD` for data exchange
 
 ### Authentication
 

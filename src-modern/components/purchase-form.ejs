@@ -44,9 +44,9 @@
     <div class="row g-3">
         <div class="col-md-6">
             <label for="purchaseDate" class="form-label">Purchase Date <span class="text-danger">*</span></label>
-            <input type="date" class="form-control" id="purchaseDate" x-model="form.purchaseDate" 
-                   :max="new Date().toISOString().split('T')[0]" 
-                   :disabled="isViewMode || false">
+            <input type="text" class="form-control datepicker" id="purchaseDate" x-ref="purchaseDateInput"
+                   :disabled="isViewMode || false" placeholder="Select date...">
+            <small class="text-muted" x-text="'Format: ' + (window.getDateFormatExample ? window.getDateFormatExample() : 'YYYY-MM-DD')"></small>
         </div>
         <div class="col-md-6">
             <label for="price" class="form-label">Price <span class="text-danger">*</span></label>
@@ -76,13 +76,15 @@
     <div class="row g-3">
         <div class="col-md-6">
             <label for="warrantyExpiry" class="form-label">Warranty Expiry Date</label>
-            <input type="date" class="form-control" id="warrantyExpiry" x-model="form.warrantyExpiry" :disabled="isViewMode || false">
-            <small class="text-muted">Leave blank if not applicable</small>
+            <input type="text" class="form-control datepicker" id="warrantyExpiry" x-ref="warrantyExpiryInput"
+                   :disabled="isViewMode || false" placeholder="Select date...">
+            <small class="text-muted">Leave blank if applicable. Format: <span x-text="window.getDateFormatExample ? window.getDateFormatExample() : 'YYYY-MM-DD'"></span></small>
         </div>
         <div class="col-md-6">
             <label for="returnDeadline" class="form-label">Return Deadline</label>
-            <input type="date" class="form-control" id="returnDeadline" x-model="form.returnDeadline" :disabled="isViewMode || false">
-            <small class="text-muted">Leave blank if not applicable</small>
+            <input type="text" class="form-control datepicker" id="returnDeadline" x-ref="returnDeadlineInput"
+                   :disabled="isViewMode || false" placeholder="Select date...">
+            <small class="text-muted">Leave blank if applicable. Format: <span x-text="window.getDateFormatExample ? window.getDateFormatExample() : 'YYYY-MM-DD'"></span></small>
         </div>
     </div>
 

@@ -216,7 +216,7 @@ export class DashboardManager {
         rank: index + 1,
         name: item.product_name,
         price: window.formatPrice(item.avg_price),
-        date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+        date: window.formatDate(new Date())
       }));
     } catch (error) {
       console.error('Error fetching top products data:', error);
@@ -236,7 +236,7 @@ export class DashboardManager {
         id: item.id.substring(0, 8) + '...',
         customer: item.product_name,
         amount: window.formatPrice(item.price),
-        date: new Date(item.purchase_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+        date: window.formatDate(item.purchase_date)
       }));
     } catch (error) {
       console.error('Error fetching recent orders data:', error);

@@ -145,22 +145,14 @@ export function registerInventoryComponent() {
           const warrantyExpiryStr = item.warranty?.warranty_end || item.warranty_expiry;
           const returnDeadlineStr = item.return_deadline;
           
-          // Format date for display (e.g., "Jan 30, 2026")
-          const formatDateForDisplay = (dateStr) => {
-            if (!dateStr) return '';
-            const [year, month, day] = dateStr.split('-').map(Number);
-            const date = new Date(year, month - 1, day); // Use local time, not UTC
-            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-          };
-          
           return {
             id: item.id,
             name: item.product_name,
             brand: item.brand?.name || '',
             retailer: item.retailer?.name || '',
             price: parseFloat(item.price),
-            // Formatted date for display
-            purchaseDate: formatDateForDisplay(purchaseDateStr),
+            // Formatted date for display (per user preference)
+            purchaseDate: window.formatDate(purchaseDateStr),
             // ISO date for edit form (YYYY-MM-DD) - use the string directly
             purchaseDateISO: purchaseDateStr,
             warrantyExpiry: warrantyExpiryStr || '',
@@ -217,7 +209,7 @@ export function registerInventoryComponent() {
         const start = new Date(2024, 6, 1).getTime();
         const end = new Date(2025, 0, 31).getTime();
         const randomTime = start + Math.random() * (end - start);
-        return new Date(randomTime).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        return window.formatDate(new Date(randomTime));
       };
 
       // Generate 20 sample items

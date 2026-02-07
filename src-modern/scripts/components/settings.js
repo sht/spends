@@ -9,9 +9,8 @@ export function registerSettingsComponent() {
 
     // Settings Data (maintains original structure for backward compatibility)
     settings: {
-      // General Settings (DB-persisted: currencyCode, dateFormat, timezone)
+      // General Settings (DB-persisted: currencyCode, dateFormat)
       language: 'en',
-      timezone: 'America/New_York',
       dateFormat: 'MM/DD/YYYY',
       currencyCode: 'USD',
 
@@ -148,7 +147,7 @@ export function registerSettingsComponent() {
           // API returns snake_case, convert to camelCase
           this.settings.currencyCode = apiSettings.currency_code || this.settings.currencyCode;
           this.settings.dateFormat = apiSettings.date_format || this.settings.dateFormat;
-          this.settings.timezone = apiSettings.timezone || this.settings.timezone;
+
           console.log('Loaded DB settings from API:', apiSettings);
         }
       } catch (error) {
@@ -167,7 +166,7 @@ export function registerSettingsComponent() {
           body: JSON.stringify({
             currency_code: this.settings.currencyCode,
             date_format: this.settings.dateFormat,
-            timezone: this.settings.timezone
+
           })
         });
 
@@ -489,7 +488,7 @@ export function registerSettingsComponent() {
       localStorage.removeItem('appSettings');
       this.settings = {
         language: 'en',
-        timezone: 'America/New_York',
+
         dateFormat: 'MM/DD/YYYY',
         currencyCode: 'USD',
         cardVisibility: {
