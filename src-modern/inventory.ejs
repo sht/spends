@@ -487,14 +487,18 @@
                                                         <span class="text-muted">Retailer</span>
                                                         <span class="fw-medium" x-text="item.retailer"></span>
                                                     </div>
-                                                    <div class="d-flex justify-content-between border-bottom pb-2 mb-2" x-show="item.modelNumber && item.modelNumber !== 'N/A' && item.modelNumber.trim() !== ''">
-                                                        <span class="text-muted">Model</span>
-                                                        <span class="fw-medium" x-text="item.modelNumber"></span>
-                                                    </div>
-                                                    <div class="d-flex justify-content-between" x-show="item.serialNumber && item.serialNumber !== 'N/A' && item.serialNumber.trim() !== ''">
-                                                        <span class="text-muted">Serial</span>
-                                                        <span class="fw-medium" x-text="item.serialNumber"></span>
-                                                    </div>
+                                                    <template x-if="item.modelNumber && item.modelNumber !== 'N/A' && item.modelNumber.trim() !== ''">
+                                                        <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
+                                                            <span class="text-muted">Model</span>
+                                                            <span class="fw-medium" x-text="item.modelNumber"></span>
+                                                        </div>
+                                                    </template>
+                                                    <template x-if="item.serialNumber && item.serialNumber !== 'N/A' && item.serialNumber.trim() !== ''">
+                                                        <div class="d-flex justify-content-between">
+                                                            <span class="text-muted">Serial</span>
+                                                            <span class="fw-medium" x-text="item.serialNumber"></span>
+                                                        </div>
+                                                    </template>
                                                 </div>
                                             </div>
                                         </div>
@@ -520,12 +524,14 @@
                                                         <span class="text-muted">Quantity</span>
                                                         <span class="fw-medium" x-text="item.quantity"></span>
                                                     </div>
-                                                    <div class="d-flex justify-content-between" x-show="item.link && item.link !== 'N/A' && item.link.trim() !== ''">
-                                                        <span class="text-muted">Link</span>
-                                                        <a :href="item.link" target="_blank" class="text-primary text-decoration-none">
-                                                            <i class="bi bi-box-arrow-up-right me-1"></i>View
-                                                        </a>
-                                                    </div>
+                                                    <template x-if="item.link && item.link !== 'N/A' && item.link.trim() !== ''">
+                                                        <div class="d-flex justify-content-between">
+                                                            <span class="text-muted">Link</span>
+                                                            <a :href="item.link" target="_blank" class="text-primary text-decoration-none">
+                                                                <i class="bi bi-box-arrow-up-right me-1"></i>View
+                                                            </a>
+                                                        </div>
+                                                    </template>
                                                 </div>
                                             </div>
                                         </div>
