@@ -125,7 +125,7 @@ async def get_recent_purchases_analytics(
             "product_name": purchase.product_name,
             "price": float(purchase.price) if purchase.price else 0.0,
             "currency_code": purchase.currency_code,
-            "status": purchase.status.value if purchase.status else None,
+            "status": None,  # Purchase status removed - warranty status available in warranty object
             "purchase_date": purchase.purchase_date.isoformat() if purchase.purchase_date else None,
             "notes": purchase.notes,
             "tax_deductible": purchase.tax_deductible,

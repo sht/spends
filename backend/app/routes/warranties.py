@@ -17,10 +17,9 @@ async def list_warranties(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, le=100),
     status: Optional[str] = Query(None),
-    expiring_soon: Optional[bool] = Query(None),
     db: AsyncSession = Depends(get_db)
 ):
-    warranties, total = await get_warranties(db, skip, limit, status, expiring_soon)
+    warranties, total = await get_warranties(db, skip, limit, status)
 
     # Convert SQLAlchemy models to Pydantic schemas
     warranty_responses = [WarrantyResponse.model_validate(w) for w in warranties]

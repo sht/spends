@@ -103,16 +103,13 @@ async def get_warranty_timeline(db: AsyncSession, months: int = None) -> List[Wa
 
         month_key = warranty_end_date.strftime('%Y-%m')
         if month_key not in monthly_data:
-            monthly_data[month_key] = {'active': 0, 'expired': 0, 'expiring_soon': 0}
+            monthly_data[month_key] = {'active': 0, 'expired': 0}
 
         # Determine status for this warranty
         if warranty.status.value == 'EXPIRED':
             monthly_data[month_key]['expired'] += 1
         elif warranty.status.value == 'ACTIVE':
             monthly_data[month_key]['active'] += 1
-            # Check if it's expiring soon (within 30 days)
-            if (warranty_end_date - today).days <= 30:
-                monthly_data[month_key]['expiring_soon'] += 1
         elif warranty.status.value == 'VOIDED':
             # Voided warranties are neither active nor expired in the traditional sense
             pass
@@ -130,8 +127,7 @@ async def get_warranty_timeline(db: AsyncSession, months: int = None) -> List[Wa
         timeline_items.append(WarrantyTimelineItem(
             month=formatted_month,
             active=counts['active'],
-            expired=counts['expired'],
-            expiring_soon=counts['expiring_soon']
+            expired=counts['expired']
         ))
 
     # Sort by month (convert back to sortable format for sorting)

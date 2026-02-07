@@ -14,18 +14,13 @@ async def get_warranties(
     db: AsyncSession,
     skip: int = 0,
     limit: int = 20,
-    status: Optional[str] = None,
-    expiring_soon: Optional[bool] = None
+    status: Optional[str] = None
 ) -> tuple[List[Warranty], int]:
     query = select(Warranty)
 
     # Apply filters
     if status:
         query = query.filter(Warranty.status == status)
-    if expiring_soon:
-        # This would require additional logic to determine what "expiring soon" means
-        # For now, we'll skip this filter
-        pass
 
     # Get total count
     count_query = select(Warranty.id)

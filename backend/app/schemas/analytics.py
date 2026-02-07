@@ -18,7 +18,6 @@ class WarrantyTimelineItem(BaseModel):
     month: str
     active: int
     expired: int
-    expiring_soon: int
 
 
 class WarrantyAnalytics(BaseModel):
