@@ -105,7 +105,30 @@
 
     <div>
         <label for="tags" class="form-label">Tags</label>
-        <input type="text" class="form-control" id="tags" x-model="form.tags" placeholder="e.g., electronics, work, home" :disabled="isViewMode || false">
+        <div class="tag-input-container">
+            <input type="text" 
+                   class="form-control" 
+                   id="tags" 
+                   x-model="currentTagInput"
+                   @keydown="if ($event.key === 'Enter' || $event.key === ',') { $event.preventDefault(); addTagFromInput(); }"
+                   @blur="addTagFromInput()"
+                   placeholder="Type a tag and press Enter or comma..." 
+                   :disabled="isViewMode || false">
+            
+            <!-- Display existing tags -->
+            <div class="tag-list mt-2" x-show="tagsArray && tagsArray.length > 0">
+                <template x-for="tag in tagsArray" :key="tag">
+                    <span class="badge bg-primary me-2 mb-2 d-inline-flex align-items-center">
+                        <span x-text="tag"></span>
+                        <button type="button" 
+                                class="btn-close btn-close-white ms-2" 
+                                @click="removeTag(tag)"
+                                style="font-size: 0.6rem;"
+                                aria-label="Remove tag"></button>
+                    </span>
+                </template>
+            </div>
+        </div>
     </div>
 </div>
 

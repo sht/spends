@@ -491,6 +491,9 @@ class AdminApp {
         tags: '',
         notes: ''
       },
+      // Tag input functionality
+      tagsArray: [],
+      currentTagInput: '',
       isEditMode: false,
       isViewMode: false,  // Added missing property
       editingItemId: null,
@@ -556,9 +559,12 @@ class AdminApp {
         console.log('Form retailer set to:', this.form.retailer);
         console.log('Form brand set to:', this.form.brand);
 
+        // Initialize tags array from form data
+        this.initTagsFromForm();
+
         // Load existing files for this purchase
         await this.loadFilesForPurchase(item.id);
-        
+
         // Clear any staged deletions and temporary files from previous sessions
         this.filesToDelete = [];
         this.tempFiles = [];
@@ -689,6 +695,46 @@ class AdminApp {
         this.tempFiles = []; // Clear temp files (new files not yet saved)
         this.pendingFiles = [];
         this.filesToDelete = []; // Clear staged deletions
+        // Reset tag input
+        this.tagsArray = [];
+        this.currentTagInput = '';
+      },
+
+      // Tag input methods
+      addTagFromInput() {
+        if (this.currentTagInput.trim()) {
+          const newTag = this.currentTagInput.trim();
+          // Prevent duplicate tags
+          if (!this.tagsArray.includes(newTag)) {
+            this.tagsArray.push(newTag);
+          }
+          this.currentTagInput = '';
+          
+          // Update the form tags field to be a comma-separated string
+          this.updateTagsField();
+        }
+      },
+
+      removeTag(tagToRemove) {
+        this.tagsArray = this.tagsArray.filter(tag => tag !== tagToRemove);
+        this.updateTagsField();
+      },
+
+      updateTagsField() {
+        // Join tags with commas for form submission
+        this.form.tags = this.tagsArray.join(',');
+      },
+
+      // Initialize tags from form data (when editing)
+      initTagsFromForm() {
+        if (this.form.tags) {
+          // Split the tags string by commas and trim whitespace
+          this.tagsArray = this.form.tags.split(',')
+            .map(tag => tag.trim())
+            .filter(tag => tag !== '');
+        } else {
+          this.tagsArray = [];
+        }
       },
 
       savePurchase() {

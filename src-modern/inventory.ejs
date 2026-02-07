@@ -616,7 +616,13 @@
                                                     </h6>
                                                 </div>
                                                 <div class="card-body pt-0">
-                                                    <span class="fw-medium" x-text="item.tags"></span>
+                                                    <template x-if="item.tags && item.tags !== 'N/A' && item.tags.trim() !== ''">
+                                                        <template x-for="tag in item.tags.split(',')">
+                                                            <span class="badge bg-primary me-1 mb-1" 
+                                                                  x-text="tag.trim()" 
+                                                                  x-show="tag.trim() !== '' && tag.trim().length > 0"></span>
+                                                        </template>
+                                                    </template>
                                                 </div>
                                             </div>
                                         </div>
