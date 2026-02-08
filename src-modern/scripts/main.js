@@ -35,6 +35,61 @@ import 'flatpickr/dist/flatpickr.min.css';
 // Import page-specific Alpine components
 import { registerSettingsComponent } from './components/settings.js';
 import { registerInventoryComponent } from './components/inventory.js';
+import { registerDataManagementComponent } from './components/data-management.js';
+
+// ==========================================================================
+// Dashboard Cards Visibility Component
+// ==========================================================================
+
+// Global function for dashboard cards visibility
+window.dashboardCards = function() {
+  return {
+    cardVisibility: {
+      totalAssetsValue: true,
+      itemsCount: true,
+      avgPrice: true,
+      pendingWarranties: true,
+      taxDeductible: true,
+      expiredWarranties: true
+    },
+    
+    initCardVisibility() {
+      // Load card visibility settings from localStorage
+      const savedSettings = localStorage.getItem('appSettings');
+      if (savedSettings) {
+        try {
+          const parsed = JSON.parse(savedSettings);
+          if (parsed.cardVisibility) {
+            this.cardVisibility = { ...this.cardVisibility, ...parsed.cardVisibility };
+          }
+        } catch (error) {
+          console.warn('Failed to load card visibility settings:', error);
+        }
+      }
+      
+      // Listen for settings changes from other components
+      window.addEventListener('settingsChanged', (e) => {
+        if (e.detail && e.detail.cardVisibility) {
+          this.cardVisibility = { ...this.cardVisibility, ...e.detail.cardVisibility };
+        }
+      });
+      
+      // Listen for storage changes (when settings are updated in another tab)
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'appSettings') {
+          try {
+            const parsed = JSON.parse(e.newValue);
+            if (parsed.cardVisibility) {
+              this.cardVisibility = { ...this.cardVisibility, ...parsed.cardVisibility };
+            }
+          } catch (error) {
+            console.warn('Failed to parse updated settings:', error);
+          }
+        }
+      });
+    }
+  };
+};
 
 // ==========================================================================
 // Currency Utilities
@@ -387,6 +442,10 @@ class AdminApp {
         break;
       case 'inventory':
         console.log('📦 Inventory page components registered');
+        break;
+      case 'data-management':
+        console.log('💾 Data Management page components registered');
+        registerDataManagementComponent();
         break;
       default:
         console.log('Page-specific components loading complete');

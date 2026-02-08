@@ -46,11 +46,6 @@ export function registerSettingsComponent() {
         id: 'retailer',
         name: 'Retailer',
         icon: 'bi-shop'
-      },
-      {
-        id: 'data-management',
-        name: 'Data Management',
-        icon: 'bi-database'
       }
     ],
 
