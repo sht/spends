@@ -53,47 +53,54 @@
                     </div>
                 </div>
 
-                <!-- Data Import Card -->
-                <div class="card mb-4">
-                    <div class="card-header bg-body-secondary border-bottom rounded-top py-3">
-                        <h5 class="mb-0">
-                            <i class="bi bi-upload me-2"></i>Data Import
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="text-muted mb-4">Upload and import your data from CSV, JSON, or ZIP files</p>
-                        <div class="input-group">
-                            <input type="file"
-                                   class="form-control"
-                                   id="importFile"
-                                   accept=".csv,.json,.zip"
-                                   @change="onFileSelected($event)">
-                            <button class="btn btn-primary"
-                                    type="button"
-                                    @click="importData()">
-                                <i class="bi bi-upload me-2"></i>Import
-                            </button>
+                <!-- Data Import and Danger Zone Row -->
+                <div class="row g-4">
+                    <!-- Data Import Card -->
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header bg-body-secondary border-bottom rounded-top py-3">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-upload me-2"></i>Data Import
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted mb-4">Upload and import your data from CSV, JSON, or ZIP files</p>
+                                <div class="input-group">
+                                    <input type="file"
+                                           class="form-control"
+                                           id="importFile"
+                                           accept=".csv,.json,.zip"
+                                           @change="onFileSelected($event)">
+                                    <button class="btn btn-primary"
+                                            type="button"
+                                            @click="importData()">
+                                        <i class="bi bi-upload me-2"></i>Import
+                                    </button>
+                                </div>
+                                <small class="text-muted d-block mt-2">Supported formats: CSV, JSON, ZIP (Full Backup)</small>
+                            </div>
                         </div>
-                        <small class="text-muted d-block mt-2">Supported formats: CSV, JSON, ZIP (Full Backup)</small>
                     </div>
-                </div>
 
-                <!-- Danger Zone Card -->
-                <div class="card border-danger">
-                    <div class="card-header bg-danger bg-opacity-10 border-danger">
-                        <h5 class="mb-0 text-danger">
-                            <i class="bi bi-exclamation-triangle me-2"></i>Danger Zone
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="text-muted mb-4">
-                            <strong>Warning:</strong> The following action is irreversible. Please proceed with caution.
-                        </p>
-                        <button type="button"
-                                class="btn btn-danger"
-                                @click="resetAllData()">
-                            <i class="bi bi-trash me-2"></i>Reset All Data
-                        </button>
+                    <!-- Danger Zone Card -->
+                    <div class="col-md-6">
+                        <div class="card border-danger">
+                            <div class="card-header bg-danger bg-opacity-10 border-danger">
+                                <h5 class="mb-0 text-danger">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>Danger Zone
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted mb-4">
+                                    <strong>Warning:</strong> The following action is irreversible. Please proceed with caution.
+                                </p>
+                                <button type="button"
+                                        class="btn btn-danger"
+                                        @click="resetAllData()">
+                                    <i class="bi bi-trash me-2"></i>Reset All Data
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
