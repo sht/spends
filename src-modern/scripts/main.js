@@ -1742,6 +1742,43 @@ class AdminApp {
       },
     }));
 
+    // Dashboard Cards Visibility
+    Alpine.data('dashboardCards', () => ({
+      cardVisibility: {
+        totalAssetsValue: true,
+        itemsCount: true,
+        avgPrice: true,
+        pendingWarranties: true,
+        taxDeductible: true,
+        expiredWarranties: true
+      },
+
+      init() {
+        this.initCardVisibility();
+        // Listen for settings changes from other components
+        window.addEventListener('settingsChanged', (e) => {
+          if (e.detail && e.detail.cardVisibility) {
+            this.cardVisibility = { ...this.cardVisibility, ...e.detail.cardVisibility };
+          }
+        });
+      },
+
+      initCardVisibility() {
+        // Load card visibility settings from localStorage
+        const savedSettings = localStorage.getItem('appSettings');
+        if (savedSettings) {
+          try {
+            const parsed = JSON.parse(savedSettings);
+            if (parsed.cardVisibility) {
+              this.cardVisibility = { ...this.cardVisibility, ...parsed.cardVisibility };
+            }
+          } catch (error) {
+            console.warn('Failed to load card visibility settings:', error);
+          }
+        }
+      }
+    }));
+
     // View Purchase Details
     Alpine.data('viewPurchaseDetails', () => ({
       item: {

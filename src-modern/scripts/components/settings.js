@@ -25,13 +25,6 @@ export function registerSettingsComponent() {
         expiredWarranties: true
       },
 
-      // Notifications Settings (localStorage only)
-      notifications: {
-        desktop: true,
-        email: true,
-        sound: false,
-        marketing: false
-      },
 
       // Retailer Settings (localStorage only)
       retailers: []
@@ -118,7 +111,7 @@ export function registerSettingsComponent() {
     restoreActiveSection() {
       // Check URL hash for section (e.g., #retailer)
       const hash = window.location.hash.replace('#', '');
-      const validSections = ['general', 'dashboard', 'notifications', 'retailer', 'data-management'];
+      const validSections = ['general', 'dashboard', 'retailer', 'data-management'];
 
       if (hash && validSections.includes(hash)) {
         console.log('Setting activeSection to:', hash);
@@ -207,6 +200,16 @@ export function registerSettingsComponent() {
       try {
         localStorage.setItem('appSettings', JSON.stringify(this.settings));
         console.log('Saved settings to localStorage');
+        
+        // Update dashboard cards visibility if dashboard is loaded
+        if (window.Alpine && window.Alpine.store && window.Alpine.store('dashboardCards')) {
+          // Update the dashboard cards component if it exists
+          const dashboardCardsComponent = document.querySelector('[x-data*="dashboardCards"]');
+          if (dashboardCardsComponent && dashboardCardsComponent.__x) {
+            // Notify other components of the change
+            window.dispatchEvent(new CustomEvent('settingsChanged', { detail: { cardVisibility: this.settings.cardVisibility } }));
+          }
+        }
       } catch (error) {
         console.error('Failed to save to localStorage:', error);
       }
@@ -651,12 +654,6 @@ export function registerSettingsComponent() {
             pendingWarranties: true,
             taxDeductible: true,
             expiredWarranties: true
-          },
-          notifications: {
-            desktop: true,
-            email: true,
-            sound: false,
-            marketing: false
           },
           retailers: []
         };
