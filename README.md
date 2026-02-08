@@ -18,6 +18,11 @@ Track your purchases, manage warranties, and analyze spending patterns. Upload r
 
 - [Backend Documentation](backend/README.md) - Detailed information about the backend API
 - [Development Plan](DEVELOPMENT.md) - Roadmap and development phases for the backend
+- [Security Policy](SECURITY.md) - Security guidelines and vulnerability reporting
+
+## Security
+
+For security vulnerabilities, please report to **oss@mailite.com** or create a private GitHub security advisory.
 
 ## Quick Start
 
