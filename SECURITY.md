@@ -9,7 +9,7 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability within Spends Tracker, please send an email to **[INSERT SECURITY EMAIL]**. All security vulnerabilities will be promptly addressed.
+If you discover a security vulnerability within Spends Tracker, please send an email to **spends@mailite.com**. All security vulnerabilities will be promptly addressed.
 
 Please include:
 - Description of the vulnerability
