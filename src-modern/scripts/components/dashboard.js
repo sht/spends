@@ -150,7 +150,7 @@ export class DashboardManager {
       return data.timeline || [];
     } catch (error) {
       console.error('Error fetching warranty data:', error);
-      return this.generateWarrantyData(); // fallback to mock data
+      return []; // Return empty on error
     }
   }
 
@@ -169,7 +169,7 @@ export class DashboardManager {
       }));
     } catch (error) {
       console.error('Error fetching spending data:', error);
-      return this.generateSpendingData(); // fallback to mock data
+      return []; // Return empty on error
     }
   }
 
@@ -183,7 +183,7 @@ export class DashboardManager {
       return data.retailers || [];
     } catch (error) {
       console.error('Error fetching retailers data:', error);
-      return this.generateRetailerData(); // fallback to mock data
+      return []; // Return empty on error
     }
   }
 
@@ -197,7 +197,7 @@ export class DashboardManager {
       return data.brands || [];
     } catch (error) {
       console.error('Error fetching brands data:', error);
-      return this.generateBrandData(); // fallback to mock data
+      return []; // Return empty on error
     }
   }
 
@@ -223,7 +223,7 @@ export class DashboardManager {
       }));
     } catch (error) {
       console.error('Error fetching top products data:', error);
-      return this.generateTopProducts(); // fallback to mock data
+      return []; // Return empty on error
     }
   }
 
@@ -249,7 +249,7 @@ export class DashboardManager {
       }));
     } catch (error) {
       console.error('Error fetching recent orders data:', error);
-      return this.generateRecentOrders(); // fallback to mock data
+      return []; // Return empty on error
     }
   }
 
@@ -342,133 +342,9 @@ export class DashboardManager {
     const container = document.querySelector('.container-fluid') || document.body;
     container.insertBefore(errorDiv, container.firstChild);
 
-    // Also fall back to mock data
-    this.data.warranty = this.generateWarrantyData();
-    this.data.spending = this.generateSpendingData();
-    this.data.retailers = this.generateRetailerData();
-    this.data.brands = this.generateBrandData();
-    this.data.topProducts = this.generateTopProducts();
-    this.data.orders = this.generateOrderData();
-    this.data.recentOrders = this.generateRecentOrders();
-  }
-
-  generateWarrantyData() {
-    // Generate months from April 2025 to April 2026
-    const startDate = new Date(2025, 3, 1); // April 2025
-    const monthLabels = [];
-
-    for (let i = 0; i < 12; i++) {
-      const date = new Date(startDate);
-      date.setMonth(date.getMonth() + i);
-      const monthYear = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-      monthLabels.push(monthYear);
-    }
-
-    return monthLabels.map(month => ({
-      month,
-      // Active warranties - warranties that are still valid
-      active: Math.floor(Math.random() * 30) + 20,
-      // Expired warranties - warranties that have ended
-      expired: Math.floor(Math.random() * 15) + 5
-    }));
-  }
-
-  generateSpendingData() {
-    // Generate months from April 2025 to April 2026
-    const startDate = new Date(2025, 3, 1); // April 2025
-    const monthLabels = [];
-
-    for (let i = 0; i < 12; i++) {
-      const date = new Date(startDate);
-      date.setMonth(date.getMonth() + i);
-      const monthYear = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-      monthLabels.push(monthYear);
-    }
-
-    return monthLabels.map(month => ({
-      month,
-      // Total spending amount in dollars
-      totalSpending: Math.floor(Math.random() * 3000) + 1000,
-      // Number of items purchased
-      itemsCount: Math.floor(Math.random() * 15) + 5
-    }));
-  }
-
-  generateRetailerData() {
-    // Retailer distribution data
-    const retailers = ['Amazon', 'eBay', 'Walmart', 'Target', 'Best Buy'];
-    return retailers.map(name => ({
-      name,
-      count: Math.floor(Math.random() * 10) + 1,
-      percentage: Math.floor(Math.random() * 30) + 10
-    }));
-  }
-
-  generateBrandData() {
-    // Brand distribution data
-    const brands = ['Apple', 'Sony', 'Samsung', 'LG', 'Dell'];
-    return brands.map(name => ({
-      name,
-      count: Math.floor(Math.random() * 10) + 1,
-      percentage: Math.floor(Math.random() * 25) + 10
-    }));
-  }
-
-  generateTopProducts() {
-    // Generate top 10 expensive purchases (fallback mock data)
-    const products = [
-      { name: 'MacBook Pro 16"', brand: 'Apple' },
-      { name: 'iPhone 15 Pro Max', brand: 'Apple' },
-      { name: 'Sony WH-1000XM5', brand: 'Sony' },
-      { name: 'Samsung 55" QLED TV', brand: 'Samsung' },
-      { name: 'iPad Air', brand: 'Apple' },
-      { name: 'Dell XPS 13', brand: 'Dell' },
-      { name: 'AirPods Pro', brand: 'Apple' },
-      { name: 'LG 27" Monitor', brand: 'LG' },
-      { name: 'Apple Watch Series 9', brand: 'Apple' },
-      { name: 'PlayStation 5', brand: 'Sony' }
-    ];
-
-    return products.map((product, index) => ({
-      rank: index + 1,
-      name: product.name,
-      brand: product.brand,
-      price: window.formatPrice(Math.random() * 2000 + 100),
-      date: window.formatDate(new Date())
-    }));
-  }
-
-  generateOrderData() {
-    return {
-      completed: 1245,
-      processing: 156,
-      pending: 87,
-      cancelled: 23
-    };
-  }
-
-  generateRecentOrders() {
-    // Generate recent 10 purchases (fallback mock data)
-    const products = [
-      { name: 'Bose Speaker', brand: 'Bose' },
-      { name: 'iPhone 15', brand: 'Apple' },
-      { name: 'MacBook Pro 14"', brand: 'Apple' },
-      { name: 'IKEA Bookshelf', brand: 'IKEA' },
-      { name: 'Wireless Mouse', brand: 'Logitech' },
-      { name: 'USB-C Hub', brand: 'Anker' },
-      { name: 'Monitor Stand', brand: 'Amazon Basics' },
-      { name: 'Desk Lamp', brand: 'Philips' },
-      { name: 'Mechanical Keyboard', brand: 'Keychron' },
-      { name: 'Webcam 4K', brand: 'Logitech' }
-    ];
-
-    return products.map((product, index) => ({
-      rank: index + 1,
-      name: product.name,
-      brand: product.brand,
-      price: window.formatPrice(Math.random() * 500 + 50),
-      date: window.formatDate(new Date())
-    }));
+    // Set empty data for tables on error
+    this.data.topProducts = [];
+    this.data.recentOrders = [];
   }
 
   initWarrantyCharts() {
@@ -774,6 +650,11 @@ export class DashboardManager {
     const table = document.querySelector('tbody#top-products-table');
     if (!table) return;
 
+    if (!this.data.topProducts || this.data.topProducts.length === 0) {
+      table.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">No purchases found</td></tr>';
+      return;
+    }
+
     const html = this.data.topProducts.map(product => `
         <tr>
             <td><strong>#${product.rank}</strong></td>
@@ -790,6 +671,14 @@ export class DashboardManager {
   populateRecentOrders() {
     // Populate recent 10 purchases table (same format as top products)
     const tables = document.querySelectorAll('tbody#recent-orders-table');
+    
+    if (!this.data.recentOrders || this.data.recentOrders.length === 0) {
+      tables.forEach(table => {
+        table.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">No purchases found</td></tr>';
+      });
+      return;
+    }
+    
     const html = this.data.recentOrders.map(order => `
         <tr>
             <td><strong>#${order.rank}</strong></td>
