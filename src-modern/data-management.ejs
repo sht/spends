@@ -54,10 +54,10 @@
                 </div>
 
                 <!-- Data Import and Danger Zone Row -->
-                <div class="row g-4">
+                <div class="row g-4 align-items-stretch">
                     <!-- Data Import Card -->
                     <div class="col-md-6">
-                        <div class="card mb-4">
+                        <div class="card mb-4 h-100">
                             <div class="card-header bg-body-secondary border-bottom rounded-top py-3">
                                 <h5 class="mb-0">
                                     <i class="bi bi-upload me-2"></i>Data Import
@@ -84,8 +84,8 @@
 
                     <!-- Danger Zone Card -->
                     <div class="col-md-6">
-                        <div class="card border-danger">
-                            <div class="card-header bg-danger bg-opacity-10 border-danger">
+                        <div class="card border-danger mb-4 h-100">
+                            <div class="card-header bg-danger bg-opacity-10 border-danger rounded-top py-3">
                                 <h5 class="mb-0 text-danger">
                                     <i class="bi bi-exclamation-triangle me-2"></i>Danger Zone
                                 </h5>
@@ -112,6 +112,7 @@
                      aria-hidden="true"
                      :class="{ 'show d-block': showResetModal }"
                      x-show="showResetModal"
+                     @keydown.escape.window="closeResetModal()"
                      style="background-color: rgba(0,0,0,0.5);">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content border-danger">
