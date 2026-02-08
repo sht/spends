@@ -6,5 +6,6 @@ from .analytics import router as analytics
 from .exports import router as exports
 from .imports import router as imports
 from .files import router as files
+from .data import router as data
 
-__all__ = ["purchases", "warranties", "retailers", "brands", "analytics", "exports", "imports", "files"]
+__all__ = ["purchases", "warranties", "retailers", "brands", "analytics", "exports", "imports", "files", "data"]

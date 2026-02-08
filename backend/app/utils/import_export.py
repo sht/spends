@@ -96,6 +96,7 @@ async def import_data_from_json(db: AsyncSession, json_data: Dict[str, Any]) -> 
     """
     import_results = {
         "purchases_added": 0,
+        "purchases_skipped_future_date": 0,
         "warranties_added": 0,
         "retailers_added": 0,
         "brands_added": 0,
@@ -106,76 +107,127 @@ async def import_data_from_json(db: AsyncSession, json_data: Dict[str, Any]) -> 
         # Import retailers first (since purchases reference them)
         if "retailers" in json_data:
             for retailer_data in json_data["retailers"]:
-                # Check if retailer already exists
+                # Check if retailer already exists by ID
                 existing_retailer_result = await db.execute(
-                    select(Retailer).filter(Retailer.name == retailer_data["name"])
+                    select(Retailer).filter(Retailer.id == retailer_data["id"])
                 )
                 existing_retailer = existing_retailer_result.scalar_one_or_none()
                 
                 if not existing_retailer:
-                    retailer = RetailerCreate(**retailer_data)
-                    db_retailer = Retailer(**retailer.model_dump())
+                    # Create retailer directly without schema validation
+                    db_retailer = Retailer(
+                        id=retailer_data["id"],
+                        name=retailer_data["name"],
+                        url=retailer_data.get("url", "")
+                    )
                     db.add(db_retailer)
                     import_results["retailers_added"] += 1
         
         # Import brands next
         if "brands" in json_data:
             for brand_data in json_data["brands"]:
-                # Check if brand already exists
+                # Check if brand already exists by ID
                 existing_brand_result = await db.execute(
-                    select(Brand).filter(Brand.name == brand_data["name"])
+                    select(Brand).filter(Brand.id == brand_data["id"])
                 )
                 existing_brand = existing_brand_result.scalar_one_or_none()
                 
                 if not existing_brand:
-                    brand = BrandCreate(**brand_data)
-                    db_brand = Brand(**brand.model_dump())
+                    # Create brand directly without schema validation
+                    db_brand = Brand(
+                        id=brand_data["id"],
+                        name=brand_data["name"],
+                        url=brand_data.get("url", "")
+                    )
                     db.add(db_brand)
                     import_results["brands_added"] += 1
         
         # Import purchases
         if "purchases" in json_data:
+            today = datetime.now().date()
             for purchase_data in json_data["purchases"]:
-                # Remove SQLAlchemy internal fields
-                clean_data = {k: v for k, v in purchase_data.items() if not k.startswith('_')}
-                
                 # Check if purchase already exists (by ID)
                 existing_purchase_result = await db.execute(
-                    select(Purchase).filter(Purchase.id == clean_data["id"])
+                    select(Purchase).filter(Purchase.id == purchase_data["id"])
                 )
                 existing_purchase = existing_purchase_result.scalar_one_or_none()
                 
                 if not existing_purchase:
-                    # Handle datetime conversion
-                    if "purchase_date" in clean_data and isinstance(clean_data["purchase_date"], str):
-                        clean_data["purchase_date"] = datetime.fromisoformat(clean_data["purchase_date"].replace('Z', '+00:00'))
+                    # Parse purchase date
+                    purchase_date = None
+                    if purchase_data.get("purchase_date"):
+                        purchase_date = datetime.fromisoformat(purchase_data["purchase_date"].replace('Z', '+00:00')).date()
                     
-                    purchase = PurchaseCreate(**clean_data)
-                    db_purchase = Purchase(**purchase.model_dump())
+                    # Skip purchases with future dates
+                    if purchase_date and purchase_date > today:
+                        import_results["purchases_skipped_future_date"] += 1
+                        continue
+                    
+                    return_deadline = None
+                    if purchase_data.get("return_deadline"):
+                        return_deadline = datetime.fromisoformat(purchase_data["return_deadline"].replace('Z', '+00:00')).date()
+                    
+                    # Create purchase directly with all fields from export
+                    db_purchase = Purchase(
+                        id=purchase_data["id"],
+                        product_name=purchase_data["product_name"],
+                        price=purchase_data["price"],
+                        currency_code=purchase_data.get("currency_code", "USD"),
+                        retailer_id=purchase_data.get("retailer_id"),
+                        brand_id=purchase_data.get("brand_id"),
+                        purchase_date=purchase_date,
+                        notes=purchase_data.get("notes"),
+                        tax_deductible=purchase_data.get("tax_deductible", 0),
+                        model_number=purchase_data.get("model_number"),
+                        serial_number=purchase_data.get("serial_number"),
+                        quantity=purchase_data.get("quantity", 1),
+                        link=purchase_data.get("link"),
+                        return_deadline=return_deadline,
+                        return_policy=purchase_data.get("return_policy"),
+                        tags=purchase_data.get("tags"),
+                        created_at=datetime.now(),
+                        updated_at=datetime.now() if purchase_data.get("updated_at") else None
+                    )
                     db.add(db_purchase)
                     import_results["purchases_added"] += 1
         
         # Import warranties
         if "warranties" in json_data:
             for warranty_data in json_data["warranties"]:
-                # Remove SQLAlchemy internal fields
-                clean_data = {k: v for k, v in warranty_data.items() if not k.startswith('_')}
-                
                 # Check if warranty already exists (by ID)
                 existing_warranty_result = await db.execute(
-                    select(Warranty).filter(Warranty.id == clean_data["id"])
+                    select(Warranty).filter(Warranty.id == warranty_data["id"])
                 )
                 existing_warranty = existing_warranty_result.scalar_one_or_none()
                 
                 if not existing_warranty:
-                    # Handle datetime conversion
-                    if "warranty_start" in clean_data and isinstance(clean_data["warranty_start"], str):
-                        clean_data["warranty_start"] = datetime.fromisoformat(clean_data["warranty_start"].replace('Z', '+00:00'))
-                    if "warranty_end" in clean_data and isinstance(clean_data["warranty_end"], str):
-                        clean_data["warranty_end"] = datetime.fromisoformat(clean_data["warranty_end"].replace('Z', '+00:00'))
+                    # Parse dates
+                    warranty_start = None
+                    if warranty_data.get("warranty_start"):
+                        warranty_start = datetime.fromisoformat(warranty_data["warranty_start"].replace('Z', '+00:00')).date()
                     
-                    warranty = WarrantyCreate(**clean_data)
-                    db_warranty = Warranty(**warranty.model_dump())
+                    warranty_end = None
+                    if warranty_data.get("warranty_end"):
+                        warranty_end = datetime.fromisoformat(warranty_data["warranty_end"].replace('Z', '+00:00')).date()
+                    
+                    # Parse status - handle "WarrantyStatus.EXPIRED" format
+                    status_str = warranty_data.get("status", "ACTIVE")
+                    if status_str and "WarrantyStatus." in status_str:
+                        status_str = status_str.split(".")[-1]  # Extract just "EXPIRED"
+                    
+                    # Create warranty directly
+                    db_warranty = Warranty(
+                        id=warranty_data["id"],
+                        purchase_id=warranty_data["purchase_id"],
+                        warranty_start=warranty_start,
+                        warranty_end=warranty_end,
+                        warranty_type=warranty_data.get("warranty_type"),
+                        status=status_str,
+                        provider=warranty_data.get("provider"),
+                        notes=warranty_data.get("notes"),
+                        created_at=datetime.now(),
+                        updated_at=datetime.now() if warranty_data.get("updated_at") else None
+                    )
                     db.add(db_warranty)
                     import_results["warranties_added"] += 1
         
@@ -184,6 +236,7 @@ async def import_data_from_json(db: AsyncSession, json_data: Dict[str, Any]) -> 
     except Exception as e:
         await db.rollback()
         import_results["errors"].append(str(e))
+        import_results["errors"].append(f"Error type: {type(e).__name__}")
     
     return import_results
 

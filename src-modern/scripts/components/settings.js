@@ -5,7 +5,8 @@ export function registerSettingsComponent() {
     // UI State
     sidebarVisible: false,
     activeSection: 'general',
-    confirmReset: false,
+    confirmReset: '',  // Stores the confirmation text ('DELETE')
+    showResetModal: false,
 
     // Settings Data (maintains original structure for backward compatibility)
     settings: {
@@ -544,13 +545,21 @@ export function registerSettingsComponent() {
           if (result.warranties_added) parts.push(`${result.warranties_added} warranties`);
           if (result.retailers_added) parts.push(`${result.retailers_added} retailers`);
           if (result.brands_added) parts.push(`${result.brands_added} brands`);
+          
+          // Add skipped info if any
+          const skippedParts = [];
+          if (result.purchases_skipped_future_date) skippedParts.push(`${result.purchases_skipped_future_date} with future date`);
+          
           message = parts.length > 0 
             ? `Imported: ${parts.join(', ')}` 
-            : 'No new data imported (duplicates skipped)';
+            : 'No new data imported';
+          if (skippedParts.length > 0) {
+            message += ` (${skippedParts.join(', ')} skipped)`;
+          }
         } else {
           message = result.purchases_added 
             ? `Imported ${result.purchases_added} purchases` 
-            : 'No new purchases imported (duplicates skipped)';
+            : 'No new purchases imported';
         }
 
         this.showNotification(message, 'success');
@@ -566,45 +575,67 @@ export function registerSettingsComponent() {
     },
 
     resetAllData() {
-      this.confirmReset = true;
+      this.showResetModal = true;
+    },
+
+    closeResetModal() {
+      this.showResetModal = false;
+      this.confirmReset = '';
     },
 
     async confirmResetData() {
       const apiUrl = window.APP_CONFIG?.API_URL || '/api';
 
-      // Reset DB settings via API
+      this.showNotification('Erasing all data...', 'info');
+
       try {
-        await fetch(`${apiUrl}/settings/reset`, { method: 'POST' });
+        // Call the reset-all API endpoint
+        const response = await fetch(`${apiUrl}/data/reset-all`, { 
+          method: 'POST' 
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        // Reset local settings to defaults
+        localStorage.removeItem('appSettings');
+        this.settings = {
+          language: 'en',
+          dateFormat: 'MM/DD/YYYY',
+          currencyCode: 'USD',
+          cardVisibility: {
+            totalAssetsValue: true,
+            itemsCount: true,
+            avgPrice: true,
+            pendingWarranties: true,
+            taxDeductible: true,
+            expiredWarranties: true
+          },
+          notifications: {
+            desktop: true,
+            email: true,
+            sound: false,
+            marketing: false
+          },
+          retailers: []
+        };
+        this.retailerList = [];
+        
+        // Close modal and show success
+        this.showResetModal = false;
+        this.confirmReset = '';
+        this.showNotification('All data has been erased successfully', 'success');
+        
       } catch (error) {
-        console.warn('Failed to reset DB settings:', error);
+        console.error('Reset error:', error);
+        this.showNotification(`Failed to erase data: ${error.message}`, 'error');
+        this.showResetModal = false;
+        this.confirmReset = '';
       }
-
-      // Reset all settings to defaults
-      localStorage.removeItem('appSettings');
-      this.settings = {
-        language: 'en',
-
-        dateFormat: 'MM/DD/YYYY',
-        currencyCode: 'USD',
-        cardVisibility: {
-          totalAssetsValue: true,
-          itemsCount: true,
-          avgPrice: true,
-          pendingWarranties: true,
-          taxDeductible: true,
-          expiredWarranties: true
-        },
-        notifications: {
-          desktop: true,
-          email: true,
-          sound: false,
-          marketing: false
-        },
-        retailers: []
-      };
-      this.retailerList = [];
-      this.confirmReset = false;
-      this.showNotification('All data has been reset to defaults', 'success');
     },
 
     // Notification Helper

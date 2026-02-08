@@ -361,24 +361,86 @@
                                         </p>
                                         <button type="button"
                                                 class="btn btn-danger"
-                                                @click="resetAllData()"
-                                                x-show="!confirmReset">
-                                            <i class="bi bi-arrow-clockwise me-2"></i>Reset All Data
+                                                @click="resetAllData()">
+                                            <i class="bi bi-trash me-2"></i>Reset All Data
                                         </button>
-                                        <div x-show="confirmReset" class="alert alert-danger" role="alert">
-                                            <p class="mb-3">
-                                                <strong>Are you sure?</strong> This will permanently delete all your data and cannot be undone.
-                                            </p>
-                                            <div class="d-flex gap-2">
-                                                <button type="button"
-                                                        class="btn btn-danger"
-                                                        @click="confirmResetData()">
-                                                    <i class="bi bi-check-lg me-2"></i>Yes, Reset Everything
-                                                </button>
-                                                <button type="button"
-                                                        class="btn btn-secondary"
-                                                        @click="confirmReset = false">
+                                    </div>
+                                </div>
+
+                                <!-- Reset Confirmation Modal -->
+                                <div class="modal fade" 
+                                     id="resetConfirmModal" 
+                                     tabindex="-1" 
+                                     aria-labelledby="resetConfirmModalLabel" 
+                                     aria-hidden="true"
+                                     :class="{ 'show d-block': showResetModal }"
+                                     x-show="showResetModal"
+                                     style="background-color: rgba(0,0,0,0.5);">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content border-danger">
+                                            <div class="modal-header bg-danger bg-opacity-10 border-danger">
+                                                <h5 class="modal-title text-danger" id="resetConfirmModalLabel">
+                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>⚠️ Irreversible Action
+                                                </h5>
+                                                <button type="button" 
+                                                        class="btn-close" 
+                                                        @click="closeResetModal()"
+                                                        aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="alert alert-warning d-flex align-items-start mb-3">
+                                                    <i class="bi bi-info-circle-fill me-2 mt-1"></i>
+                                                    <div>
+                                                        <strong>Recommended:</strong> Before proceeding, please <a href="#" @click.prevent="exportData('JSON')" class="alert-link">export your data</a> to create a backup. This action cannot be undone.
+                                                    </div>
+                                                </div>
+                                                <p class="mb-3">
+                                                    You are about to <strong>permanently delete</strong>:
+                                                </p>
+                                                <ul class="list-group list-group-flush mb-3">
+                                                    <li class="list-group-item d-flex align-items-center">
+                                                        <i class="bi bi-cart-x text-danger me-2"></i>All purchases
+                                                    </li>
+                                                    <li class="list-group-item d-flex align-items-center">
+                                                        <i class="bi bi-shield-x text-danger me-2"></i>All warranties
+                                                    </li>
+                                                    <li class="list-group-item d-flex align-items-center">
+                                                        <i class="bi bi-shop text-danger me-2"></i>All retailers
+                                                    </li>
+                                                    <li class="list-group-item d-flex align-items-center">
+                                                        <i class="bi bi-tag text-danger me-2"></i>All brands
+                                                    </li>
+                                                    <li class="list-group-item d-flex align-items-center">
+                                                        <i class="bi bi-file-earmark-x text-danger me-2"></i>All uploaded files
+                                                    </li>
+                                                    <li class="list-group-item d-flex align-items-center">
+                                                        <i class="bi bi-gear text-danger me-2"></i>All settings
+                                                    </li>
+                                                </ul>
+                                                <div class="alert alert-danger" role="alert">
+                                                    <i class="bi bi-exclamation-octagon-fill me-2"></i>
+                                                    <strong>This action cannot be undone.</strong> All data will be permanently erased.
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">Type "DELETE" to confirm:</label>
+                                                    <input type="text" 
+                                                           class="form-control" 
+                                                           x-model="confirmReset"
+                                                           placeholder="Type DELETE"
+                                                           @keyup.enter="confirmReset === 'DELETE' && confirmResetData()">
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" 
+                                                        class="btn btn-secondary" 
+                                                        @click="closeResetModal()">
                                                     <i class="bi bi-x-lg me-2"></i>Cancel
+                                                </button>
+                                                <button type="button" 
+                                                        class="btn btn-danger"
+                                                        :disabled="confirmReset !== 'DELETE'"
+                                                        @click="confirmResetData()">
+                                                    <i class="bi bi-trash me-2"></i>Yes, Erase Everything
                                                 </button>
                                             </div>
                                         </div>
