@@ -65,7 +65,7 @@ async def export_purchases_to_csv(db: AsyncSession) -> str:
     # Write header
     writer.writerow([
         'id', 'product_name', 'price', 'currency_code', 'retailer_id', 
-        'brand_id', 'status', 'purchase_date', 'notes', 'created_at', 'updated_at'
+        'brand_id', 'purchase_date', 'notes', 'created_at', 'updated_at'
     ])
     
     # Write data rows
@@ -77,7 +77,6 @@ async def export_purchases_to_csv(db: AsyncSession) -> str:
             purchase.currency_code,
             purchase.retailer_id,
             purchase.brand_id,
-            purchase.status.value if purchase.status else '',
             purchase.purchase_date.isoformat() if purchase.purchase_date else '',
             purchase.notes,
             purchase.created_at.isoformat() if purchase.created_at else '',
@@ -219,7 +218,6 @@ async def import_purchases_from_csv(db: AsyncSession, csv_content: str) -> Dict[
                     "currency_code": row["currency_code"] or "USD",
                     "retailer_id": row["retailer_id"] or None,
                     "brand_id": row["brand_id"] or None,
-                    "status": row["status"] or "RECEIVED",
                     "purchase_date": datetime.fromisoformat(row["purchase_date"].replace('Z', '+00:00')),
                     "notes": row["notes"] or None
                 }

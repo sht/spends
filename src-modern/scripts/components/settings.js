@@ -388,34 +388,64 @@ export function registerSettingsComponent() {
     },
 
     // Data Management
-    exportData(format) {
-      const data = {
-        settings: this.settings,
-        exportDate: new Date().toISOString(),
-        format: format
-      };
-
-      let content, filename, mimeType;
-
-      if (format === 'JSON') {
-        content = JSON.stringify(data, null, 2);
-        filename = `data_export_${new Date().getTime()}.json`;
-        mimeType = 'application/json';
-      } else if (format === 'CSV') {
-        // Convert to CSV format
-        content = this.convertToCSV(data);
-        filename = `data_export_${new Date().getTime()}.csv`;
-        mimeType = 'text/csv';
+    async exportData(format) {
+      const apiUrl = window.APP_CONFIG?.API_URL || '/api';
+      
+      // Normalize format to uppercase for comparison
+      const formatUpper = format.toUpperCase();
+      
+      try {
+        if (formatUpper === 'JSON') {
+          // Fetch all data from backend
+          const response = await fetch(`${apiUrl}/export/json`);
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          
+          // Get the JSON data
+          const data = await response.json();
+          
+          // Create and download file
+          const content = JSON.stringify(data, null, 2);
+          const filename = `spends_export_${new Date().toISOString().split('T')[0]}.json`;
+          this.downloadFile(content, filename, 'application/json');
+          
+        } else if (formatUpper === 'CSV') {
+          // Fetch purchases as CSV from backend
+          const response = await fetch(`${apiUrl}/export/csv`);
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          
+          // Get the CSV content
+          const csvContent = await response.text();
+          
+          // Create and download file
+          const filename = `spends_purchases_${new Date().toISOString().split('T')[0]}.csv`;
+          this.downloadFile(csvContent, filename, 'text/csv');
+        }
+        
+        this.showNotification(`Data exported as ${formatUpper} successfully!`, 'success');
+      } catch (error) {
+        console.error('Export error:', error);
+        this.showNotification(`Failed to export data: ${error.message}`, 'error');
       }
+    },
 
+    // Helper function to download file
+    downloadFile(content, filename, mimeType) {
       const blob = new Blob([content], { type: mimeType });
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
+      link.style.display = 'none';
+      link.href = url;
       link.download = filename;
+      document.body.appendChild(link);
+      
+      // Trigger download
       link.click();
-      URL.revokeObjectURL(link.href);
-
-      this.showNotification(`Data exported as ${format}!`, 'success');
+      
+      // Cleanup after a short delay to ensure download starts
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
     },
 
     convertToCSV(data) {
