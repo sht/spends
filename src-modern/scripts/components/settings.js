@@ -71,7 +71,33 @@ export function registerSettingsComponent() {
 
     // Data Management
     importFile: null,
+    selectedImportFile: null,
     exportFormats: ['JSON', 'CSV'],
+
+    // Handle file selection (stores file for later import)
+    onFileSelected(event) {
+      const file = event.target.files[0];
+      if (file) {
+        this.selectedImportFile = file;
+        console.log('Selected file:', file.name);
+      }
+    },
+
+    // Import data from selected file
+    async importData() {
+      if (!this.selectedImportFile) {
+        this.showNotification('Please select a file first', 'error');
+        return;
+      }
+      
+      // Create a fake event object to reuse handleFileImport
+      const fakeEvent = { target: { files: [this.selectedImportFile], value: '' } };
+      await this.handleFileImport(fakeEvent);
+      
+      // Clear selected file after import
+      this.selectedImportFile = null;
+      document.getElementById('importFile').value = '';
+    },
 
     async init() {
       // Get current theme from document or localStorage
@@ -472,32 +498,71 @@ export function registerSettingsComponent() {
       return csv;
     },
 
-    handleFileImport(event) {
+    async handleFileImport(event) {
       const file = event.target.files[0];
       if (!file) return;
 
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        try {
-          const content = e.target.result;
-          let importedData;
+      const apiUrl = window.APP_CONFIG?.API_URL || '/api';
+      
+      // Detect file type by extension
+      const isJson = file.name.toLowerCase().endsWith('.json');
+      const isCsv = file.name.toLowerCase().endsWith('.csv');
+      
+      if (!isJson && !isCsv) {
+        this.showNotification('Invalid file type. Please upload a JSON or CSV file.', 'error');
+        return;
+      }
 
-          if (file.name.endsWith('.json')) {
-            importedData = JSON.parse(content);
-            if (importedData.settings) {
-              this.settings = { ...this.settings, ...importedData.settings };
-              await this.saveSettings();
-              this.showNotification('Data imported successfully from JSON!', 'success');
-            }
-          } else if (file.name.endsWith('.csv')) {
-            this.showNotification('CSV import received. Manual parsing required.', 'info');
-          }
-        } catch (error) {
-          this.showNotification('Failed to import file', 'error');
-          console.error('Import error:', error);
+      this.showNotification(`Importing ${isJson ? 'JSON' : 'CSV'} file...`, 'info');
+
+      try {
+        // Create FormData to send file
+        const formData = new FormData();
+        formData.append('file', file);
+
+        // Determine endpoint based on file type
+        const endpoint = isJson ? `${apiUrl}/import/json` : `${apiUrl}/import/csv`;
+        
+        // Send file to backend
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
         }
-      };
-      reader.readAsText(file);
+
+        const result = await response.json();
+        
+        // Build success message
+        let message = '';
+        if (isJson) {
+          const parts = [];
+          if (result.purchases_added) parts.push(`${result.purchases_added} purchases`);
+          if (result.warranties_added) parts.push(`${result.warranties_added} warranties`);
+          if (result.retailers_added) parts.push(`${result.retailers_added} retailers`);
+          if (result.brands_added) parts.push(`${result.brands_added} brands`);
+          message = parts.length > 0 
+            ? `Imported: ${parts.join(', ')}` 
+            : 'No new data imported (duplicates skipped)';
+        } else {
+          message = result.purchases_added 
+            ? `Imported ${result.purchases_added} purchases` 
+            : 'No new purchases imported (duplicates skipped)';
+        }
+
+        this.showNotification(message, 'success');
+        
+        // Clear file input
+        event.target.value = '';
+        
+      } catch (error) {
+        console.error('Import error:', error);
+        this.showNotification(`Import failed: ${error.message}`, 'error');
+        event.target.value = '';
+      }
     },
 
     resetAllData() {
