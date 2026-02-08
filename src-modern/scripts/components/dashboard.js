@@ -231,14 +231,20 @@ export class DashboardManager {
     try {
       // Get API URL from global variable or fallback to default
       const apiUrl = window.APP_CONFIG?.API_URL || '/api';
-      const response = await fetch(`${apiUrl}/analytics/recent-purchases?limit=10`);
+      // Fetch purchases from existing API (same as inventory and top products)
+      const response = await fetch(`${apiUrl}/purchases/?limit=100`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
-      // Transform API data to match table format
-      return (data || []).map(item => ({
-        id: item.id.substring(0, 8) + '...',
-        customer: item.product_name,
-        amount: window.formatPrice(item.price),
+      // Sort by purchase date descending (latest first)
+      const sorted = (data.items || [])
+        .sort((a, b) => new Date(b.purchase_date) - new Date(a.purchase_date))
+        .slice(0, 10); // Take only most recent 10
+      // Transform to match table format (same as top products)
+      return sorted.map((item, index) => ({
+        rank: index + 1,
+        name: item.product_name,
+        brand: item.brand?.name || 'N/A',
+        price: window.formatPrice(item.price),
         date: window.formatDate(item.purchase_date)
       }));
     } catch (error) {
@@ -442,37 +448,26 @@ export class DashboardManager {
   }
 
   generateRecentOrders() {
-    const items = [
-      'Bose Speaker',
-      'iPhone 15',
-      'MacBook Pro 14"',
-      'IKEA Bookshelf',
-      'Wireless Mouse',
-      'USB-C Hub',
-      'Monitor Stand',
-      'Desk Lamp',
-      'Mechanical Keyboard',
-      'Webcam 4K'
-    ];
-    const statuses = [
-        { text: 'Ordered', class: 'bg-primary' },
-        { text: 'Received', class: 'bg-success' }
+    // Generate recent 10 purchases (fallback mock data)
+    const products = [
+      { name: 'Bose Speaker', brand: 'Bose' },
+      { name: 'iPhone 15', brand: 'Apple' },
+      { name: 'MacBook Pro 14"', brand: 'Apple' },
+      { name: 'IKEA Bookshelf', brand: 'IKEA' },
+      { name: 'Wireless Mouse', brand: 'Logitech' },
+      { name: 'USB-C Hub', brand: 'Anker' },
+      { name: 'Monitor Stand', brand: 'Amazon Basics' },
+      { name: 'Desk Lamp', brand: 'Philips' },
+      { name: 'Mechanical Keyboard', brand: 'Keychron' },
+      { name: 'Webcam 4K', brand: 'Logitech' }
     ];
 
-    // Generate random date between October 2021 and January 2026
-    const getRandomDate = () => {
-      const startDate = new Date(2021, 9, 1).getTime(); // October 2021
-      const endDate = new Date(2026, 0, 31).getTime(); // January 2026
-      const randomTime = startDate + Math.random() * (endDate - startDate);
-      return new Date(randomTime).toLocaleDateString();
-    };
-
-    return Array.from({length: 10}, () => ({
-        id: `#${Math.floor(Math.random() * 9000) + 1000}`,
-        customer: items[Math.floor(Math.random() * items.length)],
-        amount: `$${(Math.random() * 500 + 50).toFixed(2)}`,
-        status: statuses[Math.floor(Math.random() * statuses.length)],
-        date: getRandomDate()
+    return products.map((product, index) => ({
+      rank: index + 1,
+      name: product.name,
+      brand: product.brand,
+      price: window.formatPrice(Math.random() * 500 + 50),
+      date: window.formatDate(new Date())
     }));
   }
 
@@ -793,13 +788,14 @@ export class DashboardManager {
   }
 
   populateRecentOrders() {
-    // Handle multiple table elements with same ID
+    // Populate recent 10 purchases table (same format as top products)
     const tables = document.querySelectorAll('tbody#recent-orders-table');
     const html = this.data.recentOrders.map(order => `
         <tr>
-            <td><strong>${order.id}</strong></td>
-            <td>${order.customer}</td>
-            <td>${order.amount}</td>
+            <td><strong>#${order.rank}</strong></td>
+            <td>${order.name}</td>
+            <td>${order.brand}</td>
+            <td>${order.price}</td>
             <td>${order.date}</td>
         </tr>
     `).join('');
