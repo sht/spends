@@ -758,6 +758,19 @@ class AdminApp {
           }
         });
 
+        // Listen for modal shown event to reset form when adding new purchase
+        // This handles the case when user clicks "Add New" button
+        const modalEl = document.getElementById('newItemModal') || document.getElementById('inventoryModal');
+        if (modalEl) {
+          modalEl.addEventListener('shown.bs.modal', () => {
+            // If not in edit mode, ensure form is reset for new purchase
+            if (!this.isEditMode) {
+              console.log('Modal opened for new purchase, resetting form');
+              this.resetForm();
+            }
+          });
+        }
+
         // Watch for changes to purchase date to validate warranty/return dates
         this.$watch('form.purchaseDate', (newDate) => {
           if (newDate) {

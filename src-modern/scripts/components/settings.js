@@ -446,6 +446,20 @@ export function registerSettingsComponent() {
           // Create and download file
           const filename = `spends_purchases_${new Date().toISOString().split('T')[0]}.csv`;
           this.downloadFile(csvContent, filename, 'text/csv');
+          
+        } else if (formatUpper === 'ZIP') {
+          // Fetch full backup ZIP from backend
+          this.showNotification('Creating full backup... This may take a moment.', 'info');
+          
+          const response = await fetch(`${apiUrl}/export/zip`);
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          
+          // Get the ZIP blob
+          const zipBlob = await response.blob();
+          
+          // Create and download file
+          const filename = `spends_backup_${new Date().toISOString().split('T')[0]}.zip`;
+          this.downloadBlob(zipBlob, filename);
         }
         
         this.showNotification(`Data exported as ${formatUpper} successfully!`, 'success');
@@ -458,6 +472,11 @@ export function registerSettingsComponent() {
     // Helper function to download file
     downloadFile(content, filename, mimeType) {
       const blob = new Blob([content], { type: mimeType });
+      this.downloadBlob(blob, filename);
+    },
+
+    // Helper function to download blob
+    downloadBlob(blob, filename) {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.style.display = 'none';
@@ -508,13 +527,14 @@ export function registerSettingsComponent() {
       // Detect file type by extension
       const isJson = file.name.toLowerCase().endsWith('.json');
       const isCsv = file.name.toLowerCase().endsWith('.csv');
+      const isZip = file.name.toLowerCase().endsWith('.zip');
       
-      if (!isJson && !isCsv) {
-        this.showNotification('Invalid file type. Please upload a JSON or CSV file.', 'error');
+      if (!isJson && !isCsv && !isZip) {
+        this.showNotification('Invalid file type. Please upload a JSON, CSV, or ZIP file.', 'error');
         return;
       }
 
-      this.showNotification(`Importing ${isJson ? 'JSON' : 'CSV'} file...`, 'info');
+      this.showNotification(`Importing ${isJson ? 'JSON' : isCsv ? 'CSV' : 'ZIP'} file...`, 'info');
 
       try {
         // Create FormData to send file
@@ -522,7 +542,10 @@ export function registerSettingsComponent() {
         formData.append('file', file);
 
         // Determine endpoint based on file type
-        const endpoint = isJson ? `${apiUrl}/import/json` : `${apiUrl}/import/csv`;
+        let endpoint;
+        if (isJson) endpoint = `${apiUrl}/import/json`;
+        else if (isCsv) endpoint = `${apiUrl}/import/csv`;
+        else endpoint = `${apiUrl}/import/zip`;
         
         // Send file to backend
         const response = await fetch(endpoint, {
@@ -553,6 +576,25 @@ export function registerSettingsComponent() {
           message = parts.length > 0 
             ? `Imported: ${parts.join(', ')}` 
             : 'No new data imported';
+          if (skippedParts.length > 0) {
+            message += ` (${skippedParts.join(', ')} skipped)`;
+          }
+        } else if (isZip) {
+          const parts = [];
+          if (result.purchases_added) parts.push(`${result.purchases_added} purchases`);
+          if (result.warranties_added) parts.push(`${result.warranties_added} warranties`);
+          if (result.retailers_added) parts.push(`${result.retailers_added} retailers`);
+          if (result.brands_added) parts.push(`${result.brands_added} brands`);
+          if (result.files_added) parts.push(`${result.files_added} file records`);
+          if (result.files_extracted) parts.push(`${result.files_extracted} files`);
+          
+          // Add skipped info if any
+          const skippedParts = [];
+          if (result.purchases_skipped_future_date) skippedParts.push(`${result.purchases_skipped_future_date} purchases with future date`);
+          
+          message = parts.length > 0 
+            ? `Restored: ${parts.join(', ')}` 
+            : 'No new data restored';
           if (skippedParts.length > 0) {
             message += ` (${skippedParts.join(', ')} skipped)`;
           }

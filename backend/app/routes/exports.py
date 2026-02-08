@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import StreamingResponse
-from io import StringIO
+from io import StringIO, BytesIO
 import json
+from datetime import datetime
 from app.database import get_db
 from app.utils.import_export import export_data_to_json, export_purchases_to_csv
+from app.utils.zip_backup import create_full_backup
 
 router = APIRouter(prefix="/api/export", tags=["export"])
 
@@ -40,3 +42,22 @@ async def export_purchases_csv(db: AsyncSession = Depends(get_db)):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error exporting CSV: {str(e)}")
+
+
+@router.get("/zip")
+async def export_full_backup_zip(db: AsyncSession = Depends(get_db)):
+    """
+    Export complete backup as ZIP (JSON data + all files)
+    """
+    try:
+        zip_bytes = await create_full_backup(db)
+        date_str = datetime.now().strftime("%Y-%m-%d")
+        filename = f"spends_backup_{date_str}.zip"
+        
+        return StreamingResponse(
+            BytesIO(zip_bytes),
+            media_type="application/zip",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating backup: {str(e)}")

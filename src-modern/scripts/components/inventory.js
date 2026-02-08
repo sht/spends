@@ -520,7 +520,7 @@ export function registerInventoryComponent() {
       if (confirm(`Delete "${item.product_name || item.name}"?`)) {
         try {
           const apiUrl = window.APP_CONFIG?.API_URL || '/api';
-          const response = await fetch(`${apiUrl}/purchases/${item.id}`, {
+          const response = await fetch(`${apiUrl}/purchases/${item.id}/`, {
             method: 'DELETE'
           });
 

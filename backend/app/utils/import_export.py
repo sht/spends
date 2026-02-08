@@ -1,12 +1,14 @@
 import csv
 import json
 import io
+import uuid
 from typing import List, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.purchase import Purchase
 from app.models.warranty import Warranty
 from app.models.retailer import Retailer
 from app.models.brand import Brand
+from app.models.file import File
 from app.schemas.purchase import PurchaseCreate
 from app.schemas.warranty import WarrantyCreate
 from app.schemas.retailer import RetailerCreate
@@ -35,12 +37,17 @@ async def export_data_to_json(db: AsyncSession) -> Dict[str, Any]:
     brands_result = await db.execute(select(Brand))
     brands = brands_result.scalars().all()
     
+    # Get all files
+    files_result = await db.execute(select(File))
+    files = files_result.scalars().all()
+    
     # Convert to dictionaries
     data = {
         "purchases": [purchase.__dict__ for purchase in purchases],
         "warranties": [warranty.__dict__ for warranty in warranties],
         "retailers": [retailer.__dict__ for retailer in retailers],
-        "brands": [brand.__dict__ for brand in brands]
+        "brands": [brand.__dict__ for brand in brands],
+        "files": [file.__dict__ for file in files]
     }
     
     # Remove SQLAlchemy internal attributes
@@ -100,6 +107,7 @@ async def import_data_from_json(db: AsyncSession, json_data: Dict[str, Any]) -> 
         "warranties_added": 0,
         "retailers_added": 0,
         "brands_added": 0,
+        "files_added": 0,
         "errors": []
     }
     
@@ -230,6 +238,46 @@ async def import_data_from_json(db: AsyncSession, json_data: Dict[str, Any]) -> 
                     )
                     db.add(db_warranty)
                     import_results["warranties_added"] += 1
+        
+        # Import files
+        if "files" in json_data:
+            for file_data in json_data["files"]:
+                # Parse UUID from string
+                file_id = uuid.UUID(file_data["id"]) if isinstance(file_data["id"], str) else file_data["id"]
+                
+                # Check if file already exists (by ID)
+                existing_file_result = await db.execute(
+                    select(File).filter(File.id == file_id)
+                )
+                existing_file = existing_file_result.scalar_one_or_none()
+                
+                if not existing_file:
+                    # Parse purchase_id UUID
+                    purchase_id = file_data["purchase_id"]
+                    if isinstance(purchase_id, str):
+                        purchase_id = purchase_id
+                    
+                    # Parse file_type - handle "FileType.OTHER" format
+                    file_type_str = file_data.get("file_type", "other")
+                    if file_type_str and "FileType." in file_type_str:
+                        file_type_str = file_type_str.split(".")[-1].lower()
+                    
+                    # Create file directly
+                    db_file = File(
+                        id=file_id,
+                        purchase_id=purchase_id,
+                        filename=file_data["filename"],
+                        stored_filename=file_data["stored_filename"],
+                        file_type=file_type_str,
+                        mime_type=file_data["mime_type"],
+                        file_size=file_data["file_size"],
+                        file_hash=file_data["file_hash"],
+                        reference_count=file_data.get("reference_count", 1),
+                        created_at=datetime.now(),
+                        updated_at=datetime.now() if file_data.get("updated_at") else None
+                    )
+                    db.add(db_file)
+                    import_results["files_added"] = import_results.get("files_added", 0) + 1
         
         await db.commit()
         

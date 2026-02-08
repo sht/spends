@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import json
 from app.database import get_db
 from app.utils.import_export import import_data_from_json, import_purchases_from_csv
+from app.utils.zip_backup import restore_from_backup
 
 router = APIRouter(prefix="/api/import", tags=["import"])
 
@@ -51,3 +52,28 @@ async def import_purchases_csv(file: UploadFile = File(...), db: AsyncSession = 
         raise HTTPException(status_code=400, detail="Invalid CSV format - unable to decode file")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error importing CSV: {str(e)}")
+
+
+@router.post("/zip")
+async def import_backup_zip(file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
+    """
+    Import full backup from ZIP file (JSON data + files)
+    """
+    if not file.filename.endswith('.zip'):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid file type. Please upload a ZIP file."
+        )
+    
+    try:
+        contents = await file.read()
+        result = await restore_from_backup(db, contents)
+        
+        if result.get("errors"):
+            raise HTTPException(status_code=400, detail=result["errors"])
+        
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error importing backup: {str(e)}")

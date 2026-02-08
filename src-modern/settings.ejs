@@ -301,23 +301,32 @@
                                     <div class="card-body">
                                         <p class="text-muted mb-4">Download your data in various formats</p>
                                         <div class="row g-3">
-                                            <div class="col-md-6">
+                                            <div class="col-md-4">
                                                 <button type="button"
                                                         class="btn btn-outline-primary w-100 py-3"
                                                         @click="exportData('json')">
                                                     <i class="bi bi-file-code me-2"></i>
-                                                    <span>Export as JSON</span>
+                                                    <span>JSON</span>
                                                 </button>
-                                                <small class="text-muted d-block mt-2 text-center">Machine readable format</small>
+                                                <small class="text-muted d-block mt-2 text-center">Data only</small>
                                             </div>
-                                            <div class="col-md-6">
+                                            <div class="col-md-4">
                                                 <button type="button"
                                                         class="btn btn-outline-success w-100 py-3"
                                                         @click="exportData('csv')">
                                                     <i class="bi bi-file-spreadsheet me-2"></i>
-                                                    <span>Export as CSV</span>
+                                                    <span>CSV</span>
                                                 </button>
-                                                <small class="text-muted d-block mt-2 text-center">Spreadsheet format</small>
+                                                <small class="text-muted d-block mt-2 text-center">Spreadsheet</small>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <button type="button"
+                                                        class="btn btn-outline-info w-100 py-3"
+                                                        @click="exportData('zip')">
+                                                    <i class="bi bi-file-zip me-2"></i>
+                                                    <span>Full Backup</span>
+                                                </button>
+                                                <small class="text-muted d-block mt-2 text-center">Data + Files</small>
                                             </div>
                                         </div>
                                     </div>
@@ -331,12 +340,12 @@
                                         </h5>
                                     </div>
                                     <div class="card-body">
-                                        <p class="text-muted mb-4">Upload and import your data from CSV or JSON files</p>
+                                        <p class="text-muted mb-4">Upload and import your data from CSV, JSON, or ZIP files</p>
                                         <div class="input-group">
                                             <input type="file"
                                                    class="form-control"
                                                    id="importFile"
-                                                   accept=".csv,.json"
+                                                   accept=".csv,.json,.zip"
                                                    @change="onFileSelected($event)">
                                             <button class="btn btn-primary"
                                                     type="button"
@@ -344,7 +353,7 @@
                                                 <i class="bi bi-upload me-2"></i>Import
                                             </button>
                                         </div>
-                                        <small class="text-muted d-block mt-2">Supported formats: CSV, JSON</small>
+                                        <small class="text-muted d-block mt-2">Supported formats: CSV, JSON, ZIP (Full Backup)</small>
                                     </div>
                                 </div>
 
