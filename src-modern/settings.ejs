@@ -75,10 +75,35 @@
                                     <div class="card-body">
                                         <p class="text-muted mb-4">Toggle which dashboard cards are visible on your dashboard</p>
                                         <div class="row g-4">
-                                            <!-- Total Assets Value -->
+                                            <!-- Total Asset Value -->
                                             <div class="col-md-6">
                                                 <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
                                                     <div>
+                                                        <h6 class="mb-1">Total Asset Value</h6>
+                                                        <small class="text-muted">Show total value of all assets</small>
+                                                    </div>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="toggleTotalAssets" x-model="settings.cardVisibility.totalAssetsValue">
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Items Count -->
+                                            <div class="col-md-6">
+                                                <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
+                                                    <div>
+                                                        <h6 class="mb-1">Items Count</h6>
+                                                        <small class="text-muted">Show total number of items</small>
+                                                    </div>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="toggleItemsCount" x-model="settings.cardVisibility.itemsCount">
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Average Price -->
+                                            <div class="col-md-6">
+                                                <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
                                                     <div>
                                                         <h6 class="mb-1">Average Price</h6>
                                                         <small class="text-muted">Show average item price</small>
@@ -89,15 +114,15 @@
                                                 </div>
                                             </div>
 
-                                            <!-- Pending Warranties -->
+                                            <!-- Active Warranties -->
                                             <div class="col-md-6">
                                                 <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
                                                     <div>
-                                                        <h6 class="mb-1">Pending Warranties</h6>
+                                                        <h6 class="mb-1">Active Warranties</h6>
                                                         <small class="text-muted">Display items with active warranties</small>
                                                     </div>
                                                     <div class="form-check form-switch">
-                                                        <input class="form-check-input" type="checkbox" id="togglePendingWarranties" x-model="settings.cardVisibility.pendingWarranties">
+                                                        <input class="form-check-input" type="checkbox" id="toggleActiveWarranties" x-model="settings.cardVisibility.pendingWarranties">
                                                     </div>
                                                 </div>
                                             </div>
@@ -124,74 +149,6 @@
                                                     </div>
                                                     <div class="form-check form-switch">
                                                         <input class="form-check-input" type="checkbox" id="toggleExpiredWarranties" x-model="settings.cardVisibility.expiredWarranties">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Notifications Settings Tab -->
-                            <!-- Notifications Settings Section -->
-                            <div class="settings-section">
-                                <div class="card">
-                                    <div class="card-header bg-body-secondary border-bottom rounded-top py-3">
-                                        <h5 class="mb-0">
-                                            <i class="bi bi-bell me-2"></i>Notification Preferences
-                                        </h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <p class="text-muted mb-4">Control how and when you receive notifications</p>
-                                        <div class="row g-4">
-                                            <!-- Desktop Notifications -->
-                                            <div class="col-md-6">
-                                                <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
-                                                    <div>
-                                                        <h6 class="mb-1">Desktop Notifications</h6>
-                                                        <small class="text-muted">Show notifications on your desktop</small>
-                                                    </div>
-                                                    <div class="form-check form-switch">
-                                                        <input class="form-check-input" type="checkbox" id="toggleDesktop" x-model="settings.notifications.desktop">
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Email Notifications -->
-                                            <div class="col-md-6">
-                                                <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
-                                                    <div>
-                                                        <h6 class="mb-1">Email Notifications</h6>
-                                                        <small class="text-muted">Receive important updates via email</small>
-                                                    </div>
-                                                    <div class="form-check form-switch">
-                                                        <input class="form-check-input" type="checkbox" id="toggleEmail" x-model="settings.notifications.email">
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Sound Alerts -->
-                                            <div class="col-md-6">
-                                                <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
-                                                    <div>
-                                                        <h6 class="mb-1">Sound Alerts</h6>
-                                                        <small class="text-muted">Play sounds for important notifications</small>
-                                                    </div>
-                                                    <div class="form-check form-switch">
-                                                        <input class="form-check-input" type="checkbox" id="toggleSound" x-model="settings.notifications.sound">
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Marketing Updates -->
-                                            <div class="col-md-6">
-                                                <div class="d-flex justify-content-between align-items-center p-3 border rounded-2 bg-body-secondary-subtle">
-                                                    <div>
-                                                        <h6 class="mb-1">Marketing Updates</h6>
-                                                        <small class="text-muted">Receive updates about new features and promotions</small>
-                                                    </div>
-                                                    <div class="form-check form-switch">
-                                                        <input class="form-check-input" type="checkbox" id="toggleMarketing" x-model="settings.notifications.marketing">
                                                     </div>
                                                 </div>
                                             </div>

@@ -46,13 +46,8 @@ export function registerSettingsComponent() {
       },
       {
         id: 'dashboard',
-        name: 'Dashboard',
+        name: 'Card Visibility',
         icon: 'bi-speedometer2'
-      },
-      {
-        id: 'notifications',
-        name: 'Notifications',
-        icon: 'bi-bell'
       },
       {
         id: 'retailer',
