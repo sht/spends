@@ -1,6 +1,6 @@
 from typing import List, Dict, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import func, extract, and_
+from sqlalchemy import func, extract, and_, Float
 from datetime import datetime, timedelta, date
 from decimal import Decimal
 from app.models.purchase import Purchase
@@ -13,6 +13,7 @@ from app.schemas.analytics import (
     WarrantyTimelineItem, WarrantyAnalytics,
     DistributionItem, DistributionAnalytics,
     TopProduct, TopProductsAnalytics,
+    ExpensivePurchase, ExpensivePurchasesAnalytics,
     SummaryAnalytics
 )
 
@@ -208,10 +209,11 @@ async def get_brand_distribution(db: AsyncSession) -> List[DistributionItem]:
     return distribution_items
 
 
-async def get_top_products(db: AsyncSession, limit: int = 10) -> List[TopProduct]:
+async def get_top_products(db: AsyncSession, limit: int = 10, sort_by: str = 'price') -> List[TopProduct]:
     """
-    Get top products by purchase count
+    Get top products by price (most expensive) or by purchase count
     """
+    # Fetch all products with aggregation
     stmt = (
         select(
             Purchase.product_name,
@@ -220,12 +222,18 @@ async def get_top_products(db: AsyncSession, limit: int = 10) -> List[TopProduct
             func.avg(Purchase.price).label('avg_price')
         )
         .group_by(Purchase.product_name)
-        .order_by(func.count(Purchase.id).desc())
-        .limit(limit)
     )
     
     result = await db.execute(stmt)
     rows = result.all()
+    
+    # Sort in Python to ensure proper numeric sorting
+    if sort_by == 'price':
+        # Sort by average price descending (most expensive first)
+        rows = sorted(rows, key=lambda x: float(x.avg_price or 0), reverse=True)[:limit]
+    else:
+        # Sort by count descending
+        rows = sorted(rows, key=lambda x: x.count, reverse=True)[:limit]
     
     top_products = []
     for row in rows:
@@ -237,6 +245,41 @@ async def get_top_products(db: AsyncSession, limit: int = 10) -> List[TopProduct
         ))
     
     return top_products
+
+
+async def get_expensive_purchases(db: AsyncSession, limit: int = 10) -> List[ExpensivePurchase]:
+    """
+    Get most expensive individual purchases with brand and date
+    """
+    from app.schemas.analytics import ExpensivePurchase
+    
+    stmt = (
+        select(
+            Purchase.id,
+            Purchase.product_name,
+            Brand.name.label('brand_name'),
+            Purchase.price,
+            Purchase.purchase_date
+        )
+        .join(Brand, Purchase.brand_id == Brand.id, isouter=True)
+        .order_by(Purchase.price.desc())
+        .limit(limit)
+    )
+    
+    result = await db.execute(stmt)
+    rows = result.all()
+    
+    expensive_purchases = []
+    for row in rows:
+        expensive_purchases.append(ExpensivePurchase(
+            id=str(row.id),
+            product_name=row.product_name,
+            brand_name=row.brand_name,
+            price=row.price or Decimal('0.00'),
+            purchase_date=row.purchase_date.isoformat() if row.purchase_date else None
+        ))
+    
+    return expensive_purchases
 
 
 async def get_spending_summary(db: AsyncSession) -> SummaryAnalytics:

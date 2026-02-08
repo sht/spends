@@ -4,12 +4,12 @@ from typing import List
 from app.database import get_db
 from app.schemas.analytics import (
     SpendingAnalytics, WarrantyAnalytics, DistributionAnalytics,
-    TopProductsAnalytics, SummaryAnalytics
+    TopProductsAnalytics, ExpensivePurchasesAnalytics, SummaryAnalytics
 )
 from app.services.analytics_service import (
     get_spending_by_month, get_warranty_timeline,
     get_retailer_distribution, get_brand_distribution,
-    get_top_products, get_spending_summary
+    get_top_products, get_expensive_purchases, get_spending_summary
 )
 
 router = APIRouter(prefix="/api/analytics", tags=["analytics"])
@@ -90,6 +90,16 @@ async def get_top_products_analytics(
 ):
     top_products = await get_top_products(db, limit)
     return TopProductsAnalytics(top_products=top_products)
+
+
+@router.get("/expensive-purchases", response_model=ExpensivePurchasesAnalytics)
+async def get_expensive_purchases_analytics(
+    limit: int = 10,
+    db: AsyncSession = Depends(get_db)
+):
+    from app.services.analytics_service import get_expensive_purchases
+    purchases = await get_expensive_purchases(db, limit)
+    return ExpensivePurchasesAnalytics(purchases=purchases)
 
 
 @router.get("/recent-purchases", response_model=List[dict])

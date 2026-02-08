@@ -48,6 +48,18 @@ class TopProductsAnalytics(BaseModel):
     top_products: List[TopProduct]
 
 
+class ExpensivePurchase(BaseModel):
+    id: str
+    product_name: str
+    brand_name: Optional[str]
+    price: Decimal
+    purchase_date: Optional[str]
+
+
+class ExpensivePurchasesAnalytics(BaseModel):
+    purchases: List[ExpensivePurchase]
+
+
 class SummaryAnalytics(BaseModel):
     total_spent: Decimal
     avg_price: Decimal

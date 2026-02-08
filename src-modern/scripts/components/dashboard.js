@@ -205,15 +205,21 @@ export class DashboardManager {
     try {
       // Get API URL from global variable or fallback to default
       const apiUrl = window.APP_CONFIG?.API_URL || '/api';
-      const response = await fetch(`${apiUrl}/analytics/top-products`);
+      // Fetch all purchases and sort by price (same data as inventory)
+      const response = await fetch(`${apiUrl}/purchases/?limit=100`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
-      // Transform API data to match table format
-      return (data.top_products || []).map((item, index) => ({
+      // Sort by price descending and take top 10
+      const sorted = (data.items || [])
+        .sort((a, b) => parseFloat(b.price) - parseFloat(a.price))
+        .slice(0, 10);
+      // Transform to match table format
+      return sorted.map((item, index) => ({
         rank: index + 1,
         name: item.product_name,
-        price: window.formatPrice(item.avg_price),
-        date: window.formatDate(new Date())
+        brand: item.brand?.name || 'N/A',
+        price: window.formatPrice(item.price),
+        date: window.formatDate(item.purchase_date)
       }));
     } catch (error) {
       console.error('Error fetching top products data:', error);
@@ -403,33 +409,26 @@ export class DashboardManager {
   }
 
   generateTopProducts() {
-    // Generate top 10 unique products
-    const productNames = [
-      'MacBook Pro 16"',
-      'iPhone 15 Pro Max',
-      'Sony WH-1000XM5 Headphones',
-      'Samsung 55" QLED TV',
-      'iPad Air',
-      'Dell XPS 13 Laptop',
-      'AirPods Pro',
-      'LG 27" Gaming Monitor',
-      'Apple Watch Series 9',
-      'Sony PlayStation 5'
+    // Generate top 10 expensive purchases (fallback mock data)
+    const products = [
+      { name: 'MacBook Pro 16"', brand: 'Apple' },
+      { name: 'iPhone 15 Pro Max', brand: 'Apple' },
+      { name: 'Sony WH-1000XM5', brand: 'Sony' },
+      { name: 'Samsung 55" QLED TV', brand: 'Samsung' },
+      { name: 'iPad Air', brand: 'Apple' },
+      { name: 'Dell XPS 13', brand: 'Dell' },
+      { name: 'AirPods Pro', brand: 'Apple' },
+      { name: 'LG 27" Monitor', brand: 'LG' },
+      { name: 'Apple Watch Series 9', brand: 'Apple' },
+      { name: 'PlayStation 5', brand: 'Sony' }
     ];
 
-    // Generate random date between October 2021 and January 2026
-    const getRandomDate = () => {
-      const startDate = new Date(2021, 9, 1).getTime(); // October 2021
-      const endDate = new Date(2026, 0, 31).getTime(); // January 2026
-      const randomTime = startDate + Math.random() * (endDate - startDate);
-      return new Date(randomTime).toLocaleDateString();
-    };
-
-    return productNames.map((name, index) => ({
+    return products.map((product, index) => ({
       rank: index + 1,
-      name,
+      name: product.name,
+      brand: product.brand,
       price: window.formatPrice(Math.random() * 2000 + 100),
-      date: getRandomDate()
+      date: window.formatDate(new Date())
     }));
   }
 
@@ -776,7 +775,7 @@ export class DashboardManager {
   }
 
   populateTopProducts() {
-    // Populate top 10 products table
+    // Populate top 10 expensive purchases table
     const table = document.querySelector('tbody#top-products-table');
     if (!table) return;
 
@@ -784,6 +783,7 @@ export class DashboardManager {
         <tr>
             <td><strong>#${product.rank}</strong></td>
             <td>${product.name}</td>
+            <td>${product.brand}</td>
             <td>${product.price}</td>
             <td>${product.date}</td>
         </tr>
