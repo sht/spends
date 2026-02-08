@@ -70,6 +70,7 @@ async function main() {
       processTemplate('index.ejs', { title: 'Dashboard', page: 'dashboard' }),
       processTemplate('inventory.ejs', { title: 'Inventory', page: 'inventory' }),
       processTemplate('settings.ejs', { title: 'Settings', page: 'settings' }),
+      processTemplate('data-management.ejs', { title: 'Data & Backup', page: 'data-management' }),
     ]);
 
     console.log('\n✅ All EJS templates processed successfully!');
