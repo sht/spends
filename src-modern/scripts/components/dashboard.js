@@ -60,6 +60,35 @@ export class DashboardManager {
     this.initOrderStatusCharts();
     this.populateTopProducts();
     this.populateRecentOrders();
+
+    // Listen for settings changes to refresh date/currency displays
+    window.addEventListener('settingsChanged', async (e) => {
+      console.log('Settings changed, refreshing dashboard displays...');
+      // Re-fetch and re-render data with new format
+      await this.refreshDisplayData();
+    });
+  }
+
+  // Refresh only display data (not charts) when settings change
+  async refreshDisplayData() {
+    try {
+      // Re-fetch top products and recent orders to apply new date/currency format
+      const [topProductsData, recentOrdersData] = await Promise.all([
+        this.fetchTopProductsData(),
+        this.fetchRecentOrdersData()
+      ]);
+      
+      this.data.topProducts = topProductsData;
+      this.data.recentOrders = recentOrdersData;
+      
+      // Re-populate tables
+      this.populateTopProducts();
+      this.populateRecentOrders();
+      
+      console.log('Dashboard displays refreshed with new settings');
+    } catch (error) {
+      console.error('Error refreshing dashboard displays:', error);
+    }
   }
 
   async loadDashboardData() {

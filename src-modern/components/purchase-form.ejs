@@ -5,7 +5,7 @@
 
     <div class="mb-3">
         <label for="productName" class="form-label">Product Name <span class="text-danger">*</span></label>
-        <input type="text" class="form-control" id="productName" x-model="form.productName" placeholder="e.g., iPhone 15 Pro Max" :disabled="isViewMode || false">
+        <input type="text" class="form-control" id="productName" x-model="form.productName" placeholder="e.g., iPhone 18 Pro Max" :disabled="isViewMode || false">
     </div>
 
     <div class="row g-3">
@@ -17,6 +17,7 @@
                     <option :value="retailer.name" x-text="retailer.name"></option>
                 </template>
             </select>
+            <small class="text-muted d-block mt-2">Retailers can be configured <a href="retailers.html" class="text-decoration-none">here</a></small>
         </div>
         <div class="col-md-6">
             <label for="brand" class="form-label">Brand <span class="text-danger">*</span></label>
@@ -28,11 +29,11 @@
     <div class="row g-3 mt-0">
         <div class="col-md-6">
             <label for="modelNumber" class="form-label">Model Number</label>
-            <input type="text" class="form-control" id="modelNumber" x-model="form.modelNumber" placeholder="e.g., A2847" :disabled="isViewMode || false">
+            <input type="text" class="form-control" id="modelNumber" x-model="form.modelNumber" placeholder="e.g., 18 Pro Max" :disabled="isViewMode || false">
         </div>
         <div class="col-md-6">
             <label for="serialNumber" class="form-label">Serial Number</label>
-            <input type="text" class="form-control" id="serialNumber" x-model="form.serialNumber" placeholder="Enter serial number" :disabled="isViewMode || false">
+            <input type="text" class="form-control" id="serialNumber" x-model="form.serialNumber" placeholder="e.g., S138746" :disabled="isViewMode || false">
         </div>
     </div>
 </div>
@@ -46,7 +47,7 @@
             <label for="purchaseDate" class="form-label">Purchase Date <span class="text-danger">*</span></label>
             <input type="text" class="form-control datepicker" id="purchaseDate" x-ref="purchaseDateInput"
                    :disabled="isViewMode || false" placeholder="Select date...">
-            <small class="text-muted" x-text="'Format: ' + (window.getDateFormatExample ? window.getDateFormatExample() : 'YYYY-MM-DD')"></small>
+            <small class="text-muted" x-text="'Format: ' + dateFormatExample"></small>
         </div>
         <div class="col-md-6">
             <label for="price" class="form-label">Price <span class="text-danger">*</span></label>
@@ -78,13 +79,13 @@
             <label for="warrantyExpiry" class="form-label">Warranty Expiry Date</label>
             <input type="text" class="form-control datepicker" id="warrantyExpiry" x-ref="warrantyExpiryInput"
                    :disabled="isViewMode || false" placeholder="Select date...">
-            <small class="text-muted">Leave blank if applicable. Format: <span x-text="window.getDateFormatExample ? window.getDateFormatExample() : 'YYYY-MM-DD'"></span></small>
+            <small class="text-muted">Leave blank if applicable. Format: <span x-text="dateFormatExample"></span></small>
         </div>
         <div class="col-md-6">
             <label for="returnDeadline" class="form-label">Return Deadline</label>
             <input type="text" class="form-control datepicker" id="returnDeadline" x-ref="returnDeadlineInput"
                    :disabled="isViewMode || false" placeholder="Select date...">
-            <small class="text-muted">Leave blank if applicable. Format: <span x-text="window.getDateFormatExample ? window.getDateFormatExample() : 'YYYY-MM-DD'"></span></small>
+            <small class="text-muted">Leave blank if applicable. Format: <span x-text="dateFormatExample"></span></small>
         </div>
     </div>
 

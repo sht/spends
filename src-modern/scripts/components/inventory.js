@@ -79,6 +79,18 @@ export function registerInventoryComponent() {
         console.log('Inventory data refreshed after purchase update');
       });
 
+      // Listen for settings changes to refresh date/currency displays
+      window.addEventListener('settingsChanged', async (e) => {
+        console.log('Settings changed, refreshing inventory displays...');
+        // Re-process items to apply new date format
+        this.items = this.items.map(item => ({
+          ...item,
+          purchaseDate: window.formatDate(item.rawPurchaseDate || item.purchase_date)
+        }));
+        this.filterInventory();
+        this.updatePagination();
+      });
+
       setTimeout(() => {
         this.hideLoadingScreen();
       }, 500);
@@ -151,6 +163,8 @@ export function registerInventoryComponent() {
             brand: item.brand?.name || '',
             retailer: item.retailer?.name || '',
             price: parseFloat(item.price),
+            // Raw date for re-formatting when settings change
+            rawPurchaseDate: purchaseDateStr,
             // Formatted date for display (per user preference)
             purchaseDate: window.formatDate(purchaseDateStr),
             // ISO date for edit form (YYYY-MM-DD) - use the string directly

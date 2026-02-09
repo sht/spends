@@ -184,15 +184,20 @@ export function registerSettingsComponent() {
         localStorage.setItem('appSettings', JSON.stringify(this.settings));
         console.log('Saved settings to localStorage');
         
-        // Update dashboard cards visibility if dashboard is loaded
-        if (window.Alpine && window.Alpine.store && window.Alpine.store('dashboardCards')) {
-          // Update the dashboard cards component if it exists
-          const dashboardCardsComponent = document.querySelector('[x-data*="dashboardCards"]');
-          if (dashboardCardsComponent && dashboardCardsComponent.__x) {
-            // Notify other components of the change
-            window.dispatchEvent(new CustomEvent('settingsChanged', { detail: { cardVisibility: this.settings.cardVisibility } }));
-          }
-        }
+        // Dispatch comprehensive settings changed event for immediate refresh
+        window.dispatchEvent(new CustomEvent('settingsChanged', { 
+          detail: { 
+            settings: this.settings,
+            cardVisibility: this.settings.cardVisibility,
+            dateFormat: this.settings.dateFormat,
+            currencyCode: this.settings.currencyCode
+          } 
+        }));
+        
+        // Also dispatch specific event for date format changes
+        window.dispatchEvent(new CustomEvent('dateFormatChanged', { 
+          detail: { dateFormat: this.settings.dateFormat } 
+        }));
       } catch (error) {
         console.error('Failed to save to localStorage:', error);
       }

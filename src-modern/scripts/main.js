@@ -198,29 +198,17 @@ function getDateFormat() {
 }
 
 // Get an example date string showing the user's preferred format
+// For short format: returns example like "Jan 30, 2026"
+// For other formats: returns the format pattern like "MM/DD/YYYY"
 function getDateFormatExample() {
   const format = getDateFormat();
-  const exampleDate = new Date(2026, 0, 30); // Jan 30, 2026
   
   if (format === 'short') {
     return 'Jan 30, 2026';
   }
   
-  const day = '30';
-  const month = '01';
-  const year = '2026';
-  
-  switch (format) {
-    case 'DD/MM/YYYY':
-      return `${day}/${month}/${year}`;
-    case 'YYYY-MM-DD':
-      return `${year}-${month}-${day}`;
-    case 'DD.MM.YYYY':
-      return `${day}.${month}.${year}`;
-    case 'MM/DD/YYYY':
-    default:
-      return `${month}/${day}/${year}`;
-  }
+  // For other formats, return the format pattern itself (e.g., "MM/DD/YYYY")
+  return format || 'MM/DD/YYYY';
 }
 
 // Format date according to user preference
@@ -795,6 +783,9 @@ class AdminApp {
       tempFiles: [],
       pendingFiles: [],
       filesToDelete: [],
+      
+      // Reactive date format example - updates when settings change
+      dateFormatExample: window.getDateFormatExample ? window.getDateFormatExample() : 'YYYY-MM-DD',
 
       init() {
         this.resetForm();
@@ -829,6 +820,17 @@ class AdminApp {
           if (e.detail && e.detail.item) {
             this.enterEditMode(e.detail.item);
           }
+        });
+
+        // Listen for settings changes to refresh date pickers with new format
+        window.addEventListener('settingsChanged', (e) => {
+          console.log('Settings changed, refreshing date pickers...');
+          // Update reactive date format example
+          this.dateFormatExample = window.getDateFormatExample ? window.getDateFormatExample() : 'YYYY-MM-DD';
+          // Re-initialize date pickers with new format
+          this.$nextTick(() => {
+            this.initDatePickers();
+          });
         });
 
         // Listen for modal shown event to reset form when adding new purchase
