@@ -20,6 +20,7 @@ class Purchase(Base):
     tax_deductible = Column(Integer, default=0)  # 0 = false, 1 = true
     model_number = Column(String(100), nullable=True)
     serial_number = Column(String(100), nullable=True)
+    retailer_order_number = Column(String(100), nullable=True)
     quantity = Column(Integer, default=1)
     link = Column(String(500), nullable=True)
     return_deadline = Column(Date, nullable=True)

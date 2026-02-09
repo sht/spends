@@ -17,6 +17,7 @@ class PurchaseBase(BaseModel):
     warranty_expiry: Optional[date] = None
     model_number: Optional[str] = Field(default=None, max_length=100)
     serial_number: Optional[str] = Field(default=None, max_length=100)
+    retailer_order_number: Optional[str] = Field(default=None, max_length=100)
     quantity: Optional[int] = Field(default=1, ge=1)
     link: Optional[str] = Field(default=None, max_length=500)
     return_deadline: Optional[date] = None
@@ -45,6 +46,7 @@ class PurchaseUpdate(BaseModel):
     warranty_expiry: Optional[date] = None
     model_number: Optional[str] = Field(None, max_length=100)
     serial_number: Optional[str] = Field(None, max_length=100)
+    retailer_order_number: Optional[str] = Field(None, max_length=100)
     quantity: Optional[int] = Field(None, ge=1)
     link: Optional[str] = Field(None, max_length=500)
     return_deadline: Optional[date] = None

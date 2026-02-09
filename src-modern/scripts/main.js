@@ -758,6 +758,7 @@ class AdminApp {
         brand: '',
         modelNumber: '',
         serialNumber: '',
+        retailerOrderNumber: '',
         purchaseDate: '',
         price: '',
         quantity: 1,
@@ -931,6 +932,7 @@ class AdminApp {
         this.form.brand = item.brand || '';
         this.form.modelNumber = item.modelNumber || '';
         this.form.serialNumber = item.serialNumber || '';
+        this.form.retailerOrderNumber = item.retailerOrderNumber || '';
         this.form.purchaseDate = item.purchaseDate || '';
         this.form.price = item.price || '';
         this.form.quantity = item.quantity || 1;
@@ -1071,6 +1073,7 @@ class AdminApp {
           brand: '',
           modelNumber: '',
           serialNumber: '',
+          retailerOrderNumber: '',
           purchaseDate: '',
           price: '',
           quantity: 1,
@@ -1180,6 +1183,7 @@ class AdminApp {
           brand: this.form.brand,
           modelNumber: this.form.modelNumber,
           serialNumber: this.form.serialNumber,
+          retailerOrderNumber: this.form.retailerOrderNumber || null,
           purchaseDate: this.form.purchaseDate,
           price: parseFloat(this.form.price),
           quantity: parseInt(this.form.quantity) || 1,
@@ -1272,6 +1276,7 @@ class AdminApp {
             warranty_expiry: (purchase.warrantyExpiry && purchase.warrantyExpiry !== 'N/A' && purchase.warrantyExpiry.trim() !== '') ? purchase.warrantyExpiry : null,
             model_number: (purchase.modelNumber && purchase.modelNumber !== 'N/A' && purchase.modelNumber.trim() !== '') ? purchase.modelNumber : null,
             serial_number: (purchase.serialNumber && purchase.serialNumber !== 'N/A' && purchase.serialNumber.trim() !== '') ? purchase.serialNumber : null,
+            retailer_order_number: (purchase.retailerOrderNumber && purchase.retailerOrderNumber !== 'N/A' && purchase.retailerOrderNumber.trim() !== '') ? purchase.retailerOrderNumber : null,
             quantity: parseInt(purchase.quantity) || 1,
             link: (purchase.link && purchase.link !== 'N/A' && purchase.link.trim() !== '') ? purchase.link : null,
             return_deadline: (purchase.returnDeadline && purchase.returnDeadline !== 'N/A' && purchase.returnDeadline.trim() !== '') ? purchase.returnDeadline : null,
@@ -1856,6 +1861,7 @@ class AdminApp {
         brand: '',
         modelNumber: '',
         serialNumber: '',
+        retailerOrderNumber: '',
         purchaseDate: '',
         price: '',
         quantity: 1,

@@ -170,13 +170,25 @@
                                                 </div>
                                                 <div class="mb-2">
                                                     <div class="form-check">
-                                                        <input class="form-check-input" 
-                                                               type="checkbox" 
+                                                        <input class="form-check-input"
+                                                               type="checkbox"
                                                                id="colSerial"
                                                                x-model="visibleColumns.serialNumber"
                                                                @change="updateColumnVisibility()">
                                                         <label class="form-check-label" for="colSerial">
                                                             Serial Number
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input"
+                                                               type="checkbox"
+                                                               id="colRetailerOrder"
+                                                               x-model="visibleColumns.retailerOrderNumber"
+                                                               @change="updateColumnVisibility()">
+                                                        <label class="form-check-label" for="colRetailerOrder">
+                                                            Order Number
                                                         </label>
                                                     </div>
                                                 </div>
@@ -274,6 +286,9 @@
                                             <template x-if="visibleColumns.serialNumber">
                                                 <th @click="sortBy('serialNumber')" class="sortable align-middle">Serial</th>
                                             </template>
+                                            <template x-if="visibleColumns.retailerOrderNumber">
+                                                <th @click="sortBy('retailerOrderNumber')" class="sortable align-middle">Order Number</th>
+                                            </template>
                                             <template x-if="visibleColumns.link">
                                                 <th @click="sortBy('link')" class="sortable align-middle">Link</th>
                                             </template>
@@ -319,6 +334,9 @@
                                                 </template>
                                                 <template x-if="visibleColumns.serialNumber">
                                                     <td class="align-middle" x-text="item.serialNumber || 'N/A'"></td>
+                                                </template>
+                                                <template x-if="visibleColumns.retailerOrderNumber">
+                                                    <td class="align-middle" x-text="item.retailerOrderNumber || 'N/A'"></td>
                                                 </template>
                                                 <template x-if="visibleColumns.link">
                                                     <td class="align-middle">
@@ -502,9 +520,15 @@
                                                         </div>
                                                     </template>
                                                     <template x-if="item.serialNumber && item.serialNumber !== 'N/A' && item.serialNumber.trim() !== ''">
-                                                        <div class="d-flex justify-content-between">
+                                                        <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
                                                             <span class="text-muted">Serial</span>
                                                             <span class="fw-medium" x-text="item.serialNumber"></span>
+                                                        </div>
+                                                    </template>
+                                                    <template x-if="item.retailerOrderNumber && item.retailerOrderNumber !== 'N/A' && item.retailerOrderNumber.trim() !== ''">
+                                                        <div class="d-flex justify-content-between">
+                                                            <span class="text-muted">Order Number</span>
+                                                            <span class="fw-medium" x-text="item.retailerOrderNumber"></span>
                                                         </div>
                                                     </template>
                                                 </div>
