@@ -613,15 +613,11 @@ class AdminApp {
       executeCommand(command) {
         switch (command.action) {
           case 'addPurchase':
-            // Check if we're on inventory page (modal exists)
-            const inventoryModal = document.getElementById('inventoryModal');
-            if (inventoryModal) {
-              // We're on inventory page, open modal directly
-              const modal = new window.bootstrap.Modal(inventoryModal);
+            // Open the shared purchase modal (available on all pages via layout.ejs)
+            const purchaseModalEl = document.getElementById('purchaseModal');
+            if (purchaseModalEl) {
+              const modal = new Modal(purchaseModalEl);
               modal.show();
-            } else {
-              // Navigate to inventory page with hash to open modal
-              window.location.href = 'inventory.html#addPurchase';
             }
             break;
           case 'goDashboard':
@@ -814,6 +810,19 @@ class AdminApp {
         this.loadRetailers();
         this.loadBrands();
 
+        // Check if URL hash is #addPurchase (from command palette)
+        if (window.location.hash === '#addPurchase') {
+          this.$nextTick(() => {
+            const modalEl = document.getElementById('purchaseModal');
+            if (modalEl) {
+              const modal = new Modal(modalEl);
+              modal.show();
+              // Clear the hash
+              window.history.replaceState(null, null, window.location.pathname);
+            }
+          });
+        }
+
         // Listen for edit-purchase event from inventory table
         window.addEventListener('edit-purchase', (e) => {
           console.log('Received edit-purchase event:', e.detail);
@@ -824,7 +833,7 @@ class AdminApp {
 
         // Listen for modal shown event to reset form when adding new purchase
         // This handles the case when user clicks "Add New" button
-        const modalEl = document.getElementById('newItemModal') || document.getElementById('inventoryModal');
+        const modalEl = document.getElementById('purchaseModal');
         if (modalEl) {
           modalEl.addEventListener('shown.bs.modal', () => {
             // If not in edit mode, ensure form is reset for new purchase
@@ -1388,15 +1397,9 @@ class AdminApp {
           }
 
           // Close the modal programmatically
-          // Try inventoryModal first (inventory page), then newItemModal (dashboard)
-          const inventoryModalEl = document.getElementById('inventoryModal');
-          const newItemModalEl = document.getElementById('newItemModal');
-          
-          if (inventoryModalEl) {
-            const modal = Modal.getInstance(inventoryModalEl);
-            if (modal) modal.hide();
-          } else if (newItemModalEl) {
-            const modal = Modal.getInstance(newItemModalEl);
+          const purchaseModalEl = document.getElementById('purchaseModal');
+          if (purchaseModalEl) {
+            const modal = Modal.getInstance(purchaseModalEl);
             if (modal) modal.hide();
           }
 
@@ -2017,12 +2020,12 @@ class AdminApp {
               bsModal.hide();
             }
 
-            // Show the inventory modal for editing after a short delay
+            // Show the purchase modal for editing after a short delay
             setTimeout(() => {
-              const inventoryModalEl = document.getElementById('inventoryModal');
-              if (inventoryModalEl) {
-                const inventoryModal = Modal.getInstance(inventoryModalEl) || new Modal(inventoryModalEl);
-                inventoryModal.show();
+              const purchaseModalEl = document.getElementById('purchaseModal');
+              if (purchaseModalEl) {
+                const purchaseModal = Modal.getInstance(purchaseModalEl) || new Modal(purchaseModalEl);
+                purchaseModal.show();
               }
             }, 300);
           }

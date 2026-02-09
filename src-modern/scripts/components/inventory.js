@@ -50,12 +50,12 @@ export function registerInventoryComponent() {
       // Initialize column selector functionality
       this.initColumnSelector();
 
-      // Setup modal event listener
-      const inventoryModal = document.getElementById('inventoryModal');
-      if (inventoryModal) {
-        inventoryModal.addEventListener('show.bs.modal', (e) => {
+      // Setup modal event listener for the shared purchase modal
+      const purchaseModal = document.getElementById('purchaseModal');
+      if (purchaseModal) {
+        purchaseModal.addEventListener('show.bs.modal', (e) => {
           setTimeout(() => {
-            const modalContent = inventoryModal.querySelector('.modal-content');
+            const modalContent = purchaseModal.querySelector('.modal-content');
             if (modalContent && modalContent.__x) {
               const alpineData = modalContent.__x.$data;
               // Check if it's being opened from the "New Purchase" button
@@ -510,10 +510,12 @@ export function registerInventoryComponent() {
         detail: { item: detailedItem }
       }));
 
-      // Show the modal
-      const inventoryModalElement = document.getElementById('inventoryModal');
-      const inventoryModal = new Modal(inventoryModalElement);
-      inventoryModal.show();
+      // Show the shared purchase modal
+      const purchaseModalElement = document.getElementById('purchaseModal');
+      if (purchaseModalElement) {
+        const purchaseModal = new Modal(purchaseModalElement);
+        purchaseModal.show();
+      }
     },
 
     async deleteItem(item) {

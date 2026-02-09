@@ -34,6 +34,9 @@
         <div id="toast-container"></div>
     </div>
 
+    <!-- Shared Purchase Modal (available on all pages) -->
+    <%- include('purchase-modal.ejs') %>
+
     <!-- Command Palette -->
     <div x-data="commandPalette()" @keydown="handleKeydown" style="z-index: 10000;">
         <!-- Backdrop -->
