@@ -40,6 +40,7 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.1.0",
     "@popperjs/core": "^2.11.8",
+    "air-datepicker": "^3.6.0",
     "alpinejs": "^3.15.4",
     "apexcharts": "^5.3.6",
     "bootstrap": "^5.3.8",
@@ -47,7 +48,6 @@
     "chart.js": "^4.5.1",
     "dayjs": "^1.11.19",
     "ejs": "^4.0.1",
-    "flatpickr": "^4.6.13",
     "sweetalert2": "^11.26.17"
   },
   "optionalDependencies": {

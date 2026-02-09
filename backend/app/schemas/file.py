@@ -34,7 +34,7 @@ class FileResponse(FileBase):
     id: UUID
     purchase_id: str
     reference_count: int = 0  # For tracking shared files
-    created_at: datetime
+    created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)

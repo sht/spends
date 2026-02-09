@@ -54,9 +54,8 @@
     <div class="row g-3">
         <div class="col-md-6">
             <label for="purchaseDate" class="form-label fw-bold">Purchase Date <span class="text-danger">*</span></label>
-            <input type="text" class="form-control datepicker bg-white" id="purchaseDate" x-ref="purchaseDateInput"
-                   :disabled="isViewMode || false" placeholder="Select date...">
-            <small class="text-muted" x-text="'Format: ' + dateFormatExample"></small>
+            <input type="date" class="form-control bg-white" id="purchaseDate" x-model="form.purchaseDate" x-ref="purchaseDateInput"
+                   :disabled="isViewMode || false" :max="getTodayDate()">
         </div>
         <div class="col-md-6">
             <label for="price" class="form-label fw-bold">Price <span class="text-danger">*</span></label>
@@ -86,15 +85,15 @@
     <div class="row g-3">
         <div class="col-md-6">
             <label for="warrantyExpiry" class="form-label fw-bold">Warranty Expiry Date</label>
-            <input type="text" class="form-control datepicker bg-white" id="warrantyExpiry" x-ref="warrantyExpiryInput"
-                   :disabled="isViewMode || false" placeholder="Select date...">
-            <small class="text-muted">Leave blank if applicable. Format: <span x-text="dateFormatExample"></span></small>
+            <input type="date" class="form-control" id="warrantyExpiry" x-model="form.warrantyExpiry" x-ref="warrantyExpiryInput"
+                   :disabled="isViewMode || !form.purchaseDate" :min="form.purchaseDate ? getNextDay(form.purchaseDate) : ''" :style="form.purchaseDate ? 'background-color: #ffffff;' : 'background-color: #e2e3e5;'">
+            <small class="text-muted">Leave blank if not applicable</small>
         </div>
         <div class="col-md-6">
             <label for="returnDeadline" class="form-label fw-bold">Return Deadline</label>
-            <input type="text" class="form-control datepicker bg-white" id="returnDeadline" x-ref="returnDeadlineInput"
-                   :disabled="isViewMode || false" placeholder="Select date...">
-            <small class="text-muted">Leave blank if applicable. Format: <span x-text="dateFormatExample"></span></small>
+            <input type="date" class="form-control" id="returnDeadline" x-model="form.returnDeadline" x-ref="returnDeadlineInput"
+                   :disabled="isViewMode || !form.purchaseDate" :min="form.purchaseDate ? getNextDay(form.purchaseDate) : ''" :style="form.purchaseDate ? 'background-color: #ffffff;' : 'background-color: #e2e3e5;'">
+            <small class="text-muted">Leave blank if not applicable</small>
         </div>
     </div>
 

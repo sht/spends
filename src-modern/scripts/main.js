@@ -28,10 +28,6 @@ import Alpine from 'alpinejs';
 // Import styles (Bootstrap Icons are included in SCSS)
 import '../styles/scss/main.scss';
 
-// Import Flatpickr for custom date formatting
-import flatpickr from 'flatpickr';
-import 'flatpickr/dist/flatpickr.min.css';
-
 // Import page-specific Alpine components
 import { registerSettingsComponent } from './components/settings.js';
 import { registerInventoryComponent } from './components/inventory.js';
@@ -202,13 +198,30 @@ function getDateFormat() {
 // For other formats: returns the format pattern like "MM/DD/YYYY"
 function getDateFormatExample() {
   const format = getDateFormat();
-  
+
   if (format === 'short') {
     return 'Jan 30, 2026';
   }
-  
+
   // For other formats, return the format pattern itself (e.g., "MM/DD/YYYY")
   return format || 'MM/DD/YYYY';
+}
+
+// Get date format placeholder for HTML5 date inputs
+function getDateFormatPlaceholder() {
+  const format = getDateFormat();
+
+  switch (format) {
+    case 'DD/MM/YYYY':
+      return 'DD/MM/YYYY';
+    case 'YYYY-MM-DD':
+      return 'YYYY-MM-DD';
+    case 'DD.MM.YYYY':
+      return 'DD.MM.YYYY';
+    case 'MM/DD/YYYY':
+    default:
+      return 'MM/DD/YYYY';
+  }
 }
 
 // Format date according to user preference
@@ -263,44 +276,14 @@ function formatDate(dateInput, formatStyle = 'auto') {
 }
 
 // Initialize Flatpickr on a date input with user's preferred format
-// Usage: initDatePicker(element, { onChange: (date) => {...} })
-function initDatePicker(element, options = {}) {
-  if (!element) return null;
-  
-  const userFormat = getDateFormat();
-  
-  // Map our format to flatpickr format
-  const formatMap = {
-    'short': 'M d, Y',        // Jan 30, 2026
-    'MM/DD/YYYY': 'm/d/Y',    // 01/30/2026
-    'DD/MM/YYYY': 'd/m/Y',    // 30/01/2026
-    'YYYY-MM-DD': 'Y-m-d',    // 2026-01-30
-    'DD.MM.YYYY': 'd.m.Y'     // 30.01.2026
-  };
-  
-  const flatpickrFormat = formatMap[userFormat] || 'm/d/Y';
-  
-  // Default options
-  const defaultOptions = {
-    dateFormat: flatpickrFormat,
-    altInput: true,
-    altFormat: flatpickrFormat,
-    allowInput: true,
-    maxDate: 'today',
-    ...options
-  };
-  
-  return flatpickr(element, defaultOptions);
-}
-
 // Make utilities available globally
 window.getCurrencyCode = getCurrencyCode;
 window.getCurrencySymbol = getCurrencySymbol;
 window.formatPrice = formatPrice;
 window.getDateFormat = getDateFormat;
 window.getDateFormatExample = getDateFormatExample;
+window.getDateFormatPlaceholder = getDateFormatPlaceholder;
 window.formatDate = formatDate;
-window.initDatePicker = initDatePicker;
 window.fetchSettingsFromAPI = fetchSettingsFromAPI;
 
 // Application Class
@@ -787,6 +770,8 @@ class AdminApp {
       
       // Reactive date format example - updates when settings change
       dateFormatExample: window.getDateFormatExample ? window.getDateFormatExample() : 'YYYY-MM-DD',
+      // Reactive date format placeholder for HTML5 date inputs
+      dateFormatPlaceholder: window.getDateFormatPlaceholder ? window.getDateFormatPlaceholder() : 'MM/DD/YYYY',
 
       init() {
         this.resetForm();
@@ -825,12 +810,13 @@ class AdminApp {
 
         // Listen for settings changes to refresh date pickers with new format
         window.addEventListener('settingsChanged', (e) => {
-          console.log('Settings changed, refreshing date pickers...');
+          console.log('Settings changed, updating date format placeholder and pickers...');
           // Update reactive date format example
           this.dateFormatExample = window.getDateFormatExample ? window.getDateFormatExample() : 'YYYY-MM-DD';
-          // Re-initialize date pickers with new format
+          // Update reactive date format placeholder
+          this.dateFormatPlaceholder = window.getDateFormatPlaceholder ? window.getDateFormatPlaceholder() : 'MM/DD/YYYY';
+          // Re-initialize litepickers with new format
           this.$nextTick(() => {
-            this.initDatePickers();
           });
         });
 
@@ -844,6 +830,9 @@ class AdminApp {
               console.log('Modal opened for new purchase, resetting form');
               this.resetForm();
             }
+            // Re-initialize litepickers after modal is shown
+            this.$nextTick(() => {
+              });
           });
         }
 
@@ -853,76 +842,215 @@ class AdminApp {
             this.validateDatesAfterPurchaseDateChange();
           }
         });
-
-        // Initialize flatpickr date pickers after DOM is ready
-        this.$nextTick(() => {
-          this.initDatePickers();
-        });
       },
 
-      // Initialize flatpickr date pickers with user preferred format
-      initDatePickers() {
-        if (!window.initDatePicker) return;
+      initAirDatepickers() {
+        console.log('initAirDatepickers called');
+        const dateFormat = window.getDateFormat ? window.getDateFormat() : 'MM/DD/YYYY';
+        const airFormat = this.getAirDatepickerFormat(dateFormat);
+        console.log('Date format:', dateFormat, 'Air format:', airFormat);
 
-        // Destroy existing instances first
-        if (this.purchaseDatePicker) this.purchaseDatePicker.destroy();
-        if (this.warrantyExpiryPicker) this.warrantyExpiryPicker.destroy();
-        if (this.returnDeadlinePicker) this.returnDeadlinePicker.destroy();
+        const englishLocale = {
+          days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+          daysShort: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+          daysMin: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
+          months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+          monthsShort: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+          today: 'Today',
+          clear: 'Clear',
+          dateFormat: airFormat,
+          timeFormat: 'HH:mm',
+          firstDay: 0
+        };
 
-        // Initialize purchase date picker
-        if (this.$refs.purchaseDateInput) {
-          this.purchaseDatePicker = window.initDatePicker(this.$refs.purchaseDateInput, {
-            onChange: (selectedDates, dateStr) => {
-              // Convert flatpickr format to ISO format (YYYY-MM-DD) for storage
-              if (selectedDates[0]) {
-                const date = selectedDates[0];
-                this.form.purchaseDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-              } else {
-                this.form.purchaseDate = '';
-              }
+        // Initialize Purchase Date picker
+        const purchaseDateEl = document.getElementById('purchaseDate');
+        console.log('Purchase date element:', purchaseDateEl);
+        if (purchaseDateEl) {
+          // Destroy existing datepicker if it exists
+          if (purchaseDateEl.airDatepicker) {
+            purchaseDateEl.airDatepicker.destroy();
+            purchaseDateEl.airDatepicker = null;
+          }
+          console.log('Initializing AirDatepicker for purchase date');
+          console.log('AirDatepicker constructor:', AirDatepicker);
+          try {
+            // Create container for the picker
+            let container = document.getElementById('purchaseDateContainer');
+            if (!container) {
+              container = document.createElement('div');
+              container.id = 'purchaseDateContainer';
+              container.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1050; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); display: none;';
+              document.body.appendChild(container);
             }
+
+            purchaseDateEl.airDatepicker = new AirDatepicker(purchaseDateEl, {
+              format: airFormat,
+              locale: englishLocale,
+              maxDate: new Date(),
+              inline: true,
+              container: container,
+              onSelect: ({ date, formattedDate }) => {
+                if (date) {
+                  this.form.purchaseDate = this.formatDateForStorage(date);
+                  container.style.display = 'none';
+                  // Re-initialize warranty and return date pickers when purchase date changes
+                  this.$nextTick(() => {
+                          });
+                }
+              },
+              buttons: ['clear', 'today']
+            });
+
+            // Show picker on input click
+            purchaseDateEl.addEventListener('click', () => {
+              container.style.display = 'block';
+            });
+
+            // Hide picker when clicking outside
+            document.addEventListener('click', (e) => {
+              if (e.target !== purchaseDateEl && !container.contains(e.target)) {
+                container.style.display = 'none';
+              }
+            });
+
+            console.log('AirDatepicker initialized successfully:', purchaseDateEl.airDatepicker);
+          } catch (error) {
+            console.error('Error initializing AirDatepicker:', error);
+          }
+        }
+
+        // Initialize Warranty Expiry Date picker
+        const warrantyEl = document.getElementById('warrantyExpiry');
+        if (warrantyEl) {
+          // Destroy existing datepicker if it exists
+          if (warrantyEl.airDatepicker) {
+            warrantyEl.airDatepicker.destroy();
+            warrantyEl.airDatepicker = null;
+          }
+          const minDate = this.form.purchaseDate ? new Date(this.form.purchaseDate) : null;
+          if (minDate) {
+            minDate.setDate(minDate.getDate() + 1);
+          }
+
+          // Create container for warranty picker
+          let warrantyContainer = document.getElementById('warrantyDateContainer');
+          if (!warrantyContainer) {
+            warrantyContainer = document.createElement('div');
+            warrantyContainer.id = 'warrantyDateContainer';
+            warrantyContainer.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1050; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); display: none;';
+            document.body.appendChild(warrantyContainer);
+          }
+
+          warrantyEl.airDatepicker = new AirDatepicker(warrantyEl, {
+            format: airFormat,
+            locale: englishLocale,
+            minDate: minDate || undefined,
+            disabled: !this.form.purchaseDate,
+            inline: true,
+            container: warrantyContainer,
+            onSelect: ({ date, formattedDate }) => {
+              if (date) {
+                this.form.warrantyExpiry = this.formatDateForStorage(date);
+                warrantyContainer.style.display = 'none';
+              }
+            },
+            buttons: ['clear', 'today']
           });
-          // Set initial value if exists
+
+          // Show picker on input click
           if (this.form.purchaseDate) {
-            this.purchaseDatePicker.setDate(this.form.purchaseDate);
+            warrantyEl.addEventListener('click', () => {
+              warrantyContainer.style.display = 'block';
+            });
           }
-        }
 
-        // Initialize warranty expiry picker
-        if (this.$refs.warrantyExpiryInput) {
-          this.warrantyExpiryPicker = window.initDatePicker(this.$refs.warrantyExpiryInput, {
-            onChange: (selectedDates, dateStr) => {
-              if (selectedDates[0]) {
-                const date = selectedDates[0];
-                this.form.warrantyExpiry = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-              } else {
-                this.form.warrantyExpiry = '';
-              }
+          // Hide picker when clicking outside
+          document.addEventListener('click', (e) => {
+            if (e.target !== warrantyEl && !warrantyContainer.contains(e.target)) {
+              warrantyContainer.style.display = 'none';
             }
           });
-          if (this.form.warrantyExpiry) {
-            this.warrantyExpiryPicker.setDate(this.form.warrantyExpiry);
-          }
         }
 
-        // Initialize return deadline picker
-        if (this.$refs.returnDeadlineInput) {
-          this.returnDeadlinePicker = window.initDatePicker(this.$refs.returnDeadlineInput, {
-            onChange: (selectedDates, dateStr) => {
-              if (selectedDates[0]) {
-                const date = selectedDates[0];
-                this.form.returnDeadline = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-              } else {
-                this.form.returnDeadline = '';
+        // Initialize Return Deadline picker
+        const returnEl = document.getElementById('returnDeadline');
+        if (returnEl) {
+          // Destroy existing datepicker if it exists
+          if (returnEl.airDatepicker) {
+            returnEl.airDatepicker.destroy();
+            returnEl.airDatepicker = null;
+          }
+          const minDate = this.form.purchaseDate ? new Date(this.form.purchaseDate) : null;
+          if (minDate) {
+            minDate.setDate(minDate.getDate() + 1);
+          }
+
+          // Create container for return picker
+          let returnContainer = document.getElementById('returnDateContainer');
+          if (!returnContainer) {
+            returnContainer = document.createElement('div');
+            returnContainer.id = 'returnDateContainer';
+            returnContainer.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1050; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); display: none;';
+            document.body.appendChild(returnContainer);
+          }
+
+          returnEl.airDatepicker = new AirDatepicker(returnEl, {
+            format: airFormat,
+            locale: englishLocale,
+            minDate: minDate || undefined,
+            disabled: !this.form.purchaseDate,
+            inline: true,
+            container: returnContainer,
+            onSelect: ({ date, formattedDate }) => {
+              if (date) {
+                this.form.returnDeadline = this.formatDateForStorage(date);
+                returnContainer.style.display = 'none';
               }
+            },
+            buttons: ['clear', 'today']
+          });
+
+          // Show picker on input click
+          if (this.form.purchaseDate) {
+            returnEl.addEventListener('click', () => {
+              returnContainer.style.display = 'block';
+            });
+          }
+
+          // Hide picker when clicking outside
+          document.addEventListener('click', (e) => {
+            if (e.target !== returnEl && !returnContainer.contains(e.target)) {
+              returnContainer.style.display = 'none';
             }
           });
-          if (this.form.returnDeadline) {
-            this.returnDeadlinePicker.setDate(this.form.returnDeadline);
-          }
         }
       },
-      
+
+
+      getAirDatepickerFormat(dateFormat) {
+        // Air Datepicker format strings
+        switch (dateFormat) {
+          case 'DD/MM/YYYY':
+            return 'dd/MM/yyyy';
+          case 'DD.MM.YYYY':
+            return 'dd.MM.yyyy';
+          case 'YYYY-MM-DD':
+            return 'yyyy-MM-dd';
+          case 'MM/DD/YYYY':
+          default:
+            return 'MM/dd/yyyy';
+        }
+      },
+
+      formatDateForStorage(date) {
+        // Always store as YYYY-MM-DD for API consistency
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      },
+
       async enterEditMode(item) {
         this.isEditMode = true;
         this.editingItemId = item.id;
@@ -950,13 +1078,6 @@ class AdminApp {
         // Initialize tags array from form data
         this.initTagsFromForm();
 
-        // Update date pickers with the new values
-        this.$nextTick(() => {
-          if (this.purchaseDatePicker) this.purchaseDatePicker.setDate(this.form.purchaseDate || '');
-          if (this.warrantyExpiryPicker) this.warrantyExpiryPicker.setDate(this.form.warrantyExpiry || '');
-          if (this.returnDeadlinePicker) this.returnDeadlinePicker.setDate(this.form.returnDeadline || '');
-        });
-
         // Load existing files for this purchase
         await this.loadFilesForPurchase(item.id);
 
@@ -964,6 +1085,11 @@ class AdminApp {
         this.filesToDelete = [];
         this.tempFiles = [];
         this.pendingFiles = [];
+
+        // Re-initialize air datepickers when entering edit mode
+        this.$nextTick(() => {
+          this.initAirDatepickers();
+        });
       },
 
       // Load files for a specific purchase
@@ -1040,6 +1166,20 @@ class AdminApp {
         return Boolean(value);
       },
 
+      getTodayDate() {
+        // Return today's date in YYYY-MM-DD format
+        const today = new Date();
+        return today.toISOString().split('T')[0];
+      },
+
+      getNextDay(dateStr) {
+        // Convert YYYY-MM-DD to next day YYYY-MM-DD
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        date.setDate(date.getDate() + 1);
+        return date.toISOString().split('T')[0];
+      },
+
       async loadRetailers() {
         try {
           const apiUrl = window.APP_CONFIG?.API_URL || '/api';
@@ -1085,6 +1225,8 @@ class AdminApp {
           tags: '',
           notes: ''
         };
+        this.warrantyExpiryEnabled = false;
+        this.returnDeadlineEnabled = false;
         this.isEditMode = false;
         this.editingItemId = null;
         this.uploadedFiles = [];
@@ -1094,12 +1236,6 @@ class AdminApp {
         // Reset tag input
         this.tagsArray = [];
         this.currentTagInput = '';
-        // Clear date pickers
-        this.$nextTick(() => {
-          if (this.purchaseDatePicker) this.purchaseDatePicker.clear();
-          if (this.warrantyExpiryPicker) this.warrantyExpiryPicker.clear();
-          if (this.returnDeadlinePicker) this.returnDeadlinePicker.clear();
-        });
       },
 
       // Tag input methods
