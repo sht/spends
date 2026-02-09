@@ -71,10 +71,11 @@ async def export_purchases_to_csv(db: AsyncSession) -> str:
     
     # Write header
     writer.writerow([
-        'id', 'product_name', 'price', 'currency_code', 'retailer_id', 
-        'brand_id', 'purchase_date', 'notes', 'created_at', 'updated_at'
+        'id', 'product_name', 'price', 'currency_code', 'retailer_id',
+        'brand_id', 'purchase_date', 'notes', 'model_number', 'serial_number',
+        'retailer_order_number', 'created_at', 'updated_at'
     ])
-    
+
     # Write data rows
     for purchase in purchases:
         writer.writerow([
@@ -86,6 +87,9 @@ async def export_purchases_to_csv(db: AsyncSession) -> str:
             purchase.brand_id,
             purchase.purchase_date.isoformat() if purchase.purchase_date else '',
             purchase.notes,
+            purchase.model_number or '',
+            purchase.serial_number or '',
+            purchase.retailer_order_number or '',
             purchase.created_at.isoformat() if purchase.created_at else '',
             purchase.updated_at.isoformat() if purchase.updated_at else ''
         ])

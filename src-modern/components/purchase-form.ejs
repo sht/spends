@@ -324,10 +324,10 @@
                     <div class="d-flex gap-2 flex-wrap">
                         <template x-for="file in getFilesByType('warranty')" :key="file.id">
                             <div class="position-relative" style="cursor: pointer;" @click="openFileViewer(file)">
-                                <template x:if="isImageFile(file)">
+                                <template x-if="isImageFile(file)">
                                     <img :src="getFilePreviewUrl(file)" class="rounded" style="width: 60px; height: 60px; object-fit: cover; border: 1px solid #dee2e6;">
                                 </template>
-                                <template x:if="!isImageFile(file)">
+                                <template x-if="!isImageFile(file)">
                                     <div class="d-flex align-items-center justify-content-center rounded position-relative" :style="`width: 60px; height: 60px; background-color: ${getFileColor(file)}; border: 1px solid #dee2e6;`">
                                         <i :class="getFileIcon(file)" style="font-size: 1.5rem;"></i>
                                     </div>

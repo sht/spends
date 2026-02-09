@@ -93,13 +93,10 @@
 
     <!-- Define APP_CONFIG before loading main script -->
     <script>
-      // Use the backend API URL - defaults to relative path for proxy support
+      // Use the backend API URL - from environment or default to localhost:3031
       // In production, this can be overridden by setting window.APP_CONFIG before this script
       window.APP_CONFIG = window.APP_CONFIG || {
-        // Determine API URL based on current host to support external access
-        API_URL: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-          ? '/api'  // Use relative path for proxy support during development
-          : 'http://' + window.location.hostname + ':3031/api'  // Direct backend access for external IPs
+        API_URL: 'http://' + window.location.hostname + ':3031/api'  // Backend on port 3031
       };
     </script>
 
