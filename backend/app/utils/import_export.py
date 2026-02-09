@@ -188,6 +188,7 @@ async def import_data_from_json(db: AsyncSession, json_data: Dict[str, Any]) -> 
                         tax_deductible=purchase_data.get("tax_deductible", 0),
                         model_number=purchase_data.get("model_number"),
                         serial_number=purchase_data.get("serial_number"),
+                        retailer_order_number=purchase_data.get("retailer_order_number"),
                         quantity=purchase_data.get("quantity", 1),
                         link=purchase_data.get("link"),
                         return_deadline=return_deadline,
