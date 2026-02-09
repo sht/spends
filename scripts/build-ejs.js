@@ -69,6 +69,7 @@ async function main() {
     await Promise.all([
       processTemplate('index.ejs', { title: 'Dashboard', page: 'dashboard' }),
       processTemplate('inventory.ejs', { title: 'Inventory', page: 'inventory' }),
+      processTemplate('retailers.ejs', { title: 'Retailers', page: 'retailers' }),
       processTemplate('settings.ejs', { title: 'Settings', page: 'settings' }),
       processTemplate('data-management.ejs', { title: 'Data & Backup', page: 'data-management' }),
     ]);

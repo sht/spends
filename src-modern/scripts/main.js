@@ -36,6 +36,7 @@ import 'flatpickr/dist/flatpickr.min.css';
 import { registerSettingsComponent } from './components/settings.js';
 import { registerInventoryComponent } from './components/inventory.js';
 import { registerDataManagementComponent } from './components/data-management.js';
+import { registerRetailersComponent } from './components/retailers.js';
 
 // ==========================================================================
 // Dashboard Cards Visibility Component
@@ -446,6 +447,10 @@ class AdminApp {
       case 'data-management':
         console.log('💾 Data Management page components registered');
         registerDataManagementComponent();
+        break;
+      case 'retailers':
+        console.log('🏪 Retailers page components registered');
+        registerRetailersComponent();
         break;
       default:
         console.log('Page-specific components loading complete');
@@ -2037,6 +2042,7 @@ class AdminApp {
     // Register page-specific Alpine components
     registerSettingsComponent();
     registerInventoryComponent();
+    registerRetailersComponent();
 
     // Start Alpine.js
     Alpine.start();

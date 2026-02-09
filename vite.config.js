@@ -22,6 +22,7 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'src-modern/index.html'),
         inventory: resolve(__dirname, 'src-modern/inventory.html'),
+        retailers: resolve(__dirname, 'src-modern/retailers.html'),
         settings: resolve(__dirname, 'src-modern/settings.html'),
         'data-management': resolve(__dirname, 'src-modern/data-management.html'),
       },
