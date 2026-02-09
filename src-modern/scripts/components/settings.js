@@ -28,15 +28,15 @@ export function registerSettingsComponent() {
 
     },
 
-    // Navigation Sections
+    // Navigation Sections (for left sidebar)
     sections: [
       {
         id: 'general',
-        name: 'General',
-        icon: 'bi-gear'
+        name: 'General Settings',
+        icon: 'bi-sliders'
       },
       {
-        id: 'dashboard',
+        id: 'cards',
         name: 'Card Visibility',
         icon: 'bi-speedometer2'
       }
@@ -153,7 +153,8 @@ export function registerSettingsComponent() {
       }
     },
 
-    async saveSettings() {
+    // Save General Settings (Date Format & Currency)
+    async saveGeneralSettings() {
       const apiUrl = window.APP_CONFIG?.API_URL || '/api';
 
       // 1. Save DB-persisted settings to API
@@ -163,8 +164,7 @@ export function registerSettingsComponent() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             currency_code: this.settings.currencyCode,
-            date_format: this.settings.dateFormat,
-
+            date_format: this.settings.dateFormat
           })
         });
 
@@ -172,29 +172,27 @@ export function registerSettingsComponent() {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        console.log('Saved DB settings to API');
+        console.log('Saved general settings to API');
       } catch (error) {
-        console.error('Failed to save DB settings to API:', error);
-        this.showNotification('Failed to save settings to server', 'error');
+        console.error('Failed to save general settings to API:', error);
+        this.showNotification('Failed to save general settings', 'error');
         return;
       }
 
-      // 2. Save all settings to localStorage (for other components to access)
+      // 2. Save to localStorage and dispatch events
       try {
         localStorage.setItem('appSettings', JSON.stringify(this.settings));
-        console.log('Saved settings to localStorage');
+        console.log('Saved general settings to localStorage');
         
-        // Dispatch comprehensive settings changed event for immediate refresh
+        // Dispatch settings changed event
         window.dispatchEvent(new CustomEvent('settingsChanged', { 
           detail: { 
             settings: this.settings,
-            cardVisibility: this.settings.cardVisibility,
             dateFormat: this.settings.dateFormat,
             currencyCode: this.settings.currencyCode
           } 
         }));
         
-        // Also dispatch specific event for date format changes
         window.dispatchEvent(new CustomEvent('dateFormatChanged', { 
           detail: { dateFormat: this.settings.dateFormat } 
         }));
@@ -202,7 +200,36 @@ export function registerSettingsComponent() {
         console.error('Failed to save to localStorage:', error);
       }
 
-      this.showNotification('Settings saved successfully!', 'success');
+      this.showNotification('General settings saved successfully!', 'success');
+    },
+
+    // Save Card Visibility Settings
+    async saveCardVisibility() {
+      // Card visibility is localStorage only (no API call needed)
+      try {
+        localStorage.setItem('appSettings', JSON.stringify(this.settings));
+        console.log('Saved card visibility to localStorage');
+        
+        // Dispatch event for dashboard to update
+        window.dispatchEvent(new CustomEvent('settingsChanged', { 
+          detail: { 
+            settings: this.settings,
+            cardVisibility: this.settings.cardVisibility
+          } 
+        }));
+      } catch (error) {
+        console.error('Failed to save card visibility:', error);
+        this.showNotification('Failed to save card visibility', 'error');
+        return;
+      }
+
+      this.showNotification('Card visibility saved successfully!', 'success');
+    },
+
+    // Legacy save method - saves all settings (kept for backward compatibility)
+    async saveSettings() {
+      await this.saveGeneralSettings();
+      await this.saveCardVisibility();
     },
 
     setActiveSection(sectionId) {
