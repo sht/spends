@@ -1,6 +1,37 @@
 <% const title = 'Retailers'; %>
 <% const page = 'retailers'; %>
 
+            <!-- Retailers Styles -->
+            <style>
+                .retailers-scroll {
+                    border: 1px solid var(--bs-border-color);
+                    border-radius: 0 0 0.375rem 0.375rem;
+                    background-color: var(--bs-white);
+                }
+                .retailers-scroll::-webkit-scrollbar {
+                    width: 8px;
+                }
+                .retailers-scroll::-webkit-scrollbar-track {
+                    background: #f1f1f1;
+                    border-radius: 0 0 0.375rem 0;
+                }
+                .retailers-scroll::-webkit-scrollbar-thumb {
+                    background: #888;
+                    border-radius: 4px;
+                }
+                .retailers-scroll::-webkit-scrollbar-thumb:hover {
+                    background: #555;
+                }
+                .scroll-indicator {
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    right: 0;
+                    background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0.95) 40%) !important;
+                    pointer-events: none;
+                }
+            </style>
+
             <!-- Retailers Container -->
             <div x-data="retailersComponent" x-init="init()" class="retailers-layout container-fluid p-4 p-lg-4">
 
@@ -12,84 +43,92 @@
                     </div>
                 </div>
 
-                <!-- Add New Retailer Card -->
-                <div class="card mb-4">
-                    <div class="card-header bg-body-secondary border-bottom rounded-top py-3">
-                        <h5 class="mb-0">
-                            <i class="bi bi-plus-circle me-2"></i>Add New Retailer
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <label for="retailerName" class="form-label fw-500 mb-3">Retailer Name</label>
-                        <div class="d-flex gap-2">
-                            <input type="text"
-                                   class="form-control flex-grow-1"
-                                   id="retailerName"
-                                   placeholder="Enter retailer name"
-                                   x-model="newRetailerName"
-                                   @keydown.enter="addRetailer()">
-                            <button type="button"
-                                    class="btn btn-primary"
-                                    style="width: 40%; white-space: nowrap;"
-                                    @click="addRetailer()">
-                                Add Retailer
-                            </button>
-                        </div>
-                        <small class="text-muted d-block mt-2">Name of the retailer or store</small>
-                    </div>
-                </div>
-
-                <!-- Current Retailers Card -->
-                <div class="card">
-                    <div class="card-header bg-body-secondary border-bottom rounded-top py-3">
-                        <h5 class="mb-0">
-                            <i class="bi bi-shop me-2"></i>Current Retailers
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Is Brand</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <template x-for="retailer in retailers" :key="retailer.id">
-                                        <tr>
-                                            <td>
-                                                <span x-text="retailer.name"></span>
-                                            </td>
-                                            <td>
-                                                <div class="form-check form-switch">
-                                                    <input class="form-check-input"
-                                                           type="checkbox"
-                                                           :id="`isBrand_${retailer.id}`"
-                                                           :checked="retailer.is_brand"
-                                                           @change="toggleRetailerBrand(retailer)">
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <button type="button"
-                                                        class="btn btn-sm btn-outline-danger"
-                                                        @click="deleteRetailer(retailer.id)"
-                                                        title="Delete retailer">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    </template>
-                                    <template x-if="retailers.length === 0">
-                                        <tr>
-                                            <td colspan="3" class="text-center text-muted py-4">
-                                                No retailers added yet. Add one to get started.
-                                            </td>
-                                        </tr>
-                                    </template>
-                                </tbody>
-                            </table>
+                <!-- Retailers Row -->
+                <div class="row g-4 align-items-start">
+                    <!-- Current Retailers Card -->
+                    <div class="col-md-8 mx-auto">
+                        <div class="card">
+                            <div class="card-header bg-body-secondary border-bottom rounded-top py-3">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-shop me-2"></i>Retailers
+                                    <span class="badge bg-secondary ms-2" x-text="retailers.length"></span>
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <!-- Inline Add New Retailer Form -->
+                                <div class="d-flex gap-2 mb-3">
+                                    <input type="text"
+                                           class="form-control"
+                                           id="retailerName"
+                                           placeholder="Add new retailer..."
+                                           x-model="newRetailerName"
+                                           @keydown.enter="addRetailer()">
+                                    <button type="button"
+                                            class="btn btn-primary"
+                                            style="white-space: nowrap;"
+                                            @click="addRetailer()">
+                                        <i class="bi bi-plus-lg me-1"></i>Add
+                                    </button>
+                                </div>
+                                
+                                <hr class="my-3">
+                                
+                                <!-- Retailers List -->
+                                <div class="position-relative">
+                                <div class="table-responsive retailers-scroll" style="max-height: 500px; overflow-y: auto;">
+                                    <table class="table table-hover mb-0">
+                                        <thead class="sticky-top bg-white border-bottom">
+                                            <tr>
+                                                <th class="ps-3 bg-light">Name</th>
+                                                <th class="bg-light">Is Brand</th>
+                                                <th class="pe-3 bg-light">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white">
+                                            <template x-for="retailer in retailers" :key="retailer.id">
+                                                <tr>
+                                                    <td class="ps-3">
+                                                        <span x-text="retailer.name"></span>
+                                                    </td>
+                                                    <td>
+                                                        <div class="form-check form-switch">
+                                                            <input class="form-check-input"
+                                                                   type="checkbox"
+                                                                   :id="`isBrand_${retailer.id}`"
+                                                                   :checked="retailer.is_brand"
+                                                                   @change="toggleRetailerBrand(retailer)">
+                                                        </div>
+                                                    </td>
+                                                    <td class="pe-3">
+                                                        <button type="button"
+                                                                class="btn btn-sm btn-outline-danger"
+                                                                @click="deleteRetailer(retailer.id)"
+                                                                title="Delete retailer">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                            <template x-if="retailers.length === 0">
+                                                <tr>
+                                                    <td colspan="3" class="text-center text-muted py-4">
+                                                        No retailers added yet.
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <!-- Scroll indicator - shows when there are more items -->
+                                <div x-show="retailers.length > 8" 
+                                     class="scroll-indicator text-center py-1 border-top"
+                                     style="background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.03));">
+                                    <small class="text-muted">
+                                        <i class="bi bi-chevron-down"></i> Scroll for more
+                                    </small>
+                                </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

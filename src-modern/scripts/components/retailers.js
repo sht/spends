@@ -107,6 +107,28 @@ export function registerRetailersComponent() {
         const apiUrl = window.APP_CONFIG?.API_URL || '/api';
 
         const retailer = this.retailers.find(r => r.id === id);
+        if (!retailer) {
+          this.showNotification('Retailer not found', 'error');
+          return;
+        }
+
+        // Check if any purchases use this retailer
+        const purchasesResponse = await fetch(`${apiUrl}/purchases/?retailer_id=${id}&limit=1`);
+        if (purchasesResponse.ok) {
+          const purchasesData = await purchasesResponse.json();
+          if (purchasesData.total > 0) {
+            this.showNotification(
+              `Cannot delete "${retailer.name}" - ${purchasesData.total} purchase(s) use this retailer. Delete those purchases first.`,
+              'error'
+            );
+            return;
+          }
+        }
+
+        // Confirm deletion
+        if (!confirm(`Delete retailer "${retailer.name}"?`)) {
+          return;
+        }
 
         // Remove retailer from the backend API
         const response = await fetch(`${apiUrl}/retailers/${id}`, {
@@ -123,7 +145,7 @@ export function registerRetailersComponent() {
         }
 
         // If retailer is also a brand, delete the brand too
-        if (retailer && retailer.is_brand && retailer.brandId) {
+        if (retailer.is_brand && retailer.brandId) {
           try {
             const brandResponse = await fetch(`${apiUrl}/brands/${retailer.brandId}/`, {
               method: 'DELETE'
