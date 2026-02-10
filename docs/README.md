@@ -2,7 +2,7 @@
 
 ## Available Documentation
 
-- **[API Documentation](api.md)** - Complete REST API reference
+- **[API Documentation](API.md)** - Complete REST API reference
   - All endpoints with methods and parameters
   - Complete schema definitions
   - File management system details
@@ -31,7 +31,7 @@
   - Vulnerability reporting procedures
   - Security considerations
 
-- **[Architecture Diagram](diagram.md)** - Visual system architecture
+- **[Architecture Diagram](DIAGRAM.md)** - Visual system architecture
   - Mermaid flowchart showing data flow
   - Frontend/backend component relationships
   - API route structure
@@ -41,7 +41,7 @@
 
 ### 1. API Users
 
-Start with **[API Documentation](api.md)** for:
+Start with **[API Documentation](API.md)** for:
 
 - Complete endpoint reference
 - Request/response examples
@@ -103,11 +103,11 @@ cd backend && uvicorn app.main:app --reload --port 3031  # Backend
 ```
 docs/
 ├── README.md          # This file - Documentation overview
-├── api.md             # Complete API documentation
+├── API.md             # Complete API documentation
 ├── ARCHITECTURE.md    # System architecture overview
 ├── DEVELOPMENT.md     # Development roadmap and phases
 ├── SECURITY.md        # Security policy and guidelines
-└── diagram.md         # Visual architecture diagram
+└── DIAGRAM.md         # Visual architecture diagram
 
 ../
 ├── README.md          # Main project documentation
@@ -117,7 +117,7 @@ docs/
 
 ## Getting Help
 
-- **API Issues**: Check [API Documentation](api.md) first
+- **API Issues**: Check [API Documentation](API.md) first
 - **Architecture Questions**: See [System Architecture](ARCHITECTURE.md)
 - **Backend Problems**: Refer to [Backend Documentation](../backend/README.md)
 - **Security Concerns**: Review [Security Policy](SECURITY.md)

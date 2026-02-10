@@ -17,11 +17,11 @@ Track your purchases, manage warranties, and analyze spending patterns. Upload r
 ## Documentation
 
 - [Documentation Hub](docs/) - Complete documentation collection
-  - [API Documentation](docs/api.md) - Complete REST API reference
+  - [API Documentation](docs/API.md) - Complete REST API reference
   - [System Architecture](docs/ARCHITECTURE.md) - Architecture overview and design
   - [Development Plan](docs/DEVELOPMENT.md) - Roadmap and development phases
   - [Security Policy](docs/SECURITY.md) - Security guidelines and vulnerability reporting
-  - [Architecture Diagram](docs/diagram.md) - Visual system architecture
+  - [Architecture Diagram](docs/DIAGRAM.md) - Visual system architecture
 - [Backend Documentation](backend/README.md) - Backend-specific implementation details
 
 ## Security
