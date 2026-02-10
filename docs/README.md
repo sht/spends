@@ -9,7 +9,7 @@
   - Testing examples with curl commands
   - CORS configuration and security considerations
 
-- **[System Architecture](../ARCHITECTURE.md)** - Complete system architecture overview
+- **[System Architecture](ARCHITECTURE.md)** - Complete system architecture overview
   - Frontend and backend architecture
   - Technology stack details
   - Deployment options
@@ -21,15 +21,21 @@
   - Development setup
   - Deployment instructions
 
-- **[Development Plan](../DEVELOPMENT.md)** - Roadmap and development phases
+- **[Development Plan](DEVELOPMENT.md)** - Roadmap and development phases
   - Feature implementation timeline
   - Development methodology
   - Future enhancements
 
-- **[Security Policy](../SECURITY.md)** - Security guidelines and vulnerability reporting
+- **[Security Policy](SECURITY.md)** - Security guidelines and vulnerability reporting
   - Security best practices
   - Vulnerability reporting procedures
   - Security considerations
+
+- **[Architecture Diagram](diagram.md)** - Visual system architecture
+  - Mermaid flowchart showing data flow
+  - Frontend/backend component relationships
+  - API route structure
+  - Build and deployment process
 
 ## Quick Start Guide
 
@@ -44,7 +50,7 @@ Start with **[API Documentation](api.md)** for:
 
 ### 2. System Understanding
 
-Read **[System Architecture](../ARCHITECTURE.md)** for:
+Read **[System Architecture](ARCHITECTURE.md)** for:
 
 - Overall system design
 - Technology stack information
@@ -62,7 +68,7 @@ See **[Backend Documentation](../backend/README.md)** for:
 
 ### 4. Contributing
 
-Check **[Development Plan](../DEVELOPMENT.md)** for:
+Check **[Development Plan](DEVELOPMENT.md)** for:
 
 - Roadmap and milestones
 - Feature development phases
@@ -97,12 +103,13 @@ cd backend && uvicorn app.main:app --reload --port 3031  # Backend
 ```
 docs/
 ├── README.md          # This file - Documentation overview
-└── api.md             # Complete API documentation
+├── api.md             # Complete API documentation
+├── ARCHITECTURE.md    # System architecture overview
+├── DEVELOPMENT.md     # Development roadmap and phases
+├── SECURITY.md        # Security policy and guidelines
+└── diagram.md         # Visual architecture diagram
 
 ../
-├── ARCHITECTURE.md    # System architecture
-├── DEVELOPMENT.md     # Development plan
-├── SECURITY.md        # Security policy
 ├── README.md          # Main project documentation
 └── backend/
     └── README.md       # Backend-specific docs
@@ -111,16 +118,16 @@ docs/
 ## Getting Help
 
 - **API Issues**: Check [API Documentation](api.md) first
-- **Architecture Questions**: See [System Architecture](../ARCHITECTURE.md)
+- **Architecture Questions**: See [System Architecture](ARCHITECTURE.md)
 - **Backend Problems**: Refer to [Backend Documentation](../backend/README.md)
-- **Security Concerns**: Review [Security Policy](../SECURITY.md)
+- **Security Concerns**: Review [Security Policy](SECURITY.md)
 - **General Questions**: Check main [README.md](../README.md)
 
 ## Community & Support
 
 - **GitHub Repository**: Main project repository
 - **Issues & Feature Requests**: Use GitHub issue tracker
-- **Security Vulnerabilities**: Follow guidelines in [Security Policy](../SECURITY.md)
+- **Security Vulnerabilities**: Follow guidelines in [Security Policy](SECURITY.md)
 
 ---
 

@@ -20,12 +20,18 @@ flowchart TD
         Routes --> R2[/api/warranties]
         Routes --> R3[/api/retailers + brands]
         Routes --> R4[/api/analytics]
-        Routes --> R5[/api/files, export, import, data, settings]
+        Routes --> R5[/api/files]
+        Routes --> R6[/api/export + import]
+        Routes --> R7[/api/data]
+        Routes --> R8[/api/settings]
         R1 --> Services[Service Layer]
         R2 --> Services
         R3 --> Services
         R4 --> Services
         R5 --> Services
+        R6 --> Services
+        R7 --> Services
+        R8 --> Services
     end
 
     subgraph Data["Data Layer"]
@@ -44,6 +50,6 @@ flowchart TD
 ## Summary
 
 - **Frontend**: Multi-page app with Alpine.js + Bootstrap 5, built by Vite. Pages for dashboard, inventory, retailers, settings, and data management.
-- **Backend**: FastAPI with a clean Routes → Services → Models layered architecture. 10 API route groups.
+- **Backend**: FastAPI with a clean Routes → Services → Models layered architecture. 8 API route groups.
 - **Data**: SQLAlchemy ORM with 6 models (Purchase, Warranty, Retailer, Brand, File, Setting). SQLite in dev, PostgreSQL in prod. Migrations via Alembic.
 - **Dev flow**: Vite (`:3030`) proxies `/api/*` to FastAPI (`:3031`). In production, FastAPI serves the built `dist-modern/` static files directly.
