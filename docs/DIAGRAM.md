@@ -16,15 +16,15 @@ flowchart TD
 
     subgraph Backend["Backend — backend/app/"]
         FastAPI --> Routes[API Routes]
-        Routes --> R1[/api/purchases]
-        Routes --> R2[/api/warranties]
-        Routes --> R3[/api/retailers + brands]
-        Routes --> R4[/api/analytics]
-        Routes --> R5[/api/files]
-        Routes --> R6[/api/export + import]
-        Routes --> R7[/api/data]
-        Routes --> R8[/api/settings]
-        R1 --> Services[Service Layer]
+        Routes --> R1["/api/purchases"]
+        Routes --> R2["/api/warranties"]
+        Routes --> R3["/api/retailers + brands"]
+        Routes --> R4["/api/analytics"]
+        Routes --> R5["/api/files"]
+        Routes --> R6["/api/export + import"]
+        Routes --> R7["/api/data"]
+        Routes --> R8["/api/settings"]
+        R1 --> Services["Service Layer"]
         R2 --> Services
         R3 --> Services
         R4 --> Services
@@ -35,15 +35,15 @@ flowchart TD
     end
 
     subgraph Data["Data Layer"]
-        Services --> ORM[SQLAlchemy Models<br/>Purchase, Warranty, Retailer,<br/>Brand, File, Setting]
-        ORM --> DB[(SQLite / PostgreSQL)]
-        Alembic[Alembic Migrations] --> DB
+        Services --> ORM["SQLAlchemy Models<br/>Purchase, Warranty, Retailer,<br/>Brand, File, Setting"]
+        ORM --> DB["(SQLite / PostgreSQL)"]
+        Alembic["Alembic Migrations"] --> DB
     end
 
     subgraph Deploy["Build and Deploy"]
-        Build[npm run build] --> Dist[dist-modern/]
+        Build["npm run build"] --> Dist["dist-modern/"]
         Dist --> FastAPI
-        Docker[Docker] --> FastAPI
+        Docker["Docker"] --> FastAPI
     end
 ```
 
