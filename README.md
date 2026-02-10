@@ -8,14 +8,15 @@ Track your purchases, manage warranties, and analyze spending patterns. Upload r
 
 ## Tech Stack
 
-| Frontend | Backend | Storage |
-|----------|---------|---------|
+| Frontend         | Backend              | Storage                          |
+| ---------------- | -------------------- | -------------------------------- |
 | Vite + Alpine.js | FastAPI + SQLAlchemy | SQLite (dev) / PostgreSQL (prod) |
-| Bootstrap 5 | Pydantic | Hash-sharded files |
-| Chart.js | Uvicorn | Reference counting |
+| Bootstrap 5      | Pydantic             | Hash-sharded files               |
+| Chart.js         | Uvicorn              | Reference counting               |
 
 ## Documentation
 
+- [API Documentation](docs/api.md) - Complete REST API reference
 - [Backend Documentation](backend/README.md) - Detailed information about the backend API
 - [Development Plan](DEVELOPMENT.md) - Roadmap and development phases for the backend
 - [Security Policy](SECURITY.md) - Security guidelines and vulnerability reporting
@@ -27,6 +28,7 @@ For security vulnerabilities, please report to **oss@mailite.com** or create a p
 ## Quick Start
 
 ### Prerequisites
+
 - Node.js 16+
 - Python 3.10+
 
@@ -49,12 +51,14 @@ cd ..
 Default ports are **3030** (frontend) and **3031** (backend). To customize, edit the `.env` files:
 
 **`.env`** (frontend):
+
 ```env
 VITE_PORT=3030
 VITE_API_URL=http://localhost:3031
 ```
 
 **`backend/.env`** (backend):
+
 ```env
 PORT=3031
 FRONTEND_URL=http://localhost:3030
@@ -63,22 +67,24 @@ FRONTEND_URL=http://localhost:3030
 ### Run Development Environment
 
 **Terminal 1 - Frontend:**
+
 ```bash
 npm run dev -- --host 0.0.0.0
 ```
 
 **Terminal 2 - Backend:**
+
 ```bash
 cd backend
 source venv/bin/activate
 uvicorn app.main:app --reload --host 0.0.0.0 --port 3031
 ```
 
-| Service | Default URL |
-|---------|-------------|
-| Frontend | http://localhost:3030 |
-| Backend API | http://localhost:3031/api |
-| API Docs | http://localhost:3031/docs |
+| Service     | Default URL                |
+| ----------- | -------------------------- |
+| Frontend    | http://localhost:3030      |
+| Backend API | http://localhost:3031/api  |
+| API Docs    | http://localhost:3031/docs |
 
 ## Features
 
