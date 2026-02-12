@@ -60,7 +60,7 @@
         <div class="col-md-6">
             <label for="price" class="form-label fw-bold">Price <span class="text-danger">*</span></label>
             <div class="input-group">
-                <span class="input-group-text">$</span>
+                <span class="input-group-text" x-text="window.getCurrencySymbol ? window.getCurrencySymbol() : '$'"></span>
                 <input type="number" class="form-control bg-white" id="price" x-model="form.price" placeholder="0.00" step="0.01" :disabled="isViewMode || false">
             </div>
         </div>
