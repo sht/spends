@@ -3,7 +3,18 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.config import settings
-from app.routes import purchases, warranties, retailers, brands, analytics, exports, imports, files, data, settings
+from app.routes import (
+    purchases,
+    warranties,
+    retailers,
+    brands,
+    analytics,
+    exports,
+    imports,
+    files,
+    data,
+    settings,
+)
 
 app = FastAPI(title="Spends Tracker API", version="0.1.0")
 
@@ -19,6 +30,14 @@ app.add_middleware(
 # Determine the base directory (backend folder)
 BASE_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = BASE_DIR.parent.parent
+
+# In Docker container, everything is in /app/, so adjust PROJECT_ROOT
+if (PROJECT_ROOT / "dist-modern").exists():
+    dist_dir = PROJECT_ROOT / "dist-modern"
+elif (Path("/app/dist-modern")).exists():
+    dist_dir = Path("/app/dist-modern")
+else:
+    dist_dir = None
 
 # Include API routers (all under /api prefix)
 app.include_router(purchases)
@@ -42,10 +61,13 @@ async def root():
 # Mount public-assets for static resources (images, icons, etc.)
 public_assets_dir = PROJECT_ROOT / "public-assets"
 if public_assets_dir.exists():
-    app.mount("/public-assets", StaticFiles(directory=str(public_assets_dir)), name="public-assets")
+    app.mount(
+        "/public-assets",
+        StaticFiles(directory=str(public_assets_dir)),
+        name="public-assets",
+    )
 
 # Check if dist-modern exists (production build)
-dist_dir = PROJECT_ROOT / "dist-modern"
 
 if dist_dir.exists():
     # Production mode: serve static built frontend files
