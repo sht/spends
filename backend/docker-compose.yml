@@ -2,9 +2,7 @@ version: '3.8'
 
 services:
   backend:
-    build:
-      context: ..
-      dockerfile: backend/Dockerfile
+    image: tajii/spends-tracker:latest
     container_name: spends_tracker_backend
     ports:
       - '3031:8000'
