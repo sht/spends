@@ -1389,7 +1389,9 @@ class AdminApp {
               purchaseDateInput = `${dateParts[2]}-${dateParts[0].padStart(2, '0')}-${dateParts[1].padStart(2, '0')}`;
             }
           }
-          const purchaseDate = new Date(purchaseDateInput);
+          // Parse date components manually to avoid timezone issues
+          const [year, month, day] = purchaseDateInput.split('-').map(Number);
+          const purchaseDate = new Date(year, month - 1, day);
           if (purchaseDate > today) {
             window.AdminApp.notificationManager.error('Purchase date cannot be in the future');
             return;
