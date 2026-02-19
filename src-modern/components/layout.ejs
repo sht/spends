@@ -93,10 +93,10 @@
 
     <!-- Define APP_CONFIG before loading main script -->
     <script>
-      // Use the backend API URL - from environment or default to localhost:3031
-      // In production, this can be overridden by setting window.APP_CONFIG before this script
+      // Use relative API path - works with reverse proxy (Caddy, nginx, etc.)
+      // Backend API is proxied to /api by the reverse proxy
       window.APP_CONFIG = window.APP_CONFIG || {
-        API_URL: 'http://' + window.location.hostname + ':3031/api'  // Backend on port 3031
+        API_URL: '/api'
       };
     </script>
 

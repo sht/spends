@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from typing import Optional
 from datetime import datetime, date
 from decimal import Decimal
@@ -6,6 +6,8 @@ from .common import BaseResponse
 
 
 class PurchaseBase(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+    
     product_name: str = Field(..., min_length=1, max_length=255)
     price: Decimal = Field(..., gt=0)
     currency_code: Optional[str] = Field(default="USD", max_length=3)
@@ -35,6 +37,8 @@ class PurchaseCreate(PurchaseBase):
 
 
 class PurchaseUpdate(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+    
     product_name: Optional[str] = Field(None, min_length=1, max_length=255)
     price: Optional[Decimal] = Field(None, gt=0)
     currency_code: Optional[str] = Field(None, max_length=3)
@@ -84,6 +88,8 @@ class WarrantyInfo(BaseModel):
 
 
 class PurchaseResponse(PurchaseBase, BaseResponse):
+    model_config = ConfigDict(protected_namespaces=())
+    
     warranty_id: Optional[str] = None
     retailer: Optional[RetailerInfo] = None
     brand: Optional[BrandInfo] = None
