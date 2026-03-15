@@ -147,7 +147,7 @@ export function registerRetailersComponent() {
         // If retailer is also a brand, delete the brand too
         if (retailer.is_brand && retailer.brandId) {
           try {
-            const brandResponse = await fetch(`${apiUrl}/brands/${retailer.brandId}/`, {
+            const brandResponse = await fetch(`${apiUrl}/brands/${retailer.brandId}`, {
               method: 'DELETE'
             });
             if (!brandResponse.ok && brandResponse.status !== 404) {
@@ -205,7 +205,7 @@ export function registerRetailersComponent() {
         } else {
           // Remove from brands
           if (retailer.brandId) {
-            const response = await fetch(`${apiUrl}/brands/${retailer.brandId}/`, {
+            const response = await fetch(`${apiUrl}/brands/${retailer.brandId}`, {
               method: 'DELETE'
             });
 
@@ -223,7 +223,7 @@ export function registerRetailersComponent() {
               const brandsData = await brandsResponse.json();
               const brand = brandsData.items.find(b => b.name === retailer.name);
               if (brand) {
-                const deleteResponse = await fetch(`${apiUrl}/brands/${brand.id}/`, {
+                const deleteResponse = await fetch(`${apiUrl}/brands/${brand.id}`, {
                   method: 'DELETE'
                 });
                 if (deleteResponse.ok || deleteResponse.status === 404) {
