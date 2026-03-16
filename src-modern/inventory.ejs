@@ -628,7 +628,10 @@
                                                         <template x-for="tag in item.tags.split(',')">
                                                             <span class="badge bg-primary me-1 mb-1" 
                                                                   x-text="tag.trim()" 
-                                                                  x-show="tag.trim() !== '' && tag.trim().length > 0"></span>
+                                                                  x-show="tag.trim() !== '' && tag.trim().length > 0"
+                                                                  style="cursor: pointer;"
+                                                                  onclick="window.showTagItems(this.textContent.trim())"
+                                                                  title="Click to see all items with this tag"></span>
                                                         </template>
                                                     </template>
                                                 </div>
@@ -759,6 +762,47 @@
                     <button type="button" class="btn btn-primary px-4" @click="editPurchaseItem();">
                         <i class="bi bi-pencil me-2"></i>Edit Details
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tag Items Modal -->
+    <div class="modal fade" id="tagItemsModal" tabindex="-1" aria-labelledby="tagItemsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-light border-bottom">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-10 d-flex align-items-center justify-content-center rounded-circle me-3" style="width: 38px; height: 38px;">
+                            <i class="bi bi-tags text-primary fs-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold text-dark" id="tagItemsModalLabel">Items with Tag</h5>
+                            <small class="text-muted" id="tagItemsModalTag"></small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close me-2" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped mb-0" id="tagItemsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Product Name</th>
+                                    <th>Retailer</th>
+                                    <th>Brand</th>
+                                    <th>Purchase Date</th>
+                                    <th>Price</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tagItemsTableBody">
+                                <tr><td colspan="5" class="text-center py-4">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>

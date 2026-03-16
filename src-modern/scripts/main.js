@@ -6,6 +6,9 @@
 // Import Bootstrap 5 JavaScript components (only those actively used)
 import { Collapse, Dropdown, Modal, Offcanvas, Popover, Tab, Toast, Tooltip } from 'bootstrap';
 
+// Make Bootstrap available globally for inline handlers
+window.bootstrap = { Modal };
+
 // Import our custom modules
 import { ThemeManager } from './utils/theme-manager.js';
 import { DashboardManager } from './components/dashboard.js';
@@ -2487,6 +2490,70 @@ app.init();
 // Export for global access
 window.AdminApp = app;
 window.IconManager = iconManager;
+
+// Function to show items with a specific tag
+window.showTagItems = async function (tag) {
+  const modal = document.getElementById('tagItemsModal');
+  const tagLabel = document.getElementById('tagItemsModalTag');
+  const tableBody = document.getElementById('tagItemsTableBody');
+
+  tagLabel.textContent = tag;
+  tableBody.innerHTML =
+    '<tr><td colspan="5" class="text-center py-4"><div class="spinner-border spinner-border-sm" role="status"></div> Loading...</td></tr>';
+
+  const modalInstance = new bootstrap.Modal(modal);
+  modalInstance.show();
+
+  try {
+    const apiUrl = window.APP_CONFIG?.API_URL || '/api';
+    const response = await fetch(`${apiUrl}/purchases/?tag=${encodeURIComponent(tag)}&limit=100`);
+    const data = await response.json();
+
+    if (data.items && data.items.length > 0) {
+      tableBody.innerHTML = data.items
+        .map(
+          (item) => `
+        <tr style="cursor: pointer;" onclick="window.viewItemById('${item.id}')">
+          <td class="align-middle">${item.product_name || 'N/A'}</td>
+          <td class="align-middle">${item.retailer?.name || 'N/A'}</td>
+          <td class="align-middle">${item.brand?.name || 'N/A'}</td>
+          <td class="align-middle">${item.purchase_date || 'N/A'}</td>
+          <td class="align-middle">${item.price ? '$' + item.price : 'N/A'}</td>
+        </tr>
+      `
+        )
+        .join('');
+    } else {
+      tableBody.innerHTML =
+        '<tr><td colspan="5" class="text-center py-4 text-muted">No items found with this tag</td></tr>';
+    }
+  } catch (error) {
+    console.error('Error fetching tagged items:', error);
+    tableBody.innerHTML =
+      '<tr><td colspan="5" class="text-center py-4 text-danger">Error loading items</td></tr>';
+  }
+};
+
+// Function to view item by ID (called from tag modal)
+window.viewItemById = async function (itemId) {
+  // Close tag modal first
+  const tagModal = document.getElementById('tagItemsModal');
+  const modalInstance = bootstrap.Modal.getInstance(tagModal);
+  if (modalInstance) {
+    modalInstance.hide();
+  }
+
+  // Need to get the item from inventory data and open view modal
+  // Find inventory component and call viewItem
+  const inventoryEl = document.querySelector('[x-data*="inventoryTable"]');
+  if (inventoryEl && inventoryEl.__x) {
+    const items = inventoryEl.__x.$data.items;
+    const item = items.find((i) => i.id == itemId);
+    if (item) {
+      inventoryEl.__x.$data.viewItem(item);
+    }
+  }
+};
 
 // Export the app instance for module imports
 export default app;
