@@ -39,7 +39,7 @@ async function processTemplate(templateFile, pageData) {
     // Extract page variables (title, page)
     const variables = {};
     const varMatches = pageContent.match(/<% const (\w+) = '([^']+)'; %>/g) || [];
-    varMatches.forEach(match => {
+    varMatches.forEach((match) => {
       const [, key, value] = match.match(/<% const (\w+) = '([^']+)'; %>/);
       variables[key] = value;
     });
@@ -48,11 +48,15 @@ async function processTemplate(templateFile, pageData) {
     const cleanContent = pageContent.replace(/<% const .* %>\n?/g, '').trim();
 
     // Process the page content through EJS to handle includes
-    const processedContent = ejs.render(cleanContent, {}, {
-      filename: pagePath,
-      rmWhitespace: false,
-      views: [COMPONENTS_DIR],
-    });
+    const processedContent = ejs.render(
+      cleanContent,
+      {},
+      {
+        filename: pagePath,
+        rmWhitespace: false,
+        views: [COMPONENTS_DIR],
+      }
+    );
     variables.content = processedContent;
 
     // Render the template
@@ -84,7 +88,6 @@ async function main() {
       processTemplate('retailers.ejs', { title: 'Retailers', page: 'retailers' }),
       processTemplate('settings.ejs', { title: 'Settings', page: 'settings' }),
       processTemplate('data-management.ejs', { title: 'Data & Backup', page: 'data-management' }),
-      processTemplate('asset.ejs', { title: 'Asset Viewer', page: 'asset' }),
     ]);
 
     console.log('\n✅ All EJS templates processed successfully!');

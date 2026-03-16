@@ -29,21 +29,38 @@ export function registerInventoryComponent() {
       link: false,
       taxDeductible: false,
       tags: false,
-      notes: false
+      notes: false,
     },
     showColumnSelector: false,
 
     // Statistics
     stats: {
       total: 0,
-      totalSpending: 0
+      totalSpending: 0,
     },
 
     async init() {
       // Initialize showColumnSelector to false
       this.showColumnSelector = false;
-      
+
+      // Make shareItem available globally for use from view modal
+      window.shareItemFromInventory = (item) => this.shareItem(item);
+
       await this.loadInventoryData();
+
+      // Check if there's a view parameter in the URL (for shareable links)
+      const urlParams = new URLSearchParams(window.location.search);
+      const viewId = urlParams.get('view');
+      if (viewId) {
+        const itemToView = this.items.find((item) => item.id == viewId);
+        if (itemToView) {
+          // Open the view modal for the shared item
+          this.viewItem(itemToView);
+          // Clean up the URL to remove the parameter
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      }
+
       this.filterInventory();
       this.calculateStats();
       this.updatePagination();
@@ -60,7 +77,11 @@ export function registerInventoryComponent() {
             if (modalContent && modalContent.__x) {
               const alpineData = modalContent.__x.$data;
               // Check if it's being opened from the "New Purchase" button
-              if (e.relatedTarget && e.relatedTarget.classList.contains('btn-primary') && e.relatedTarget.textContent.includes('New Purchase')) {
+              if (
+                e.relatedTarget &&
+                e.relatedTarget.classList.contains('btn-primary') &&
+                e.relatedTarget.textContent.includes('New Purchase')
+              ) {
                 alpineData.resetForm();
               }
               // If edit mode is set, keep it; otherwise reset to add mode
@@ -84,9 +105,9 @@ export function registerInventoryComponent() {
       window.addEventListener('settingsChanged', async (e) => {
         console.log('Settings changed, refreshing inventory displays...');
         // Re-process items to apply new date format
-        this.items = this.items.map(item => ({
+        this.items = this.items.map((item) => ({
           ...item,
-          purchaseDate: window.formatDate(item.rawPurchaseDate || item.purchase_date)
+          purchaseDate: window.formatDate(item.rawPurchaseDate || item.purchase_date),
         }));
         this.filterInventory();
         this.updatePagination();
@@ -114,13 +135,17 @@ export function registerInventoryComponent() {
       // Close the column selector when clicking outside
       document.addEventListener('click', (event) => {
         const columnSelectorButton = document.getElementById('columnSelectorDropdown');
-        const columnSelectorMenu = document.querySelector('[aria-labelledby="columnSelectorDropdown"]');
-        
-        if (this.showColumnSelector && 
-            columnSelectorButton && 
-            columnSelectorMenu &&
-            !columnSelectorButton.contains(event.target) && 
-            !columnSelectorMenu.contains(event.target)) {
+        const columnSelectorMenu = document.querySelector(
+          '[aria-labelledby="columnSelectorDropdown"]'
+        );
+
+        if (
+          this.showColumnSelector &&
+          columnSelectorButton &&
+          columnSelectorMenu &&
+          !columnSelectorButton.contains(event.target) &&
+          !columnSelectorMenu.contains(event.target)
+        ) {
           this.showColumnSelector = false;
         }
       });
@@ -152,12 +177,12 @@ export function registerInventoryComponent() {
 
         // Transform API response to match expected format
         // Dates come as YYYY-MM-DD strings, parse them without timezone conversion
-        this.items = data.items.map(item => {
+        this.items = data.items.map((item) => {
           // Parse date strings directly without creating Date objects to avoid timezone issues
           const purchaseDateStr = item.purchase_date;
           const warrantyExpiryStr = item.warranty?.warranty_end || item.warranty_expiry;
           const returnDeadlineStr = item.return_deadline;
-          
+
           return {
             id: item.id,
             name: item.product_name,
@@ -180,7 +205,7 @@ export function registerInventoryComponent() {
             link: item.link || '',
             returnDeadline: returnDeadlineStr || '',
             returnPolicy: item.return_policy || '',
-            tags: item.tags || ''
+            tags: item.tags || '',
           };
         });
 
@@ -217,7 +242,7 @@ export function registerInventoryComponent() {
         { name: 'Google Pixel 8 Pro', brand: 'Google', price: 999 },
         { name: 'Nintendo Switch OLED', brand: 'Nintendo', price: 349 },
         { name: 'Canon EOS R5', brand: 'Canon', price: 3899 },
-        { name: 'DJI Mini 3 Pro', brand: 'DJI', price: 369 }
+        { name: 'DJI Mini 3 Pro', brand: 'DJI', price: 369 },
       ];
 
       // Generate random dates between Jul 2024 and Jan 2025
@@ -248,7 +273,7 @@ export function registerInventoryComponent() {
           link: '',
           returnDeadline: '',
           returnPolicy: '',
-          tags: ''
+          tags: '',
         };
       });
     },
@@ -258,10 +283,11 @@ export function registerInventoryComponent() {
       if (tableContainer) {
         // Remove any existing loader first
         this.hideLoadingState();
-        
+
         const loader = document.createElement('div');
         loader.className = 'position-absolute top-50 start-50 translate-middle inventory-loader';
-        loader.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
+        loader.innerHTML =
+          '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
         loader.style.zIndex = '10';
         loader.style.backgroundColor = 'rgba(255, 255, 255, 0.7)';
         loader.style.padding = '20px';
@@ -286,7 +312,8 @@ export function registerInventoryComponent() {
       if (tableContainer) {
         const errorDiv = document.createElement('div');
         errorDiv.className = 'alert alert-danger';
-        errorDiv.innerHTML = '<strong>Error:</strong> Failed to load inventory data. Please check your connection and try again.';
+        errorDiv.innerHTML =
+          '<strong>Error:</strong> Failed to load inventory data. Please check your connection and try again.';
         tableContainer.parentNode.insertBefore(errorDiv, tableContainer);
       }
     },
@@ -297,8 +324,9 @@ export function registerInventoryComponent() {
     },
 
     filterInventory() {
-      this.filteredItems = this.items.filter(item => {
-        const matchesSearch = !this.searchQuery ||
+      this.filteredItems = this.items.filter((item) => {
+        const matchesSearch =
+          !this.searchQuery ||
           item.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
           item.brand.toLowerCase().includes(this.searchQuery.toLowerCase());
 
@@ -319,7 +347,7 @@ export function registerInventoryComponent() {
       // The purchaseDate is in format like "Jan 30, 2026", so we need to parse it
       // But we have purchaseDateISO which is in YYYY-MM-DD format, which is easier to work with
       const purchaseDateStr = item.purchaseDateISO || item.purchaseDate;
-      
+
       if (!purchaseDateStr) return true; // If no date, include the item
 
       // Try to parse the date - it might be in different formats
@@ -351,23 +379,25 @@ export function registerInventoryComponent() {
           const diff = today.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
           startOfWeek.setDate(diff);
           startOfWeek.setHours(0, 0, 0, 0);
-          
+
           return itemDate >= startOfWeek && itemDate <= today;
         case 'month':
-          return itemDate.getMonth() === today.getMonth() && 
-                 itemDate.getFullYear() === today.getFullYear();
+          return (
+            itemDate.getMonth() === today.getMonth() &&
+            itemDate.getFullYear() === today.getFullYear()
+          );
         case 'year':
           return itemDate.getFullYear() === today.getFullYear();
         case 'custom':
           // For custom date range, check if startDate and endDate are set
           if (!this.startDate || !this.endDate) return true; // If dates not set, show all
-          
+
           // Parse the custom date range
           const startRange = new Date(this.startDate);
           const endRange = new Date(this.endDate);
           startRange.setHours(0, 0, 0, 0);
           endRange.setHours(23, 59, 59, 999); // End of the day
-          
+
           return itemDate >= startRange && itemDate <= endRange;
         default:
           return true; // No filter applied
@@ -452,87 +482,137 @@ export function registerInventoryComponent() {
 
     toggleAll(checked) {
       if (checked) {
-        this.selectedItems = this.paginatedItems.map(item => item.id);
+        this.selectedItems = this.paginatedItems.map((item) => item.id);
       } else {
         this.selectedItems = [];
       }
     },
 
     shareItem(item) {
-      // Generate shareable link using the asset ID
-      const baseUrl = window.location.origin;
-      const shareLink = `${baseUrl}/asset/${item.id}`;
+      const baseUrl = window.location.origin + window.location.pathname;
+      const shareLink = `${baseUrl}?view=${item.id}`;
 
-      // Copy to clipboard with fallback for non-HTTPS contexts
+      const tryCopy = () => {
+        const textarea = document.createElement('textarea');
+        textarea.value = shareLink;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        textarea.setSelectionRange(0, shareLink.length);
+
+        const copied = document.execCommand('copy');
+        document.body.removeChild(textarea);
+        return copied;
+      };
+
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(shareLink).then(() => {
-          this.showShareSuccess(shareLink);
-        }).catch((err) => {
-          console.error('Failed to copy link:', err);
-          this.fallbackCopy(shareLink);
-        });
+        navigator.clipboard
+          .writeText(shareLink)
+          .then(() => {
+            // Verify it actually got copied by reading back
+            navigator.clipboard
+              .readText()
+              .then((copiedText) => {
+                if (copiedText === shareLink) {
+                  this.showShareSuccess();
+                } else {
+                  // Clipboard API didn't work, try fallback
+                  if (tryCopy()) {
+                    this.showShareSuccess();
+                  } else {
+                    this.showCopyError(shareLink);
+                  }
+                }
+              })
+              .catch(() => {
+                // readText failed, try fallback
+                if (tryCopy()) {
+                  this.showShareSuccess();
+                } else {
+                  this.showCopyError(shareLink);
+                }
+              });
+          })
+          .catch((err) => {
+            console.error('Failed to copy link:', err);
+            if (tryCopy()) {
+              this.showShareSuccess();
+            } else {
+              this.showCopyError(shareLink);
+            }
+          });
       } else {
-        // Fallback for non-secure contexts (clipboard API requires HTTPS or localhost)
-        this.fallbackCopy(shareLink);
+        if (tryCopy()) {
+          this.showShareSuccess();
+        } else {
+          this.showCopyError(shareLink);
+        }
       }
     },
 
-    showShareSuccess(link) {
+    showShareSuccess() {
       if (window.AdminApp && window.AdminApp.notificationManager) {
         window.AdminApp.notificationManager.success('Share link copied to clipboard!');
       } else {
-        alert('Share link copied to clipboard!\n\n' + link);
+        alert('Share link copied to clipboard!');
       }
     },
 
-    fallbackCopy(link) {
-      // Create temporary textarea to copy text
-      const textarea = document.createElement('textarea');
-      textarea.value = link;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
-      document.body.appendChild(textarea);
-      textarea.select();
-      try {
-        document.execCommand('copy');
-        this.showShareSuccess(link);
-      } catch (err) {
-        console.error('Fallback copy failed:', err);
-        prompt('Copy this link to share:', link);
+    showCopyError(link) {
+      if (window.AdminApp && window.AdminApp.notificationManager) {
+        window.AdminApp.notificationManager.error('Could not copy. Please copy manually: ' + link);
+      } else {
+        alert('Could not copy. Link: ' + link);
       }
-      document.body.removeChild(textarea);
     },
 
     viewItem(item) {
       // Get the freshest item data
-      const freshItem = this.items.find(i => i.id === item.id) || item;
+      const freshItem = this.items.find((i) => i.id === item.id) || item;
 
       // Prepare the detailed item object with all fields
       // Only set defaults for undefined/null values, preserve actual values like 'N/A'
       const detailedItem = {
         productName: freshItem.name,
-        retailer: typeof freshItem.retailer === 'object' ? freshItem.retailer.name : (freshItem.retailer !== undefined ? freshItem.retailer : undefined),
-        brand: typeof freshItem.brand === 'object' ? freshItem.brand.name : (freshItem.brand !== undefined ? freshItem.brand : undefined),
+        retailer:
+          typeof freshItem.retailer === 'object'
+            ? freshItem.retailer.name
+            : freshItem.retailer !== undefined
+              ? freshItem.retailer
+              : undefined,
+        brand:
+          typeof freshItem.brand === 'object'
+            ? freshItem.brand.name
+            : freshItem.brand !== undefined
+              ? freshItem.brand
+              : undefined,
         modelNumber: freshItem.modelNumber !== undefined ? freshItem.modelNumber : undefined,
         serialNumber: freshItem.serialNumber !== undefined ? freshItem.serialNumber : undefined,
-        retailerOrderNumber: freshItem.retailerOrderNumber !== undefined ? freshItem.retailerOrderNumber : undefined,
+        retailerOrderNumber:
+          freshItem.retailerOrderNumber !== undefined ? freshItem.retailerOrderNumber : undefined,
         purchaseDate: freshItem.purchaseDateISO || freshItem.purchaseDate,
         price: freshItem.price,
         quantity: freshItem.quantity || 1,
         link: freshItem.link !== undefined ? freshItem.link : undefined,
-        warrantyExpiry: freshItem.warrantyExpiry !== undefined ? freshItem.warrantyExpiry : undefined,
-        returnDeadline: freshItem.returnDeadline !== undefined ? freshItem.returnDeadline : undefined,
+        warrantyExpiry:
+          freshItem.warrantyExpiry !== undefined ? freshItem.warrantyExpiry : undefined,
+        returnDeadline:
+          freshItem.returnDeadline !== undefined ? freshItem.returnDeadline : undefined,
         returnPolicy: freshItem.returnPolicy !== undefined ? freshItem.returnPolicy : undefined,
         taxDeductible: freshItem.taxDeductible !== undefined ? freshItem.taxDeductible : undefined,
         tags: freshItem.tags !== undefined ? freshItem.tags : undefined,
         notes: freshItem.notes !== undefined ? freshItem.notes : undefined,
-        id: freshItem.id
+        id: freshItem.id,
       };
 
       // Dispatch custom event to notify viewPurchaseDetails component to show modal with data
-      window.dispatchEvent(new CustomEvent('show-view-details', {
-        detail: { item: detailedItem }
-      }));
+      window.dispatchEvent(
+        new CustomEvent('show-view-details', {
+          detail: { item: detailedItem },
+        })
+      );
 
       // Show the view modal
       const viewDetailsModal = new Modal(document.getElementById('viewDetailsModal'));
@@ -541,7 +621,7 @@ export function registerInventoryComponent() {
 
     editItem(item) {
       // Get fresh data from this.items to ensure we have the latest values
-      const freshItem = this.items.find(i => i.id === item.id) || item;
+      const freshItem = this.items.find((i) => i.id === item.id) || item;
       console.log('Edit item - fresh item:', freshItem);
       console.log('Edit item - modelNumber:', freshItem.modelNumber);
       console.log('Edit item - serialNumber:', freshItem.serialNumber);
@@ -550,28 +630,43 @@ export function registerInventoryComponent() {
       // Use purchaseDateISO for the date input (YYYY-MM-DD format)
       const detailedItem = {
         productName: freshItem.name,
-        retailer: typeof freshItem.retailer === 'object' ? freshItem.retailer.name : (freshItem.retailer !== undefined ? freshItem.retailer : undefined),
-        brand: typeof freshItem.brand === 'object' ? freshItem.brand.name : (freshItem.brand !== undefined ? freshItem.brand : undefined),
+        retailer:
+          typeof freshItem.retailer === 'object'
+            ? freshItem.retailer.name
+            : freshItem.retailer !== undefined
+              ? freshItem.retailer
+              : undefined,
+        brand:
+          typeof freshItem.brand === 'object'
+            ? freshItem.brand.name
+            : freshItem.brand !== undefined
+              ? freshItem.brand
+              : undefined,
         modelNumber: freshItem.modelNumber !== undefined ? freshItem.modelNumber : undefined,
         serialNumber: freshItem.serialNumber !== undefined ? freshItem.serialNumber : undefined,
-        retailerOrderNumber: freshItem.retailerOrderNumber !== undefined ? freshItem.retailerOrderNumber : undefined,
+        retailerOrderNumber:
+          freshItem.retailerOrderNumber !== undefined ? freshItem.retailerOrderNumber : undefined,
         purchaseDate: freshItem.purchaseDateISO || freshItem.purchaseDate,
         price: freshItem.price,
         quantity: freshItem.quantity || 1,
         link: freshItem.link !== undefined ? freshItem.link : undefined,
-        warrantyExpiry: freshItem.warrantyExpiry !== undefined ? freshItem.warrantyExpiry : undefined,
-        returnDeadline: freshItem.returnDeadline !== undefined ? freshItem.returnDeadline : undefined,
+        warrantyExpiry:
+          freshItem.warrantyExpiry !== undefined ? freshItem.warrantyExpiry : undefined,
+        returnDeadline:
+          freshItem.returnDeadline !== undefined ? freshItem.returnDeadline : undefined,
         returnPolicy: freshItem.returnPolicy !== undefined ? freshItem.returnPolicy : undefined,
         taxDeductible: freshItem.taxDeductible !== undefined ? freshItem.taxDeductible : undefined,
         tags: freshItem.tags !== undefined ? freshItem.tags : undefined,
         notes: freshItem.notes !== undefined ? freshItem.notes : undefined,
-        id: freshItem.id
+        id: freshItem.id,
       };
 
       // Dispatch custom event to notify addPurchaseForm to enter edit mode
-      window.dispatchEvent(new CustomEvent('edit-purchase', { 
-        detail: { item: detailedItem }
-      }));
+      window.dispatchEvent(
+        new CustomEvent('edit-purchase', {
+          detail: { item: detailedItem },
+        })
+      );
 
       // Show the shared purchase modal
       const purchaseModalElement = document.getElementById('purchaseModal');
@@ -586,7 +681,7 @@ export function registerInventoryComponent() {
         try {
           const apiUrl = window.APP_CONFIG?.API_URL || '/api';
           const response = await fetch(`${apiUrl}/purchases/${item.id}/`, {
-            method: 'DELETE'
+            method: 'DELETE',
           });
 
           if (!response.ok) {
@@ -594,14 +689,16 @@ export function registerInventoryComponent() {
           }
 
           // Only remove from UI after successful deletion
-          this.items = this.items.filter(i => i.id !== item.id);
-          this.selectedItems = this.selectedItems.filter(id => id !== item.id);
+          this.items = this.items.filter((i) => i.id !== item.id);
+          this.selectedItems = this.selectedItems.filter((id) => id !== item.id);
           this.filterInventory();
           this.calculateStats();
 
           // Show success notification
           if (window.AdminApp && window.AdminApp.notificationManager) {
-            window.AdminApp.notificationManager.success(`"${item.product_name || item.name}" deleted successfully!`);
+            window.AdminApp.notificationManager.success(
+              `"${item.product_name || item.name}" deleted successfully!`
+            );
           }
 
           console.log('Item deleted from database:', item);
@@ -617,6 +714,6 @@ export function registerInventoryComponent() {
           }
         }
       }
-    }
+    },
   }));
 }

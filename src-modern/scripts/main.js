@@ -4,16 +4,7 @@
 // ==========================================================================
 
 // Import Bootstrap 5 JavaScript components (only those actively used)
-import {
-  Collapse,
-  Dropdown,
-  Modal,
-  Offcanvas,
-  Popover,
-  Tab,
-  Toast,
-  Tooltip,
-} from 'bootstrap';
+import { Collapse, Dropdown, Modal, Offcanvas, Popover, Tab, Toast, Tooltip } from 'bootstrap';
 
 // Import our custom modules
 import { ThemeManager } from './utils/theme-manager.js';
@@ -39,7 +30,7 @@ import { registerRetailersComponent } from './components/retailers.js';
 // ==========================================================================
 
 // Global function for dashboard cards visibility
-window.dashboardCards = function() {
+window.dashboardCards = function () {
   return {
     cardVisibility: {
       totalAssetsValue: true,
@@ -47,9 +38,9 @@ window.dashboardCards = function() {
       avgPrice: true,
       pendingWarranties: true,
       taxDeductible: true,
-      expiredWarranties: true
+      expiredWarranties: true,
     },
-    
+
     initCardVisibility() {
       // Load card visibility settings from localStorage
       const savedSettings = localStorage.getItem('appSettings');
@@ -63,14 +54,14 @@ window.dashboardCards = function() {
           console.warn('Failed to load card visibility settings:', error);
         }
       }
-      
+
       // Listen for settings changes from other components
       window.addEventListener('settingsChanged', (e) => {
         if (e.detail && e.detail.cardVisibility) {
           this.cardVisibility = { ...this.cardVisibility, ...e.detail.cardVisibility };
         }
       });
-      
+
       // Listen for storage changes (when settings are updated in another tab)
       window.addEventListener('storage', (e) => {
         if (e.key === 'appSettings') {
@@ -84,7 +75,7 @@ window.dashboardCards = function() {
           }
         }
       });
-    }
+    },
   };
 };
 
@@ -94,15 +85,15 @@ window.dashboardCards = function() {
 
 // Currency symbols mapping
 const CURRENCY_SYMBOLS = {
-  'USD': '$',
-  'EUR': '€',
-  'GBP': '£',
-  'JPY': '¥',
-  'CAD': 'C$',
-  'AUD': 'A$',
-  'CHF': 'CHF',
-  'CNY': '¥',
-  'INR': '₹'
+  USD: '$',
+  EUR: '€',
+  GBP: '£',
+  JPY: '¥',
+  CAD: 'C$',
+  AUD: 'A$',
+  CHF: 'CHF',
+  CNY: '¥',
+  INR: '₹',
 };
 
 // Cached settings from API
@@ -116,7 +107,7 @@ async function fetchSettingsFromAPI() {
     if (response.ok) {
       const apiSettings = await response.json();
       cachedSettings = apiSettings;
-      
+
       // Merge with existing localStorage settings
       const savedSettings = localStorage.getItem('appSettings');
       let existing = {};
@@ -127,14 +118,14 @@ async function fetchSettingsFromAPI() {
           // ignore
         }
       }
-      
+
       // Update with API values (API is source of truth for these)
       const merged = {
         ...existing,
         currencyCode: apiSettings.currency_code || existing.currencyCode || 'USD',
-        dateFormat: apiSettings.date_format || existing.dateFormat || 'MM/DD/YYYY'
+        dateFormat: apiSettings.date_format || existing.dateFormat || 'MM/DD/YYYY',
       };
-      
+
       localStorage.setItem('appSettings', JSON.stringify(merged));
       console.log('Synced settings from API:', apiSettings);
       return apiSettings;
@@ -151,7 +142,7 @@ function getCurrencyCode() {
   if (cachedSettings) {
     return cachedSettings.currency_code || 'USD';
   }
-  
+
   // Fallback to localStorage
   const savedSettings = localStorage.getItem('appSettings');
   if (savedSettings) {
@@ -229,7 +220,7 @@ function getDateFormatPlaceholder() {
 // formatStyle: 'auto' = use user preference | 'short' = "Jan 30, 2026" | 'numeric' = user numeric format
 function formatDate(dateInput, formatStyle = 'auto') {
   if (!dateInput) return '';
-  
+
   // Parse input to Date object
   let date;
   if (dateInput instanceof Date) {
@@ -245,23 +236,23 @@ function formatDate(dateInput, formatStyle = 'auto') {
   } else {
     return '';
   }
-  
+
   if (isNaN(date.getTime())) return '';
-  
+
   // Get user preference
   const dateFormat = getDateFormat();
-  
+
   // If user prefers short format, or formatStyle is 'short'
   if (dateFormat === 'short' || formatStyle === 'short') {
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   }
-  
+
   // Format per user preference
   const day = String(date.getDate()).padStart(2, '0');
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const year = date.getFullYear();
   const yearShort = String(year).slice(-2);
-  
+
   switch (dateFormat) {
     case 'DD/MM/YYYY':
       return `${day}/${month}/${year}`;
@@ -300,7 +291,7 @@ class AdminApp {
     try {
       // Wait for DOM to be ready
       if (document.readyState === 'loading') {
-        await new Promise(resolve => {
+        await new Promise((resolve) => {
           document.addEventListener('DOMContentLoaded', resolve);
         });
       }
@@ -316,8 +307,18 @@ class AdminApp {
 
       // Preload common icons for better performance
       this.iconManager.preloadIcons([
-        'dashboard', 'purchases', 'analytics', 'settings', 'notifications',
-        'search', 'menu', 'check', 'warning', 'info', 'success', 'error'
+        'dashboard',
+        'purchases',
+        'analytics',
+        'settings',
+        'notifications',
+        'search',
+        'menu',
+        'check',
+        'warning',
+        'info',
+        'success',
+        'error',
       ]);
 
       // Initialize Bootstrap components
@@ -328,7 +329,7 @@ class AdminApp {
 
       // Setup global event listeners
       this.setupEventListeners();
-      
+
       // Initialize navigation
       this.initNavigation();
 
@@ -347,7 +348,6 @@ class AdminApp {
 
       // Hide loading screen with fade out animation
       this.hideLoadingScreen();
-
     } catch (error) {
       console.error('❌ Failed to initialize Admin App:', error);
     }
@@ -356,32 +356,32 @@ class AdminApp {
   // Initialize Bootstrap components
   initBootstrapComponents() {
     // Initialize dropdowns
-    document.querySelectorAll('[data-bs-toggle="dropdown"]').forEach(element => {
+    document.querySelectorAll('[data-bs-toggle="dropdown"]').forEach((element) => {
       new Dropdown(element);
     });
 
     // Initialize modals
-    document.querySelectorAll('.modal').forEach(element => {
+    document.querySelectorAll('.modal').forEach((element) => {
       new Modal(element);
     });
 
     // Initialize offcanvas
-    document.querySelectorAll('.offcanvas').forEach(element => {
+    document.querySelectorAll('.offcanvas').forEach((element) => {
       new Offcanvas(element);
     });
 
     // Initialize collapse elements
-    document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(element => {
+    document.querySelectorAll('[data-bs-toggle="collapse"]').forEach((element) => {
       new Collapse(element);
     });
 
     // Initialize tabs
-    document.querySelectorAll('[data-bs-toggle="tab"]').forEach(element => {
+    document.querySelectorAll('[data-bs-toggle="tab"]').forEach((element) => {
       new Tab(element);
     });
 
     // Initialize toasts
-    document.querySelectorAll('.toast').forEach(element => {
+    document.querySelectorAll('.toast').forEach((element) => {
       new Toast(element);
     });
   }
@@ -389,12 +389,12 @@ class AdminApp {
   // Initialize tooltips and popovers
   initTooltipsAndPopovers() {
     // Initialize tooltips
-    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(element => {
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((element) => {
       new Tooltip(element);
     });
 
     // Initialize popovers
-    document.querySelectorAll('[data-bs-toggle="popover"]').forEach(element => {
+    document.querySelectorAll('[data-bs-toggle="popover"]').forEach((element) => {
       new Popover(element);
     });
   }
@@ -520,7 +520,7 @@ class AdminApp {
 
     // Restore submenu states from localStorage
     const submenuToggles = document.querySelectorAll('[data-bs-toggle="collapse"]');
-    submenuToggles.forEach(toggle => {
+    submenuToggles.forEach((toggle) => {
       const targetId = toggle.getAttribute('data-bs-target');
       const savedState = localStorage.getItem(`submenu-${targetId}`);
 
@@ -543,8 +543,18 @@ class AdminApp {
       selectedIndex: 0,
 
       commands: [
-        { name: 'Add New Purchase', icon: 'bi-plus-circle', action: 'addPurchase', category: 'Purchase' },
-        { name: 'Go to Dashboard', icon: 'bi-house', action: 'goDashboard', category: 'Navigation' },
+        {
+          name: 'Add New Purchase',
+          icon: 'bi-plus-circle',
+          action: 'addPurchase',
+          category: 'Purchase',
+        },
+        {
+          name: 'Go to Dashboard',
+          icon: 'bi-house',
+          action: 'goDashboard',
+          category: 'Navigation',
+        },
         { name: 'Go to Inventory', icon: 'bi-box', action: 'goInventory', category: 'Navigation' },
         { name: 'Go to Settings', icon: 'bi-gear', action: 'goSettings', category: 'Navigation' },
         { name: 'Export Data', icon: 'bi-download', action: 'exportData', category: 'Data' },
@@ -553,9 +563,10 @@ class AdminApp {
 
       get filteredCommands() {
         if (!this.query) return this.commands;
-        return this.commands.filter(cmd =>
-          cmd.name.toLowerCase().includes(this.query.toLowerCase()) ||
-          cmd.category.toLowerCase().includes(this.query.toLowerCase())
+        return this.commands.filter(
+          (cmd) =>
+            cmd.name.toLowerCase().includes(this.query.toLowerCase()) ||
+            cmd.category.toLowerCase().includes(this.query.toLowerCase())
         );
       },
 
@@ -620,7 +631,8 @@ class AdminApp {
           this.selectedIndex = (this.selectedIndex + 1) % this.filteredCommands.length;
           e.preventDefault();
         } else if (e.key === 'ArrowUp') {
-          this.selectedIndex = (this.selectedIndex - 1 + this.filteredCommands.length) % this.filteredCommands.length;
+          this.selectedIndex =
+            (this.selectedIndex - 1 + this.filteredCommands.length) % this.filteredCommands.length;
           e.preventDefault();
         } else if (e.key === 'Enter') {
           if (this.filteredCommands[this.selectedIndex]) {
@@ -628,32 +640,32 @@ class AdminApp {
           }
           e.preventDefault();
         }
-      }
+      },
     }));
 
     Alpine.data('statsCounter', (initialValue = 0, increment = 1) => ({
       value: initialValue,
-      
+
       init() {
         // Auto-increment every 5 seconds
         setInterval(() => {
           this.value += Math.floor(Math.random() * increment) + 1;
         }, 5000);
-      }
+      },
     }));
 
     Alpine.data('themeSwitch', () => ({
       currentTheme: 'light',
-      
+
       init() {
         this.currentTheme = localStorage.getItem('theme') || 'light';
       },
-      
+
       toggle() {
         this.currentTheme = this.currentTheme === 'light' ? 'dark' : 'light';
         document.documentElement.setAttribute('data-bs-theme', this.currentTheme);
         localStorage.setItem('theme', this.currentTheme);
-      }
+      },
     }));
 
     Alpine.data('iconDemo', () => ({
@@ -667,7 +679,7 @@ class AdminApp {
 
       getIcon(iconName) {
         return iconManager.get(iconName);
-      }
+      },
     }));
 
     // Quick Add Form for Dashboard (kept for backward compatibility)
@@ -710,7 +722,7 @@ class AdminApp {
           priority: this.itemType === 'task' ? this.priority : null,
           dateTime: ['event', 'reminder'].includes(this.itemType) ? this.dateTime : null,
           assignee: this.itemType === 'task' ? this.assignee : null,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
         };
 
         // In a real app, this would send to an API
@@ -721,7 +733,7 @@ class AdminApp {
           task: 'Task',
           note: 'Note',
           event: 'Event',
-          reminder: 'Reminder'
+          reminder: 'Reminder',
         };
 
         window.AdminApp.notificationManager.success(
@@ -730,7 +742,7 @@ class AdminApp {
 
         // Reset form for next use
         this.resetForm();
-      }
+      },
     }));
 
     // Add Purchase Form for Dashboard
@@ -751,27 +763,29 @@ class AdminApp {
         returnPolicy: '',
         taxDeductible: false,
         tags: '',
-        notes: ''
+        notes: '',
       },
       // Tag input functionality
       tagsArray: [],
       currentTagInput: '',
       isEditMode: false,
-      isViewMode: false,  // Added missing property
+      isViewMode: false, // Added missing property
       editingItemId: null,
       retailers: [],
       brands: [],
-      
+
       // Initialize files arrays with defaults to prevent undefined errors
       uploadedFiles: [],
       tempFiles: [],
       pendingFiles: [],
       filesToDelete: [],
-      
+
       // Reactive date format example - updates when settings change
       dateFormatExample: window.getDateFormatExample ? window.getDateFormatExample() : 'YYYY-MM-DD',
       // Reactive date format placeholder for HTML5 date inputs
-      dateFormatPlaceholder: window.getDateFormatPlaceholder ? window.getDateFormatPlaceholder() : 'MM/DD/YYYY',
+      dateFormatPlaceholder: window.getDateFormatPlaceholder
+        ? window.getDateFormatPlaceholder()
+        : 'MM/DD/YYYY',
 
       init() {
         this.resetForm();
@@ -812,12 +826,15 @@ class AdminApp {
         window.addEventListener('settingsChanged', (e) => {
           console.log('Settings changed, updating date format placeholder and pickers...');
           // Update reactive date format example
-          this.dateFormatExample = window.getDateFormatExample ? window.getDateFormatExample() : 'YYYY-MM-DD';
+          this.dateFormatExample = window.getDateFormatExample
+            ? window.getDateFormatExample()
+            : 'YYYY-MM-DD';
           // Update reactive date format placeholder
-          this.dateFormatPlaceholder = window.getDateFormatPlaceholder ? window.getDateFormatPlaceholder() : 'MM/DD/YYYY';
+          this.dateFormatPlaceholder = window.getDateFormatPlaceholder
+            ? window.getDateFormatPlaceholder()
+            : 'MM/DD/YYYY';
           // Re-initialize litepickers with new format
-          this.$nextTick(() => {
-          });
+          this.$nextTick(() => {});
         });
 
         // Listen for modal shown event to reset form when adding new purchase
@@ -831,8 +848,7 @@ class AdminApp {
               this.resetForm();
             }
             // Re-initialize litepickers after modal is shown
-            this.$nextTick(() => {
-              });
+            this.$nextTick(() => {});
           });
         }
 
@@ -854,13 +870,39 @@ class AdminApp {
           days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
           daysShort: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
           daysMin: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
-          months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-          monthsShort: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+          months: [
+            'January',
+            'February',
+            'March',
+            'April',
+            'May',
+            'June',
+            'July',
+            'August',
+            'September',
+            'October',
+            'November',
+            'December',
+          ],
+          monthsShort: [
+            'Jan',
+            'Feb',
+            'Mar',
+            'Apr',
+            'May',
+            'Jun',
+            'Jul',
+            'Aug',
+            'Sep',
+            'Oct',
+            'Nov',
+            'Dec',
+          ],
           today: 'Today',
           clear: 'Clear',
           dateFormat: airFormat,
           timeFormat: 'HH:mm',
-          firstDay: 0
+          firstDay: 0,
         };
 
         // Initialize Purchase Date picker
@@ -880,7 +922,8 @@ class AdminApp {
             if (!container) {
               container = document.createElement('div');
               container.id = 'purchaseDateContainer';
-              container.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1050; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); display: none;';
+              container.style.cssText =
+                'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1050; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); display: none;';
               document.body.appendChild(container);
             }
 
@@ -895,11 +938,10 @@ class AdminApp {
                   this.form.purchaseDate = this.formatDateForStorage(date);
                   container.style.display = 'none';
                   // Re-initialize warranty and return date pickers when purchase date changes
-                  this.$nextTick(() => {
-                          });
+                  this.$nextTick(() => {});
                 }
               },
-              buttons: ['clear', 'today']
+              buttons: ['clear', 'today'],
             });
 
             // Show picker on input click
@@ -938,7 +980,8 @@ class AdminApp {
           if (!warrantyContainer) {
             warrantyContainer = document.createElement('div');
             warrantyContainer.id = 'warrantyDateContainer';
-            warrantyContainer.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1050; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); display: none;';
+            warrantyContainer.style.cssText =
+              'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1050; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); display: none;';
             document.body.appendChild(warrantyContainer);
           }
 
@@ -955,7 +998,7 @@ class AdminApp {
                 warrantyContainer.style.display = 'none';
               }
             },
-            buttons: ['clear', 'today']
+            buttons: ['clear', 'today'],
           });
 
           // Show picker on input click
@@ -991,7 +1034,8 @@ class AdminApp {
           if (!returnContainer) {
             returnContainer = document.createElement('div');
             returnContainer.id = 'returnDateContainer';
-            returnContainer.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1050; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); display: none;';
+            returnContainer.style.cssText =
+              'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1050; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); display: none;';
             document.body.appendChild(returnContainer);
           }
 
@@ -1008,7 +1052,7 @@ class AdminApp {
                 returnContainer.style.display = 'none';
               }
             },
-            buttons: ['clear', 'today']
+            buttons: ['clear', 'today'],
           });
 
           // Show picker on input click
@@ -1026,7 +1070,6 @@ class AdminApp {
           });
         }
       },
-
 
       getAirDatepickerFormat(dateFormat) {
         // Air Datepicker format strings
@@ -1118,8 +1161,15 @@ class AdminApp {
       // Check if selected retailer is also a brand (using is_brand flag from API)
       get isBrandRetailer() {
         if (!this.form.retailer) return false;
-        const retailer = this.retailers.find(r => r.name === this.form.retailer);
-        console.log('Checking isBrandRetailer:', this.form.retailer, 'found:', retailer, 'is_brand:', retailer?.is_brand);
+        const retailer = this.retailers.find((r) => r.name === this.form.retailer);
+        console.log(
+          'Checking isBrandRetailer:',
+          this.form.retailer,
+          'found:',
+          retailer,
+          'is_brand:',
+          retailer?.is_brand
+        );
         return retailer && retailer.is_brand;
       },
 
@@ -1141,14 +1191,18 @@ class AdminApp {
         if (this.form.warrantyExpiry && this.form.warrantyExpiry < this.form.purchaseDate) {
           // Clear the warranty expiry date since it's invalid
           this.form.warrantyExpiry = '';
-          window.AdminApp.notificationManager.warning('Warranty expiry date was cleared because it was before the new purchase date');
+          window.AdminApp.notificationManager.warning(
+            'Warranty expiry date was cleared because it was before the new purchase date'
+          );
         }
 
         // Check if return deadline is before the new purchase date
         if (this.form.returnDeadline && this.form.returnDeadline < this.form.purchaseDate) {
           // Clear the return deadline since it's invalid
           this.form.returnDeadline = '';
-          window.AdminApp.notificationManager.warning('Return deadline was cleared because it was before the new purchase date');
+          window.AdminApp.notificationManager.warning(
+            'Return deadline was cleared because it was before the new purchase date'
+          );
         }
       },
 
@@ -1223,7 +1277,7 @@ class AdminApp {
           returnPolicy: '',
           taxDeductible: false,
           tags: '',
-          notes: ''
+          notes: '',
         };
         this.warrantyExpiryEnabled = false;
         this.returnDeadlineEnabled = false;
@@ -1247,14 +1301,14 @@ class AdminApp {
             this.tagsArray.push(newTag);
           }
           this.currentTagInput = '';
-          
+
           // Update the form tags field to be a comma-separated string
           this.updateTagsField();
         }
       },
 
       removeTag(tagToRemove) {
-        this.tagsArray = this.tagsArray.filter(tag => tag !== tagToRemove);
+        this.tagsArray = this.tagsArray.filter((tag) => tag !== tagToRemove);
         this.updateTagsField();
       },
 
@@ -1267,9 +1321,10 @@ class AdminApp {
       initTagsFromForm() {
         if (this.form.tags) {
           // Split the tags string by commas and trim whitespace
-          this.tagsArray = this.form.tags.split(',')
-            .map(tag => tag.trim())
-            .filter(tag => tag !== '');
+          this.tagsArray = this.form.tags
+            .split(',')
+            .map((tag) => tag.trim())
+            .filter((tag) => tag !== '');
         } else {
           this.tagsArray = [];
         }
@@ -1303,13 +1358,17 @@ class AdminApp {
 
         // Validate warranty date is not before purchase date
         if (this.form.warrantyExpiry && this.form.warrantyExpiry < this.form.purchaseDate) {
-          window.AdminApp.notificationManager.warning('Warranty expiry date cannot be before purchase date');
+          window.AdminApp.notificationManager.warning(
+            'Warranty expiry date cannot be before purchase date'
+          );
           return;
         }
 
         // Validate return deadline is not before purchase date
         if (this.form.returnDeadline && this.form.returnDeadline < this.form.purchaseDate) {
-          window.AdminApp.notificationManager.warning('Return deadline cannot be before purchase date');
+          window.AdminApp.notificationManager.warning(
+            'Return deadline cannot be before purchase date'
+          );
           return;
         }
 
@@ -1330,7 +1389,7 @@ class AdminApp {
           taxDeductible: this.form.taxDeductible,
           tags: this.form.tags,
           notes: this.form.notes,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
         };
 
         console.log('New purchase created:', purchase);
@@ -1341,14 +1400,16 @@ class AdminApp {
 
       async getOrCreateRetailer(apiUrl, retailerName) {
         // Check if retailer exists
-        let retailer = this.retailers.find(r => r.name.toLowerCase() === retailerName.toLowerCase());
+        let retailer = this.retailers.find(
+          (r) => r.name.toLowerCase() === retailerName.toLowerCase()
+        );
         if (retailer) return retailer.id;
-        
+
         // Create new retailer
         const response = await fetch(`${apiUrl}/retailers/`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: retailerName, url: '' })
+          body: JSON.stringify({ name: retailerName, url: '' }),
         });
         if (!response.ok) throw new Error('Failed to create retailer');
         const newRetailer = await response.json();
@@ -1358,14 +1419,14 @@ class AdminApp {
 
       async getOrCreateBrand(apiUrl, brandName) {
         // Check if brand exists
-        let brand = this.brands.find(b => b.name.toLowerCase() === brandName.toLowerCase());
+        let brand = this.brands.find((b) => b.name.toLowerCase() === brandName.toLowerCase());
         if (brand) return brand.id;
-        
+
         // Create new brand
         const response = await fetch(`${apiUrl}/brands/`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: brandName, url: '' })
+          body: JSON.stringify({ name: brandName, url: '' }),
         });
         if (!response.ok) throw new Error('Failed to create brand');
         const newBrand = await response.json();
@@ -1376,13 +1437,17 @@ class AdminApp {
       async submitPurchaseToAPI(purchase) {
         try {
           const apiUrl = window.APP_CONFIG?.API_URL || '/api';
-          
+
           // Validate purchase date is not in the future
           const today = new Date();
           today.setHours(0, 0, 0, 0);
           // Ensure purchaseDate is in the correct format (YYYY-MM-DD)
           let purchaseDateInput = purchase.purchaseDate;
-          if (purchaseDateInput && typeof purchaseDateInput === 'string' && purchaseDateInput.includes('/')) {
+          if (
+            purchaseDateInput &&
+            typeof purchaseDateInput === 'string' &&
+            purchaseDateInput.includes('/')
+          ) {
             // Convert MM/DD/YYYY to YYYY-MM-DD format if needed
             const dateParts = purchaseDateInput.split('/');
             if (dateParts.length === 3) {
@@ -1400,7 +1465,7 @@ class AdminApp {
           // Get or create retailer and brand IDs
           const retailerId = await this.getOrCreateRetailer(apiUrl, purchase.retailer);
           const brandId = await this.getOrCreateBrand(apiUrl, purchase.brand);
-          
+
           // Prepare the payload according to backend schema
           // Dates are sent as YYYY-MM-DD strings without time component
           const payload = {
@@ -1409,19 +1474,58 @@ class AdminApp {
             purchase_date: purchaseDateInput, // Use the properly formatted date
             retailer_id: retailerId,
             brand_id: brandId,
-            notes: (purchase.notes && purchase.notes !== 'N/A' && purchase.notes.trim() !== '') ? purchase.notes : null,
+            notes:
+              purchase.notes && purchase.notes !== 'N/A' && purchase.notes.trim() !== ''
+                ? purchase.notes
+                : null,
             tax_deductible: this.ensureBoolean(purchase.taxDeductible) ? 1 : 0,
-            warranty_expiry: (purchase.warrantyExpiry && purchase.warrantyExpiry !== 'N/A' && purchase.warrantyExpiry.trim() !== '') ? purchase.warrantyExpiry : null,
-            model_number: (purchase.modelNumber && purchase.modelNumber !== 'N/A' && purchase.modelNumber.trim() !== '') ? purchase.modelNumber : null,
-            serial_number: (purchase.serialNumber && purchase.serialNumber !== 'N/A' && purchase.serialNumber.trim() !== '') ? purchase.serialNumber : null,
-            retailer_order_number: (purchase.retailerOrderNumber && purchase.retailerOrderNumber !== 'N/A' && purchase.retailerOrderNumber.trim() !== '') ? purchase.retailerOrderNumber : null,
+            warranty_expiry:
+              purchase.warrantyExpiry &&
+              purchase.warrantyExpiry !== 'N/A' &&
+              purchase.warrantyExpiry.trim() !== ''
+                ? purchase.warrantyExpiry
+                : null,
+            model_number:
+              purchase.modelNumber &&
+              purchase.modelNumber !== 'N/A' &&
+              purchase.modelNumber.trim() !== ''
+                ? purchase.modelNumber
+                : null,
+            serial_number:
+              purchase.serialNumber &&
+              purchase.serialNumber !== 'N/A' &&
+              purchase.serialNumber.trim() !== ''
+                ? purchase.serialNumber
+                : null,
+            retailer_order_number:
+              purchase.retailerOrderNumber &&
+              purchase.retailerOrderNumber !== 'N/A' &&
+              purchase.retailerOrderNumber.trim() !== ''
+                ? purchase.retailerOrderNumber
+                : null,
             quantity: parseInt(purchase.quantity) || 1,
-            link: (purchase.link && purchase.link !== 'N/A' && purchase.link.trim() !== '') ? purchase.link : null,
-            return_deadline: (purchase.returnDeadline && purchase.returnDeadline !== 'N/A' && purchase.returnDeadline.trim() !== '') ? purchase.returnDeadline : null,
-            return_policy: (purchase.returnPolicy && purchase.returnPolicy !== 'N/A' && purchase.returnPolicy.trim() !== '') ? purchase.returnPolicy : null,
-            tags: (purchase.tags && purchase.tags !== 'N/A' && purchase.tags.trim() !== '') ? purchase.tags : null
+            link:
+              purchase.link && purchase.link !== 'N/A' && purchase.link.trim() !== ''
+                ? purchase.link
+                : null,
+            return_deadline:
+              purchase.returnDeadline &&
+              purchase.returnDeadline !== 'N/A' &&
+              purchase.returnDeadline.trim() !== ''
+                ? purchase.returnDeadline
+                : null,
+            return_policy:
+              purchase.returnPolicy &&
+              purchase.returnPolicy !== 'N/A' &&
+              purchase.returnPolicy.trim() !== ''
+                ? purchase.returnPolicy
+                : null,
+            tags:
+              purchase.tags && purchase.tags !== 'N/A' && purchase.tags.trim() !== ''
+                ? purchase.tags
+                : null,
           };
-          
+
           console.log('Submitting purchase payload:', payload);
 
           const isUpdate = this.isEditMode && this.editingItemId;
@@ -1433,9 +1537,9 @@ class AdminApp {
           const response = await fetch(url, {
             method: method,
             headers: {
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',
             },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(payload),
           });
 
           if (!response.ok) {
@@ -1458,23 +1562,25 @@ class AdminApp {
             try {
               // Handle the case where errorData is an array of validation errors
               if (Array.isArray(errorData)) {
-                const validationErrors = errorData.map(err => {
-                  // Handle different possible structures of validation errors
-                  if (typeof err === 'string') return err;
-                  if (err.msg) return err.msg;
-                  if (err.detail) return err.detail;
-                  if (err.input) return err.input;
-                  if (err.loc && err.type) return `${err.loc.join('.')}: ${err.type}`;
-                  if (typeof err === 'object') {
-                    // Try to extract meaningful information from the error object
-                    const keys = Object.keys(err);
-                    if (keys.length > 0) {
-                      return keys.map(key => `${key}: ${JSON.stringify(err[key])}`).join(', ');
+                const validationErrors = errorData
+                  .map((err) => {
+                    // Handle different possible structures of validation errors
+                    if (typeof err === 'string') return err;
+                    if (err.msg) return err.msg;
+                    if (err.detail) return err.detail;
+                    if (err.input) return err.input;
+                    if (err.loc && err.type) return `${err.loc.join('.')}: ${err.type}`;
+                    if (typeof err === 'object') {
+                      // Try to extract meaningful information from the error object
+                      const keys = Object.keys(err);
+                      if (keys.length > 0) {
+                        return keys.map((key) => `${key}: ${JSON.stringify(err[key])}`).join(', ');
+                      }
+                      return JSON.stringify(err);
                     }
-                    return JSON.stringify(err);
-                  }
-                  return String(err);
-                }).join('; ');
+                    return String(err);
+                  })
+                  .join('; ');
                 throw new Error(`Validation error: ${validationErrors}`);
               }
 
@@ -1482,24 +1588,35 @@ class AdminApp {
               if (typeof errorData === 'object' && errorData !== null) {
                 // Check if errorData has a detail property that might be an array
                 if (errorData.detail && Array.isArray(errorData.detail)) {
-                  const detailErrors = errorData.detail.map(detailErr => {
-                    if (typeof detailErr === 'string') return detailErr;
-                    if (detailErr.msg) return detailErr.msg;
-                    if (detailErr.loc && detailErr.type) return `${detailErr.loc.join('.')}: ${detailErr.type}`;
-                    return JSON.stringify(detailErr);
-                  }).join('; ');
+                  const detailErrors = errorData.detail
+                    .map((detailErr) => {
+                      if (typeof detailErr === 'string') return detailErr;
+                      if (detailErr.msg) return detailErr.msg;
+                      if (detailErr.loc && detailErr.type)
+                        return `${detailErr.loc.join('.')}: ${detailErr.type}`;
+                      return JSON.stringify(detailErr);
+                    })
+                    .join('; ');
                   throw new Error(`Validation error: ${detailErrors}`);
                 }
-                
-                throw new Error(errorData.detail || errorData.message || errorData.error || JSON.stringify(errorData) || `HTTP error! status: ${response.status}`);
+
+                throw new Error(
+                  errorData.detail ||
+                    errorData.message ||
+                    errorData.error ||
+                    JSON.stringify(errorData) ||
+                    `HTTP error! status: ${response.status}`
+                );
               }
-              
+
               // If errorData is a string or other primitive
               throw new Error(errorData || `HTTP error! status: ${response.status}`);
             } catch (errorProcessingError) {
               // If there's an error processing the error data, fall back to basic error
               console.error('Error processing error response:', errorProcessingError);
-              throw new Error(`Error processing response: ${JSON.stringify(errorData)} | Status: ${response.status}`);
+              throw new Error(
+                `Error processing response: ${JSON.stringify(errorData)} | Status: ${response.status}`
+              );
             }
           }
 
@@ -1527,11 +1644,31 @@ class AdminApp {
           }
 
           // Upload any temporary files that were added before the purchase was saved
-          console.log('Uploading temp files:', this.tempFiles?.length || 0, 'for purchase:', this.editingItemId);
-          console.log('Temp files details:', this.tempFiles?.map(f => ({name: f.fileName, size: f.fileSize, hasFileObj: !!f.file})));
+          console.log(
+            'Uploading temp files:',
+            this.tempFiles?.length || 0,
+            'for purchase:',
+            this.editingItemId
+          );
+          console.log(
+            'Temp files details:',
+            this.tempFiles?.map((f) => ({
+              name: f.fileName,
+              size: f.fileSize,
+              hasFileObj: !!f.file,
+            }))
+          );
           if (this.tempFiles && this.tempFiles.length > 0) {
             for (const tempFile of this.tempFiles) {
-              console.log('Uploading temp file:', tempFile.fileName, 'type:', tempFile.fileType, 'fileObj:', tempFile.file?.name, tempFile.file?.size);
+              console.log(
+                'Uploading temp file:',
+                tempFile.fileName,
+                'type:',
+                tempFile.fileType,
+                'fileObj:',
+                tempFile.file?.name,
+                tempFile.file?.size
+              );
               if (!tempFile.file) {
                 console.error('No file object found for:', tempFile.fileName);
                 continue;
@@ -1569,7 +1706,12 @@ class AdminApp {
 
           // Refresh dashboard data if on dashboard page
           const isDashboard = document.querySelector('[data-page="dashboard"]');
-          console.log('Is dashboard:', !!isDashboard, 'dashboardManager:', !!window.dashboardManager);
+          console.log(
+            'Is dashboard:',
+            !!isDashboard,
+            'dashboardManager:',
+            !!window.dashboardManager
+          );
 
           if (window.dashboardManager && isDashboard) {
             console.log('Refreshing dashboard data...');
@@ -1612,7 +1754,7 @@ class AdminApp {
             fileSize: file.size,
             mimeType: file.type,
             previewUrl: null, // Will be set below
-            uploadStatus: 'pending' // 'pending', 'uploading', 'uploaded', 'error'
+            uploadStatus: 'pending', // 'pending', 'uploading', 'uploaded', 'error'
           };
 
           // Generate preview based on file type
@@ -1643,12 +1785,12 @@ class AdminApp {
       async uploadFile(file, fileType) {
         try {
           console.log('uploadFile called:', file?.name, 'type:', fileType, 'size:', file?.size);
-          
+
           // Create a new File object with sanitized name (like DumbSpends does)
           const sanitizedName = this.sanitizeFileName(file.name);
           const fileToUpload = new File([file], sanitizedName, { type: file.type });
           console.log('Created sanitized file:', fileToUpload.name, 'size:', fileToUpload.size);
-          
+
           const formData = new FormData();
           formData.append('file', fileToUpload);
           formData.append('file_type', fileType);
@@ -1661,19 +1803,23 @@ class AdminApp {
 
           if (!purchaseId) {
             console.error('No purchaseId available for file upload');
-            window.AdminApp.notificationManager.warning('Purchase not saved yet. File will be uploaded after saving purchase.');
+            window.AdminApp.notificationManager.warning(
+              'Purchase not saved yet. File will be uploaded after saving purchase.'
+            );
             return;
           }
 
           const response = await fetch(`${apiUrl}/files/${purchaseId}/`, {
             method: 'POST',
-            body: formData
+            body: formData,
           });
 
           if (!response.ok) {
             if (response.status === 404) {
               // If purchase doesn't exist, show a specific error
-              throw new Error(`Purchase not found. Please save the purchase first before uploading files.`);
+              throw new Error(
+                `Purchase not found. Please save the purchase first before uploading files.`
+              );
             }
             let errorData = {};
             try {
@@ -1692,24 +1838,32 @@ class AdminApp {
 
             // Handle the case where errorData is an array of validation errors
             if (Array.isArray(errorData)) {
-              const validationErrors = errorData.map(err => {
-                // Handle different possible structures of validation errors
-                if (typeof err === 'string') return err;
-                if (err.msg) return err.msg;
-                if (err.detail) return err.detail;
-                if (err.input) return err.input;
-                if (err.loc && err.type) return `${err.loc.join('.')}: ${err.type}`;
-                if (typeof err === 'object') return JSON.stringify(err);
-                return String(err);
-              }).join('; ');
+              const validationErrors = errorData
+                .map((err) => {
+                  // Handle different possible structures of validation errors
+                  if (typeof err === 'string') return err;
+                  if (err.msg) return err.msg;
+                  if (err.detail) return err.detail;
+                  if (err.input) return err.input;
+                  if (err.loc && err.type) return `${err.loc.join('.')}: ${err.type}`;
+                  if (typeof err === 'object') return JSON.stringify(err);
+                  return String(err);
+                })
+                .join('; ');
               throw new Error(`Validation error: ${validationErrors}`);
             }
 
             // Handle errorData if it's an object with different possible properties
             if (typeof errorData === 'object' && errorData !== null) {
-              throw new Error(errorData.detail || errorData.message || errorData.error || JSON.stringify(errorData) || `HTTP error! status: ${response.status}`);
+              throw new Error(
+                errorData.detail ||
+                  errorData.message ||
+                  errorData.error ||
+                  JSON.stringify(errorData) ||
+                  `HTTP error! status: ${response.status}`
+              );
             }
-            
+
             // If errorData is a string or other primitive
             throw new Error(errorData || `HTTP error! status: ${response.status}`);
           }
@@ -1732,7 +1886,7 @@ class AdminApp {
       // Remove a file
       async removeFile(fileId) {
         try {
-          const fileToRemove = this.uploadedFiles.find(f => f.id === fileId);
+          const fileToRemove = this.uploadedFiles.find((f) => f.id === fileId);
           if (!fileToRemove) return;
 
           const apiUrl = window.APP_CONFIG?.API_URL || '/api';
@@ -1744,7 +1898,7 @@ class AdminApp {
           }
 
           const response = await fetch(`${apiUrl}/files/${purchaseId}/${fileId}/`, {
-            method: 'DELETE'
+            method: 'DELETE',
           });
 
           if (!response.ok) {
@@ -1767,23 +1921,25 @@ class AdminApp {
             try {
               // Handle the case where errorData is an array of validation errors
               if (Array.isArray(errorData)) {
-                const validationErrors = errorData.map(err => {
-                  // Handle different possible structures of validation errors
-                  if (typeof err === 'string') return err;
-                  if (err.msg) return err.msg;
-                  if (err.detail) return err.detail;
-                  if (err.input) return err.input;
-                  if (err.loc && err.type) return `${err.loc.join('.')}: ${err.type}`;
-                  if (typeof err === 'object') {
-                    // Try to extract meaningful information from the error object
-                    const keys = Object.keys(err);
-                    if (keys.length > 0) {
-                      return keys.map(key => `${key}: ${JSON.stringify(err[key])}`).join(', ');
+                const validationErrors = errorData
+                  .map((err) => {
+                    // Handle different possible structures of validation errors
+                    if (typeof err === 'string') return err;
+                    if (err.msg) return err.msg;
+                    if (err.detail) return err.detail;
+                    if (err.input) return err.input;
+                    if (err.loc && err.type) return `${err.loc.join('.')}: ${err.type}`;
+                    if (typeof err === 'object') {
+                      // Try to extract meaningful information from the error object
+                      const keys = Object.keys(err);
+                      if (keys.length > 0) {
+                        return keys.map((key) => `${key}: ${JSON.stringify(err[key])}`).join(', ');
+                      }
+                      return JSON.stringify(err);
                     }
-                    return JSON.stringify(err);
-                  }
-                  return String(err);
-                }).join('; ');
+                    return String(err);
+                  })
+                  .join('; ');
                 throw new Error(`Validation error: ${validationErrors}`);
               }
 
@@ -1791,29 +1947,40 @@ class AdminApp {
               if (typeof errorData === 'object' && errorData !== null) {
                 // Check if errorData has a detail property that might be an array
                 if (errorData.detail && Array.isArray(errorData.detail)) {
-                  const detailErrors = errorData.detail.map(detailErr => {
-                    if (typeof detailErr === 'string') return detailErr;
-                    if (detailErr.msg) return detailErr.msg;
-                    if (detailErr.loc && detailErr.type) return `${detailErr.loc.join('.')}: ${detailErr.type}`;
-                    return JSON.stringify(detailErr);
-                  }).join('; ');
+                  const detailErrors = errorData.detail
+                    .map((detailErr) => {
+                      if (typeof detailErr === 'string') return detailErr;
+                      if (detailErr.msg) return detailErr.msg;
+                      if (detailErr.loc && detailErr.type)
+                        return `${detailErr.loc.join('.')}: ${detailErr.type}`;
+                      return JSON.stringify(detailErr);
+                    })
+                    .join('; ');
                   throw new Error(`Validation error: ${detailErrors}`);
                 }
-                
-                throw new Error(errorData.detail || errorData.message || errorData.error || JSON.stringify(errorData) || `HTTP error! status: ${response.status}`);
+
+                throw new Error(
+                  errorData.detail ||
+                    errorData.message ||
+                    errorData.error ||
+                    JSON.stringify(errorData) ||
+                    `HTTP error! status: ${response.status}`
+                );
               }
-              
+
               // If errorData is a string or other primitive
               throw new Error(errorData || `HTTP error! status: ${response.status}`);
             } catch (errorProcessingError) {
               // If there's an error processing the error data, fall back to basic error
               console.error('Error processing error response:', errorProcessingError);
-              throw new Error(`Error processing response: ${JSON.stringify(errorData)} | Status: ${response.status}`);
+              throw new Error(
+                `Error processing response: ${JSON.stringify(errorData)} | Status: ${response.status}`
+              );
             }
           }
 
           // Remove from local array
-          this.uploadedFiles = this.uploadedFiles.filter(f => f.id !== fileId);
+          this.uploadedFiles = this.uploadedFiles.filter((f) => f.id !== fileId);
         } catch (error) {
           console.error('Error removing file:', error);
           window.AdminApp.notificationManager.error(`Failed to remove file: ${error.message}`);
@@ -1824,13 +1991,13 @@ class AdminApp {
       removeTempFile(fileId) {
         if (this.tempFiles) {
           // Revoke the preview URL to free memory
-          const fileToRemove = this.tempFiles.find(f => f.id === fileId);
+          const fileToRemove = this.tempFiles.find((f) => f.id === fileId);
           if (fileToRemove && fileToRemove.previewUrl) {
             URL.revokeObjectURL(fileToRemove.previewUrl);
           }
 
           // Remove from temp files array
-          this.tempFiles = this.tempFiles.filter(f => f.id !== fileId);
+          this.tempFiles = this.tempFiles.filter((f) => f.id !== fileId);
         }
       },
 
@@ -1852,11 +2019,13 @@ class AdminApp {
         const tempFiles = Array.isArray(this.tempFiles) ? this.tempFiles : [];
         const uploadedFiles = Array.isArray(this.uploadedFiles) ? this.uploadedFiles : [];
         const filesToDelete = Array.isArray(this.filesToDelete) ? this.filesToDelete : [];
-        
-        const temp = tempFiles.filter(f => f && f.fileType === type);
+
+        const temp = tempFiles.filter((f) => f && f.fileType === type);
         // Exclude uploaded files that are marked for deletion
-        const filesToDeleteIds = filesToDelete.map(f => f && f.id).filter(Boolean);
-        const uploaded = uploadedFiles.filter(f => f && f.file_type === type && !filesToDeleteIds.includes(f.id));
+        const filesToDeleteIds = filesToDelete.map((f) => f && f.id).filter(Boolean);
+        const uploaded = uploadedFiles.filter(
+          (f) => f && f.file_type === type && !filesToDeleteIds.includes(f.id)
+        );
         return [...temp, ...uploaded];
       },
 
@@ -1882,7 +2051,7 @@ class AdminApp {
       getFileIcon(file) {
         const mimeType = file.mimeType || file.mime_type || '';
         const filename = file.filename || file.fileName || '';
-        
+
         if (mimeType.startsWith('image/') || filename.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
           return 'bi bi-file-earmark-image text-success';
         }
@@ -1902,7 +2071,7 @@ class AdminApp {
       getFileColor(file) {
         const mimeType = file.mimeType || file.mime_type || '';
         const filename = file.filename || file.fileName || '';
-        
+
         if (mimeType.startsWith('image/') || filename.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
           return '#d1e7dd'; // Light green for images
         }
@@ -1962,7 +2131,7 @@ class AdminApp {
         avgPrice: true,
         pendingWarranties: true,
         taxDeductible: true,
-        expiredWarranties: true
+        expiredWarranties: true,
       },
 
       init() {
@@ -1988,7 +2157,7 @@ class AdminApp {
             console.warn('Failed to load card visibility settings:', error);
           }
         }
-      }
+      },
     }));
 
     // View Purchase Details
@@ -2014,7 +2183,7 @@ class AdminApp {
         receipts: [],
         manuals: [],
         warranties: [],
-        photos: []
+        photos: [],
       },
 
       init() {
@@ -2050,30 +2219,39 @@ class AdminApp {
 
           const data = await response.json();
           // Ensure data has the expected structure
-          const allFiles = Array.isArray(data.items) ? data.items : (Array.isArray(data) ? data : []);
-          
+          const allFiles = Array.isArray(data.items) ? data.items : Array.isArray(data) ? data : [];
+
           // Store all files without filtering images
           this.item.files = allFiles;
 
           // Create categorized file groups based on file_type only
-          this.item.receipts = this.item.files.filter(file =>
-            (file.file_type && file.file_type.toLowerCase() === 'receipt')
+          this.item.receipts = this.item.files.filter(
+            (file) => file.file_type && file.file_type.toLowerCase() === 'receipt'
           );
 
-          this.item.manuals = this.item.files.filter(file =>
-            (file.file_type && file.file_type.toLowerCase() === 'manual')
+          this.item.manuals = this.item.files.filter(
+            (file) => file.file_type && file.file_type.toLowerCase() === 'manual'
           );
 
-          this.item.warranties = this.item.files.filter(file =>
-            (file.file_type && file.file_type.toLowerCase() === 'warranty')
+          this.item.warranties = this.item.files.filter(
+            (file) => file.file_type && file.file_type.toLowerCase() === 'warranty'
           );
 
-          this.item.photos = this.item.files.filter(file =>
-            (file.file_type && file.file_type.toLowerCase() === 'photo')
+          this.item.photos = this.item.files.filter(
+            (file) => file.file_type && file.file_type.toLowerCase() === 'photo'
           );
 
           console.log('Loaded files for purchase:', this.item.files);
-          console.log('Categorized files - Receipts:', this.item.receipts, 'Manuals:', this.item.manuals, 'Warranties:', this.item.warranties, 'Photos:', this.item.photos);
+          console.log(
+            'Categorized files - Receipts:',
+            this.item.receipts,
+            'Manuals:',
+            this.item.manuals,
+            'Warranties:',
+            this.item.warranties,
+            'Photos:',
+            this.item.photos
+          );
         } catch (error) {
           console.error('Error loading files:', error);
           this.item.files = []; // Ensure files array is empty if there's an error
@@ -2086,20 +2264,20 @@ class AdminApp {
       // Format file name to show first 8 chars + .. + extension
       getShortenedFileName(filename) {
         if (!filename) return '';
-        
+
         const lastDotIndex = filename.lastIndexOf('.');
         if (lastDotIndex === -1) {
           // No extension, just truncate to 8 chars and add ..
           return filename.length > 8 ? filename.substring(0, 8) + '..' : filename;
         }
-        
+
         const namePart = filename.substring(0, lastDotIndex);
         const extension = filename.substring(lastDotIndex);
-        
+
         if (namePart.length > 8) {
           return namePart.substring(0, 8) + '..' + extension;
         }
-        
+
         return filename;
       },
 
@@ -2130,16 +2308,16 @@ class AdminApp {
             </div>
           </div>
         `;
-        
+
         // Remove any existing preview modal
         const existingModal = document.getElementById('imagePreviewModal');
         if (existingModal) {
           existingModal.remove();
         }
-        
+
         // Add the new modal to the body
         document.body.insertAdjacentHTML('beforeend', modalHtml);
-        
+
         // Show the modal
         const imagePreviewModal = new Modal(document.getElementById('imagePreviewModal'));
         imagePreviewModal.show();
@@ -2148,9 +2326,11 @@ class AdminApp {
       editPurchaseItem() {
         // Trigger edit from view modal
         // First dispatch event to notify inventory table to enter edit mode
-        window.dispatchEvent(new CustomEvent('edit-purchase', {
-          detail: { item: this.item }
-        }));
+        window.dispatchEvent(
+          new CustomEvent('edit-purchase', {
+            detail: { item: this.item },
+          })
+        );
 
         // Then close the view modal and open the edit modal
         setTimeout(() => {
@@ -2170,7 +2350,8 @@ class AdminApp {
             setTimeout(() => {
               const purchaseModalEl = document.getElementById('purchaseModal');
               if (purchaseModalEl) {
-                const purchaseModal = Modal.getInstance(purchaseModalEl) || new Modal(purchaseModalEl);
+                const purchaseModal =
+                  Modal.getInstance(purchaseModalEl) || new Modal(purchaseModalEl);
                 purchaseModal.show();
               }
             }, 300);
@@ -2185,7 +2366,74 @@ class AdminApp {
         const sizes = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-      }
+      },
+
+      shareItemFromView(itemId) {
+        const baseUrl = window.location.origin + window.location.pathname;
+        const shareLink = `${baseUrl}?view=${itemId}`;
+
+        // Use setTimeout to ensure we're in the right context after modal click
+        setTimeout(() => {
+          const textarea = document.createElement('textarea');
+          textarea.value = shareLink;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          textarea.style.left = '-9999px';
+          document.body.appendChild(textarea);
+          textarea.select();
+          textarea.setSelectionRange(0, shareLink.length);
+
+          const copied = document.execCommand('copy');
+          document.body.removeChild(textarea);
+
+          if (copied) {
+            if (window.AdminApp && window.AdminApp.notificationManager) {
+              window.AdminApp.notificationManager.success('Share link copied to clipboard!');
+            } else {
+              alert('Share link copied to clipboard!');
+            }
+          } else {
+            if (window.AdminApp && window.AdminApp.notificationManager) {
+              window.AdminApp.notificationManager.error('Could not copy. Link: ' + shareLink);
+            } else {
+              alert('Could not copy. Link: ' + shareLink);
+            }
+          }
+        }, 100);
+      },
+
+      showCopyDialog(link) {
+        const modalHtml = `
+          <div class="modal fade" id="shareLinkModal" tabindex="-1" aria-labelledby="shareLinkModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-sm">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h6 class="modal-title" id="shareLinkModalLabel">Share Link</h6>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <p class="small text-muted mb-2">Copy this link to share:</p>
+                  <div class="input-group input-group-sm">
+                    <input type="text" class="form-control" value="${link}" readonly id="shareLinkInput">
+                    <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('shareLinkInput').select();document.execCommand('copy');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',2000)">Copy</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const existing = document.getElementById('shareLinkModal');
+        if (existing) existing.remove();
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = new bootstrap.Modal(document.getElementById('shareLinkModal'));
+        modal.show();
+
+        document.getElementById('shareLinkModal').addEventListener('hidden.bs.modal', function () {
+          this.remove();
+        });
+      },
     }));
 
     // Register page-specific Alpine components
@@ -2204,8 +2452,8 @@ class AdminApp {
       this.notificationManager.info('New purchase added', {
         action: {
           text: 'View',
-          handler: 'window.location.href="/purchases"'
-        }
+          handler: 'window.location.href="/purchases"',
+        },
       });
     }, 3000);
 
@@ -2220,7 +2468,7 @@ class AdminApp {
 
   // Cleanup method
   destroy() {
-    this.components.forEach(component => {
+    this.components.forEach((component) => {
       if (component.destroy) {
         component.destroy();
       }
@@ -2241,4 +2489,4 @@ window.AdminApp = app;
 window.IconManager = iconManager;
 
 // Export the app instance for module imports
-export default app; 
+export default app;
