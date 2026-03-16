@@ -1,0 +1,12 @@
+#!/bin/sh
+# Automated daily backup script for spends tracker
+# Runs at 2 AM daily
+
+# Wait for server to be ready
+sleep 10
+
+# Create backup
+curl -f -s -X POST http://localhost:8000/api/export/backup/save > /dev/null 2>&1
+
+# Cleanup old backups (keep 7)
+curl -f -s -X POST "http://localhost:8000/api/export/backup/cleanup?max_backups=7" > /dev/null 2>&1

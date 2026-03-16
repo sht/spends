@@ -6,6 +6,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     gcc \
     libpq-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first to leverage Docker cache
@@ -16,6 +17,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the backend application
 COPY backend/ .
+
+# Copy cron script
+COPY backend/cron /app/cron
 
 # Copy the built frontend
 COPY dist-modern ./dist-modern

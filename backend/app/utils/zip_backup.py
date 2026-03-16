@@ -6,7 +6,8 @@ import os
 import json
 import shutil
 from pathlib import Path
-from typing import Dict, Any, BinaryIO
+from typing import Dict, Any, BinaryIO, List
+from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models import Purchase, Warranty, Retailer, Brand, File, Setting
@@ -14,6 +15,7 @@ from app.utils.import_export import import_data_from_json, export_data_to_json
 from app.config import settings
 
 UPLOAD_DIR = Path(settings.uploads_dir)
+BACKUP_DIR = Path("/app/data/backups")
 
 
 async def create_full_backup(db: AsyncSession) -> bytes:
@@ -121,3 +123,93 @@ async def restore_from_backup(db: AsyncSession, zip_bytes: bytes) -> Dict[str, A
         # Cleanup temp directory
         if temp_dir.exists():
             shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+async def create_backup_to_file(db: AsyncSession) -> Dict[str, Any]:
+    """
+    Create a complete ZIP backup and save it to /app/data/backups/
+    Filename: spends_backup_YYYY-MM-DD.zip
+
+    Returns: Dict with backup info
+    """
+    # Ensure backup directory exists
+    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Generate filename with today's date
+    date_str = datetime.now().strftime("%Y-%m-%d")
+    filename = f"spends_backup_{date_str}.zip"
+    filepath = BACKUP_DIR / filename
+
+    # Create backup
+    zip_bytes = await create_full_backup(db)
+
+    # Write to file
+    with open(filepath, "wb") as f:
+        f.write(zip_bytes)
+
+    return {
+        "filename": filename,
+        "filepath": str(filepath),
+        "size": len(zip_bytes),
+        "created_at": datetime.now().isoformat(),
+    }
+
+
+async def cleanup_old_backups(max_backups: int = 7) -> Dict[str, Any]:
+    """
+    Delete old backups, keeping only the latest max_backups
+
+    Returns: Dict with cleanup info
+    """
+    # Ensure backup directory exists
+    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Get all backup files sorted by modification time (newest first)
+    backup_files = sorted(
+        BACKUP_DIR.glob("spends_backup_*.zip"),
+        key=lambda x: x.stat().st_mtime,
+        reverse=True,
+    )
+
+    deleted = []
+    kept = []
+
+    # Delete old backups beyond max_backups
+    for i, backup_file in enumerate(backup_files):
+        if i >= max_backups:
+            backup_file.unlink()
+            deleted.append(backup_file.name)
+        else:
+            kept.append(backup_file.name)
+
+    return {
+        "deleted": deleted,
+        "kept": kept,
+        "total_deleted": len(deleted),
+        "total_kept": len(kept),
+    }
+
+
+def list_backups() -> List[Dict[str, Any]]:
+    """
+    Get list of available backups
+
+    Returns: List of backup info
+    """
+    if not BACKUP_DIR.exists():
+        return []
+
+    backups = []
+    for backup_file in BACKUP_DIR.glob("spends_backup_*.zip"):
+        stat = backup_file.stat()
+        backups.append(
+            {
+                "filename": backup_file.name,
+                "size": stat.st_size,
+                "created_at": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+            }
+        )
+
+    # Sort by creation date (newest first)
+    backups.sort(key=lambda x: x["created_at"], reverse=True)
+    return backups

@@ -2493,6 +2493,16 @@ window.IconManager = iconManager;
 
 // Function to show items with a specific tag
 window.showTagItems = async function (tag) {
+  // Close the view details modal first
+  const viewModal = document.getElementById('viewDetailsModal');
+  const viewModalInstance = bootstrap.Modal.getInstance(viewModal);
+  if (viewModalInstance) {
+    viewModalInstance.hide();
+  }
+
+  // Wait a bit for the view modal to close
+  await new Promise((resolve) => setTimeout(resolve, 300));
+
   const modal = document.getElementById('tagItemsModal');
   const tagLabel = document.getElementById('tagItemsModalTag');
   const tableBody = document.getElementById('tagItemsTableBody');
@@ -2543,15 +2553,46 @@ window.viewItemById = async function (itemId) {
     modalInstance.hide();
   }
 
-  // Need to get the item from inventory data and open view modal
-  // Find inventory component and call viewItem
-  const inventoryEl = document.querySelector('[x-data*="inventoryTable"]');
-  if (inventoryEl && inventoryEl.__x) {
-    const items = inventoryEl.__x.$data.items;
-    const item = items.find((i) => i.id == itemId);
-    if (item) {
-      inventoryEl.__x.$data.viewItem(item);
-    }
+  // Need to fetch the item data since it may not be in the current inventory list
+  try {
+    const apiUrl = window.APP_CONFIG?.API_URL || '/api';
+    const response = await fetch(`${apiUrl}/purchases/${itemId}/`);
+    const apiItem = await response.json();
+
+    // Transform API response to match what viewItem expects
+    const item = {
+      id: apiItem.id,
+      name: apiItem.product_name,
+      retailer: apiItem.retailer?.name,
+      brand: apiItem.brand?.name,
+      modelNumber: apiItem.model_number,
+      serialNumber: apiItem.serial_number,
+      retailerOrderNumber: apiItem.retailer_order_number,
+      purchaseDate: apiItem.purchase_date,
+      purchaseDateISO: apiItem.purchase_date,
+      price: apiItem.price,
+      quantity: apiItem.quantity || 1,
+      link: apiItem.link,
+      warrantyExpiry: apiItem.warranty_expiry,
+      returnDeadline: apiItem.return_deadline,
+      returnPolicy: apiItem.return_policy,
+      taxDeductible: apiItem.tax_deductible,
+      tags: apiItem.tags,
+      notes: apiItem.notes,
+    };
+
+    // Dispatch event to show view modal
+    window.dispatchEvent(
+      new CustomEvent('show-view-details', {
+        detail: { item: item },
+      })
+    );
+
+    // Show the view modal
+    const viewDetailsModal = new bootstrap.Modal(document.getElementById('viewDetailsModal'));
+    viewDetailsModal.show();
+  } catch (error) {
+    console.error('Error fetching item:', error);
   }
 };
 

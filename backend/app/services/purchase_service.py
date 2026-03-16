@@ -41,7 +41,9 @@ async def get_purchases(
     if search:
         query = query.filter(Purchase.product_name.ilike(f"%{search}%"))
     if tag:
-        query = query.filter(Purchase.tags.ilike(f"%{tag}%"))
+        query = query.filter(
+            (Purchase.tags.ilike(f"%{tag}%")) | (Purchase.tags.is_(None))
+        )
 
     # Get total count
     count_query = select(Purchase.id)
@@ -50,7 +52,9 @@ async def get_purchases(
     if search:
         count_query = count_query.filter(Purchase.product_name.ilike(f"%{search}%"))
     if tag:
-        count_query = count_query.filter(Purchase.tags.ilike(f"%{tag}%"))
+        count_query = count_query.filter(
+            (Purchase.tags.ilike(f"%{tag}%")) | (Purchase.tags.is_(None))
+        )
 
     total_result = await db.execute(count_query)
     total = len(total_result.scalars().all())

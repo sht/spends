@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from typing import Optional
+import os
 
 
 class Settings(BaseSettings):
@@ -8,7 +9,7 @@ class Settings(BaseSettings):
     port: int = 3031
     debug: bool = False
     frontend_url: str = "http://localhost:3030"
-    uploads_dir: str = "./uploads"
+    uploads_dir: str = os.environ.get("UPLOADS_DIR", "/app/data/uploads")
 
     class Config:
         env_file = ".env"
