@@ -458,6 +458,51 @@ export function registerInventoryComponent() {
       }
     },
 
+    shareItem(item) {
+      // Generate shareable link using the asset ID
+      const baseUrl = window.location.origin;
+      const shareLink = `${baseUrl}/asset/${item.id}`;
+
+      // Copy to clipboard with fallback for non-HTTPS contexts
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(shareLink).then(() => {
+          this.showShareSuccess(shareLink);
+        }).catch((err) => {
+          console.error('Failed to copy link:', err);
+          this.fallbackCopy(shareLink);
+        });
+      } else {
+        // Fallback for non-secure contexts (clipboard API requires HTTPS or localhost)
+        this.fallbackCopy(shareLink);
+      }
+    },
+
+    showShareSuccess(link) {
+      if (window.AdminApp && window.AdminApp.notificationManager) {
+        window.AdminApp.notificationManager.success('Share link copied to clipboard!');
+      } else {
+        alert('Share link copied to clipboard!\n\n' + link);
+      }
+    },
+
+    fallbackCopy(link) {
+      // Create temporary textarea to copy text
+      const textarea = document.createElement('textarea');
+      textarea.value = link;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        this.showShareSuccess(link);
+      } catch (err) {
+        console.error('Fallback copy failed:', err);
+        prompt('Copy this link to share:', link);
+      }
+      document.body.removeChild(textarea);
+    },
+
     viewItem(item) {
       // Get the freshest item data
       const freshItem = this.items.find(i => i.id === item.id) || item;

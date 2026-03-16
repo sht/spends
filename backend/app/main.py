@@ -1,7 +1,8 @@
 from pathlib import Path
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse, FileResponse
 from app.config import settings
 from app.routes import (
     purchases,
@@ -14,7 +15,11 @@ from app.routes import (
     files,
     data,
     settings,
+    public,
 )
+from app.database import get_db
+from app.services.purchase_service import get_purchase
+from sqlalchemy.ext.asyncio import AsyncSession
 
 app = FastAPI(title="Spends Tracker API", version="0.1.0")
 
@@ -39,6 +44,34 @@ elif (Path("/app/dist-modern")).exists():
 else:
     dist_dir = None
 
+# Path to asset viewer HTML
+ASSET_HTML = dist_dir / "asset.html" if dist_dir else None
+
+
+@app.get("/api")
+async def root():
+    """API root endpoint."""
+    return {"message": "Welcome to the Spends Tracker API", "version": "0.1.0"}
+
+
+@app.get("/asset/{purchase_id}", response_class=HTMLResponse)
+async def serve_asset_viewer(request: Request, purchase_id: str, db: AsyncSession = Depends(get_db)):
+    """
+    Serve the asset viewer page at /asset/{id} URL.
+    This allows shareable links like /asset/{uuid} to work directly.
+    """
+    # Verify asset exists first
+    purchase = await get_purchase(db, purchase_id)
+    
+    if not purchase:
+        raise HTTPException(status_code=404, detail="Asset not found or has been deleted")
+    
+    # Serve the asset.html file
+    if ASSET_HTML and ASSET_HTML.exists():
+        return FileResponse(str(ASSET_HTML))
+    else:
+        raise HTTPException(status_code=404, detail="Asset viewer not available")
+
 # Include API routers (all under /api prefix)
 app.include_router(purchases)
 app.include_router(warranties)
@@ -50,12 +83,7 @@ app.include_router(imports)
 app.include_router(files)
 app.include_router(data)
 app.include_router(settings.router)
-
-
-@app.get("/api")
-async def root():
-    """API root endpoint."""
-    return {"message": "Welcome to the Spends Tracker API", "version": "0.1.0"}
+app.include_router(public.router)
 
 
 # Mount public-assets for static resources (images, icons, etc.)

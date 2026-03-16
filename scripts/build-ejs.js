@@ -24,6 +24,18 @@ async function processTemplate(templateFile, pageData) {
     const pagePath = path.join(SRC_DIR, templateFile);
     const pageContent = await fs.readFile(pagePath, 'utf-8');
 
+    // Check if this is a standalone template (like asset.ejs)
+    const isStandalone = pageContent.includes('<!DOCTYPE html>');
+
+    if (isStandalone) {
+      // For standalone templates, just replace .ejs with .html
+      const htmlFile = templateFile.replace('.ejs', '.html');
+      const htmlPath = path.join(SRC_DIR, htmlFile);
+      await fs.writeFile(htmlPath, pageContent, 'utf-8');
+      console.log(`✅ Processed ${templateFile} → ${htmlFile}`);
+      return;
+    }
+
     // Extract page variables (title, page)
     const variables = {};
     const varMatches = pageContent.match(/<% const (\w+) = '([^']+)'; %>/g) || [];
@@ -72,6 +84,7 @@ async function main() {
       processTemplate('retailers.ejs', { title: 'Retailers', page: 'retailers' }),
       processTemplate('settings.ejs', { title: 'Settings', page: 'settings' }),
       processTemplate('data-management.ejs', { title: 'Data & Backup', page: 'data-management' }),
+      processTemplate('asset.ejs', { title: 'Asset Viewer', page: 'asset' }),
     ]);
 
     console.log('\n✅ All EJS templates processed successfully!');

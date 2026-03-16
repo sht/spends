@@ -25,6 +25,7 @@ export default defineConfig({
         retailers: resolve(__dirname, 'src-modern/retailers.html'),
         settings: resolve(__dirname, 'src-modern/settings.html'),
         'data-management': resolve(__dirname, 'src-modern/data-management.html'),
+        asset: resolve(__dirname, 'src-modern/asset.html'),
       },
 
       output: {
@@ -60,6 +61,12 @@ export default defineConfig({
         target: env.VITE_API_URL || 'http://localhost:3031',
         changeOrigin: true,
         ws: true,
+        rewrite: (path) => path,
+      },
+      // Proxy asset viewer pages to backend
+      '/asset/': {
+        target: env.VITE_API_URL || 'http://localhost:3031',
+        changeOrigin: true,
         rewrite: (path) => path,
       },
     },
