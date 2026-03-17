@@ -69,29 +69,43 @@ async def get_purchases(
 
 
 async def create_purchase(db: AsyncSession, purchase: PurchaseCreate) -> Purchase:
-    # Extract warranty_expiry if provided
+    # Extract warranty_expiry and warranty_type if provided
     warranty_expiry = purchase.warranty_expiry
+    warranty_type = getattr(purchase, "warranty_type", None)
 
-    # Create purchase without warranty_expiry (it's not a Purchase column)
-    purchase_data = purchase.model_dump(exclude={"warranty_expiry"})
+    # Create purchase without warranty_expiry and warranty_type (not Purchase columns)
+    purchase_data = purchase.model_dump(exclude={"warranty_expiry", "warranty_type"})
     db_purchase = Purchase(**purchase_data)
     db.add(db_purchase)
     await db.commit()
     await db.refresh(db_purchase)
 
-    # Create warranty if warranty_expiry is provided
-    if warranty_expiry:
-        from app.models.warranty import Warranty, WarrantyStatus
+    # Create warranty if warranty_expiry is provided OR warranty_type is LIFETIME
+    if warranty_expiry or warranty_type == "LIFETIME":
+        from app.models.warranty import Warranty as WarrantyModel, WarrantyStatus
 
         today = date.today()
-        is_active = warranty_expiry >= today
-        db_warranty = Warranty(
-            purchase_id=db_purchase.id,
-            warranty_start=db_purchase.purchase_date,
-            warranty_end=warranty_expiry,
-            status=WarrantyStatus.ACTIVE if is_active else WarrantyStatus.EXPIRED,
-            notes="Auto-created from purchase",
-        )
+
+        # Handle lifetime warranty
+        if warranty_type == "LIFETIME":
+            db_warranty = WarrantyModel(
+                purchase_id=db_purchase.id,
+                warranty_start=db_purchase.purchase_date,
+                warranty_end=date(9999, 12, 31),  # Far future date for lifetime
+                warranty_type="LIFETIME",
+                status=WarrantyStatus.ACTIVE,
+                notes="Lifetime warranty",
+            )
+        else:
+            is_active = warranty_expiry >= today
+            db_warranty = WarrantyModel(
+                purchase_id=db_purchase.id,
+                warranty_start=db_purchase.purchase_date,
+                warranty_end=warranty_expiry,
+                warranty_type=warranty_type or "LIMITED",
+                status=WarrantyStatus.ACTIVE if is_active else WarrantyStatus.EXPIRED,
+                notes="Auto-created from purchase",
+            )
         db.add(db_warranty)
         await db.commit()
         await db.refresh(db_warranty)
@@ -118,20 +132,45 @@ async def update_purchase(
     update_dict = purchase_update.model_dump(exclude_unset=True)
     warranty_expiry_provided = "warranty_expiry" in update_dict
     warranty_expiry = update_dict.get("warranty_expiry")
+    warranty_type = update_dict.get("warranty_type")
 
-    # Update purchase fields (excluding warranty_expiry)
-    update_data = {k: v for k, v in update_dict.items() if k != "warranty_expiry"}
+    # Update purchase fields (excluding warranty_expiry and warranty_type)
+    update_data = {
+        k: v
+        for k, v in update_dict.items()
+        if k not in ["warranty_expiry", "warranty_type"]
+    }
     for field, value in update_data.items():
         setattr(db_purchase, field, value)
 
     await db.commit()
     await db.refresh(db_purchase)
 
-    # Handle warranty update/create/delete only if warranty_expiry was provided
-    if warranty_expiry_provided:
-        from app.models.warranty import Warranty, WarrantyStatus
+    # Handle warranty update/create/delete only if warranty_expiry or warranty_type was provided
+    if warranty_expiry_provided or warranty_type:
+        from app.models.warranty import Warranty as WarrantyModel, WarrantyStatus
 
-        if warranty_expiry is not None:
+        # Handle lifetime warranty
+        if warranty_type == "LIFETIME":
+            if db_purchase.warranty:
+                # Update existing warranty to lifetime
+                db_purchase.warranty.warranty_end = date(9999, 12, 31)
+                db_purchase.warranty.warranty_type = "LIFETIME"
+                db_purchase.warranty.status = WarrantyStatus.ACTIVE
+            else:
+                # Create new lifetime warranty
+                db_warranty = WarrantyModel(
+                    purchase_id=db_purchase.id,
+                    warranty_start=db_purchase.purchase_date,
+                    warranty_end=date(9999, 12, 31),
+                    warranty_type="LIFETIME",
+                    status=WarrantyStatus.ACTIVE,
+                    notes="Lifetime warranty",
+                )
+                db.add(db_warranty)
+            await db.commit()
+            await db.refresh(db_purchase)
+        elif warranty_expiry is not None:
             # Set or update warranty
             # Convert date to datetime for comparison (use end of day for date comparison)
             today = date.today()
@@ -140,15 +179,17 @@ async def update_purchase(
             if db_purchase.warranty:
                 # Update existing warranty
                 db_purchase.warranty.warranty_end = warranty_expiry
+                db_purchase.warranty.warranty_type = warranty_type or "LIMITED"
                 db_purchase.warranty.status = (
                     WarrantyStatus.ACTIVE if is_active else WarrantyStatus.EXPIRED
                 )
             else:
                 # Create new warranty
-                db_warranty = Warranty(
+                db_warranty = WarrantyModel(
                     purchase_id=db_purchase.id,
                     warranty_start=db_purchase.purchase_date,
                     warranty_end=warranty_expiry,
+                    warranty_type=warranty_type or "LIMITED",
                     status=WarrantyStatus.ACTIVE
                     if is_active
                     else WarrantyStatus.EXPIRED,

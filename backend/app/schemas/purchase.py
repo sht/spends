@@ -7,7 +7,7 @@ from .common import BaseResponse
 
 class PurchaseBase(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
-    
+
     product_name: str = Field(..., min_length=1, max_length=255)
     price: Decimal = Field(..., gt=0)
     currency_code: Optional[str] = Field(default="USD", max_length=3)
@@ -17,6 +17,9 @@ class PurchaseBase(BaseModel):
     notes: Optional[str] = None
     tax_deductible: Optional[int] = Field(default=0, ge=0, le=1)
     warranty_expiry: Optional[date] = None
+    warranty_type: Optional[str] = Field(
+        default=None, max_length=50
+    )  # LIFETIME, LIMITED, etc.
     model_number: Optional[str] = Field(default=None, max_length=100)
     serial_number: Optional[str] = Field(default=None, max_length=100)
     retailer_order_number: Optional[str] = Field(default=None, max_length=100)
@@ -28,17 +31,17 @@ class PurchaseBase(BaseModel):
 
 
 class PurchaseCreate(PurchaseBase):
-    @field_validator('purchase_date')
+    @field_validator("purchase_date")
     @classmethod
     def validate_purchase_date_not_future(cls, v: date) -> date:
         if v > date.today():
-            raise ValueError('Purchase date cannot be in the future')
+            raise ValueError("Purchase date cannot be in the future")
         return v
 
 
 class PurchaseUpdate(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
-    
+
     product_name: Optional[str] = Field(None, min_length=1, max_length=255)
     price: Optional[Decimal] = Field(None, gt=0)
     currency_code: Optional[str] = Field(None, max_length=3)
@@ -48,6 +51,7 @@ class PurchaseUpdate(BaseModel):
     notes: Optional[str] = None
     tax_deductible: Optional[int] = Field(None, ge=0, le=1)
     warranty_expiry: Optional[date] = None
+    warranty_type: Optional[str] = Field(None, max_length=50)  # LIFETIME, LIMITED, etc.
     model_number: Optional[str] = Field(None, max_length=100)
     serial_number: Optional[str] = Field(None, max_length=100)
     retailer_order_number: Optional[str] = Field(None, max_length=100)
@@ -61,7 +65,7 @@ class PurchaseUpdate(BaseModel):
 class RetailerInfo(BaseModel):
     id: str
     name: str
-    
+
     class Config:
         from_attributes = True
 
@@ -69,7 +73,7 @@ class RetailerInfo(BaseModel):
 class BrandInfo(BaseModel):
     id: str
     name: str
-    
+
     class Config:
         from_attributes = True
 
@@ -82,14 +86,14 @@ class WarrantyInfo(BaseModel):
     status: Optional[str] = None
     provider: Optional[str] = None
     notes: Optional[str] = None
-    
+
     class Config:
         from_attributes = True
 
 
 class PurchaseResponse(PurchaseBase, BaseResponse):
     model_config = ConfigDict(protected_namespaces=())
-    
+
     warranty_id: Optional[str] = None
     retailer: Optional[RetailerInfo] = None
     brand: Optional[BrandInfo] = None

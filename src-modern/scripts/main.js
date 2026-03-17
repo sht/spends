@@ -762,6 +762,7 @@ class AdminApp {
         quantity: 1,
         link: '',
         warrantyExpiry: '',
+        lifetimeWarranty: false,
         returnDeadline: '',
         returnPolicy: '',
         taxDeductible: false,
@@ -1112,6 +1113,9 @@ class AdminApp {
         this.form.quantity = item.quantity || 1;
         this.form.link = item.link || '';
         this.form.warrantyExpiry = item.warrantyExpiry || '';
+        // Check if warranty is lifetime (9999-12-31 or warranty_type is LIFETIME)
+        this.form.lifetimeWarranty =
+          item.warrantyExpiry === '9999-12-31' || item.warrantyType === 'LIFETIME';
         this.form.returnDeadline = item.returnDeadline || '';
         this.form.returnPolicy = item.returnPolicy || '';
         this.form.taxDeductible = this.ensureBoolean(item.taxDeductible);
@@ -1276,6 +1280,7 @@ class AdminApp {
           quantity: 1,
           link: '',
           warrantyExpiry: '',
+          lifetimeWarranty: false,
           returnDeadline: '',
           returnPolicy: '',
           taxDeductible: false,
@@ -1386,7 +1391,8 @@ class AdminApp {
           price: parseFloat(this.form.price),
           quantity: parseInt(this.form.quantity) || 1,
           link: this.form.link,
-          warrantyExpiry: this.form.warrantyExpiry || null,
+          warrantyExpiry: this.form.lifetimeWarranty ? null : this.form.warrantyExpiry || null,
+          warrantyType: this.form.lifetimeWarranty ? 'LIFETIME' : null,
           returnDeadline: this.form.returnDeadline || null,
           returnPolicy: this.form.returnPolicy,
           taxDeductible: this.form.taxDeductible,
@@ -1399,6 +1405,13 @@ class AdminApp {
 
         // Send data to backend API
         this.submitPurchaseToAPI(purchase);
+      },
+
+      toggleLifetimeWarranty() {
+        if (this.form.lifetimeWarranty) {
+          // Clear warranty expiry when lifetime is selected
+          this.form.warrantyExpiry = '';
+        }
       },
 
       async getOrCreateRetailer(apiUrl, retailerName) {
