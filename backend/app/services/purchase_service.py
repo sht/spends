@@ -2,11 +2,41 @@ from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
+from sqlalchemy import func
 from datetime import datetime, date
 from app.models.purchase import Purchase
 from app.models.warranty import Warranty
 from app.schemas.purchase import PurchaseCreate, PurchaseUpdate
 from uuid import UUID
+
+
+SORT_FIELD_MAP = {
+    "name": Purchase.product_name,
+    "price": Purchase.price,
+    "purchaseDate": Purchase.purchase_date,
+    "retailer": Purchase.retailer_id,
+    "modelNumber": Purchase.model_number,
+    "quantity": Purchase.quantity,
+    "serialNumber": Purchase.serial_number,
+    "retailerOrderNumber": Purchase.retailer_order_number,
+    "taxDeductible": Purchase.tax_deductible,
+    "tags": Purchase.tags,
+    "notes": Purchase.notes,
+}
+
+
+def _apply_filters(query, retailer_id, search, tag, date_from, date_to):
+    if retailer_id:
+        query = query.where(Purchase.retailer_id == retailer_id)
+    if search:
+        query = query.where(Purchase.product_name.ilike(f"%{search}%"))
+    if tag:
+        query = query.where(Purchase.tags.ilike(f"%{tag}%"))
+    if date_from:
+        query = query.where(Purchase.purchase_date >= date.fromisoformat(date_from))
+    if date_to:
+        query = query.where(Purchase.purchase_date <= date.fromisoformat(date_to))
+    return query
 
 
 async def get_purchase(db: AsyncSession, purchase_id: str) -> Optional[Purchase]:
@@ -27,7 +57,11 @@ async def get_purchases(
     retailer_id: Optional[str] = None,
     search: Optional[str] = None,
     tag: Optional[str] = None,
-) -> tuple[List[Purchase], int]:
+    sort_by: Optional[str] = None,
+    sort_direction: Optional[str] = "desc",
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+) -> tuple[List[Purchase], int, float]:
     query = (
         select(Purchase)
         .options(selectinload(Purchase.retailer))
@@ -35,37 +69,34 @@ async def get_purchases(
         .options(selectinload(Purchase.warranty))
     )
 
-    # Apply filters
-    if retailer_id:
-        query = query.filter(Purchase.retailer_id == retailer_id)
-    if search:
-        query = query.filter(Purchase.product_name.ilike(f"%{search}%"))
-    if tag:
-        query = query.filter(
-            (Purchase.tags.ilike(f"%{tag}%")) | (Purchase.tags.is_(None))
-        )
+    # Apply filters to main query
+    query = _apply_filters(query, retailer_id, search, tag, date_from, date_to)
 
-    # Get total count
-    count_query = select(Purchase.id)
-    if retailer_id:
-        count_query = count_query.filter(Purchase.retailer_id == retailer_id)
-    if search:
-        count_query = count_query.filter(Purchase.product_name.ilike(f"%{search}%"))
-    if tag:
-        count_query = count_query.filter(
-            (Purchase.tags.ilike(f"%{tag}%")) | (Purchase.tags.is_(None))
-        )
+    # Get total count and total spending in one query
+    stats_query = select(
+        func.count(Purchase.id),
+        func.coalesce(func.sum(Purchase.price), 0),
+    ).select_from(Purchase)
+    stats_query = _apply_filters(stats_query, retailer_id, search, tag, date_from, date_to)
+    stats_result = await db.execute(stats_query)
+    row = stats_result.one()
+    total = row[0]
+    total_spending = float(row[1])
 
-    total_result = await db.execute(count_query)
-    total = len(total_result.scalars().all())
+    # Apply sorting
+    sort_column = SORT_FIELD_MAP.get(sort_by, Purchase.created_at)
+    if sort_direction == "asc":
+        query = query.order_by(sort_column.asc())
+    else:
+        query = query.order_by(sort_column.desc())
 
-    # Apply ordering (newest first) and pagination
-    query = query.order_by(Purchase.created_at.desc()).offset(skip).limit(limit)
+    # Apply pagination
+    query = query.offset(skip).limit(limit)
 
     result = await db.execute(query)
     purchases = result.scalars().all()
 
-    return purchases, total
+    return purchases, total, total_spending
 
 
 async def create_purchase(db: AsyncSession, purchase: PurchaseCreate) -> Purchase:

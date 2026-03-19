@@ -16,6 +16,9 @@ export function registerInventoryComponent() {
     endDate: '',
     sortField: 'id',
     sortDirection: 'asc',
+    searchDebounceTimer: null,
+    serverTotal: 0,
+    serverTotalSpending: 0,
     visibleColumns: {
       product: true,
       retailer: true,
@@ -52,18 +55,17 @@ export function registerInventoryComponent() {
       const urlParams = new URLSearchParams(window.location.search);
       const viewId = urlParams.get('view');
       if (viewId) {
-        const itemToView = this.items.find((item) => item.id == viewId);
-        if (itemToView) {
-          // Open the view modal for the shared item
-          this.viewItem(itemToView);
-          // Clean up the URL to remove the parameter
-          window.history.replaceState({}, document.title, window.location.pathname);
-        }
+        try {
+          const apiUrl = window.APP_CONFIG?.API_URL || '/api';
+          const response = await fetch(`${apiUrl}/purchases/${viewId}/`);
+          if (response.ok) {
+            const apiItem = await response.json();
+            const transformed = this._transformItem(apiItem);
+            this.viewItem(transformed);
+          }
+        } catch (e) { /* ignore */ }
+        window.history.replaceState({}, document.title, window.location.pathname);
       }
-
-      this.filterInventory();
-      this.calculateStats();
-      this.updatePagination();
 
       // Initialize column selector functionality
       this.initColumnSelector();
@@ -76,7 +78,6 @@ export function registerInventoryComponent() {
             const modalContent = purchaseModal.querySelector('.modal-content');
             if (modalContent && modalContent.__x) {
               const alpineData = modalContent.__x.$data;
-              // Check if it's being opened from the "New Purchase" button
               if (
                 e.relatedTarget &&
                 e.relatedTarget.classList.contains('btn-primary') &&
@@ -84,8 +85,6 @@ export function registerInventoryComponent() {
               ) {
                 alpineData.resetForm();
               }
-              // If edit mode is set, keep it; otherwise reset to add mode
-              console.log('Modal opened - isEditMode:', alpineData.isEditMode);
             }
           }, 10);
         });
@@ -93,24 +92,12 @@ export function registerInventoryComponent() {
 
       // Listen for refresh-inventory event from addPurchaseForm
       window.addEventListener('refresh-inventory', async () => {
-        console.log('Received refresh-inventory event');
         await this.loadInventoryData();
-        this.filterInventory();
-        this.calculateStats();
-        this.updatePagination();
-        console.log('Inventory data refreshed after purchase update');
       });
 
       // Listen for settings changes to refresh date/currency displays
-      window.addEventListener('settingsChanged', async (e) => {
-        console.log('Settings changed, refreshing inventory displays...');
-        // Re-process items to apply new date format
-        this.items = this.items.map((item) => ({
-          ...item,
-          purchaseDate: window.formatDate(item.rawPurchaseDate || item.purchase_date),
-        }));
-        this.filterInventory();
-        this.updatePagination();
+      window.addEventListener('settingsChanged', async () => {
+        await this.loadInventoryData();
       });
 
       setTimeout(() => {
@@ -162,85 +149,112 @@ export function registerInventoryComponent() {
       }
     },
 
+    _transformItem(item) {
+      const purchaseDateStr = item.purchase_date;
+      const warrantyExpiryStr = item.warranty?.warranty_end || item.warranty_expiry;
+      const returnDeadlineStr = item.return_deadline;
+
+      return {
+        id: item.id,
+        name: item.product_name,
+        brand: item.brand?.name || '',
+        retailer: item.retailer?.name || '',
+        price: parseFloat(item.price),
+        rawPurchaseDate: purchaseDateStr,
+        purchaseDate: window.formatDate(purchaseDateStr),
+        purchaseDateISO: purchaseDateStr,
+        warrantyExpiry: warrantyExpiryStr || '',
+        notes: item.notes || '',
+        taxDeductible: item.tax_deductible === 1 || item.tax_deductible === true,
+        modelNumber: item.model_number || '',
+        serialNumber: item.serial_number || '',
+        retailerOrderNumber: item.retailer_order_number || '',
+        quantity: item.quantity || 1,
+        link: item.link || '',
+        returnDeadline: returnDeadlineStr || '',
+        returnPolicy: item.return_policy || '',
+        tags: item.tags || '',
+      };
+    },
+
+    getDateRangeParams() {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const toISO = (d) => d.toISOString().split('T')[0];
+
+      switch (this.dateFilter) {
+        case 'week': {
+          const day = today.getDay();
+          const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+          const startOfWeek = new Date(today);
+          startOfWeek.setDate(diff);
+          return { date_from: toISO(startOfWeek), date_to: toISO(today) };
+        }
+        case 'month': {
+          const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+          return { date_from: toISO(startOfMonth), date_to: toISO(today) };
+        }
+        case 'year': {
+          const startOfYear = new Date(today.getFullYear(), 0, 1);
+          return { date_from: toISO(startOfYear), date_to: toISO(today) };
+        }
+        case 'custom':
+          return {
+            date_from: this.startDate || null,
+            date_to: this.endDate || null,
+          };
+        default:
+          return {};
+      }
+    },
+
     async loadInventoryData() {
       try {
-        // Show loading state
         this.showLoadingState();
 
-        // Get API URL from global variable or fallback to default
         const apiUrl = window.APP_CONFIG?.API_URL || '/api';
 
-        // Fetch ALL inventory data using pagination (100 items per page max)
-        let allItems = [];
-        let page = 1;
-        let hasMore = true;
+        // Build query parameters for server-side pagination
+        const params = new URLSearchParams();
+        params.set('skip', String((this.currentPage - 1) * this.itemsPerPage));
+        params.set('limit', String(this.itemsPerPage));
 
-        while (hasMore) {
-          const skip = (page - 1) * 100;
-          const response = await fetch(`${apiUrl}/purchases/?skip=${skip}&limit=100`);
-          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-          const data = await response.json();
-
-          if (!data.items || data.items.length === 0) {
-            hasMore = false;
-            break;
-          }
-
-          allItems = allItems.concat(data.items);
-
-          // Check if we've retrieved all items
-          if (data.total && allItems.length >= data.total) {
-            hasMore = false;
-          } else if (data.items.length < 100) {
-            hasMore = false;
-          }
-
-          page++;
+        if (this.searchQuery) {
+          params.set('search', this.searchQuery);
         }
 
-        // Transform API response to match expected format
-        // Dates come as YYYY-MM-DD strings, parse them without timezone conversion
-        this.items = allItems.map((item) => {
-          // Parse date strings directly without creating Date objects to avoid timezone issues
-          const purchaseDateStr = item.purchase_date;
-          const warrantyExpiryStr = item.warranty?.warranty_end || item.warranty_expiry;
-          const returnDeadlineStr = item.return_deadline;
+        if (this.sortField && this.sortField !== 'id') {
+          params.set('sort_by', this.sortField);
+          params.set('sort_direction', this.sortDirection);
+        }
 
-          return {
-            id: item.id,
-            name: item.product_name,
-            brand: item.brand?.name || '',
-            retailer: item.retailer?.name || '',
-            price: parseFloat(item.price),
-            // Raw date for re-formatting when settings change
-            rawPurchaseDate: purchaseDateStr,
-            // Formatted date for display (per user preference)
-            purchaseDate: window.formatDate(purchaseDateStr),
-            // ISO date for edit form (YYYY-MM-DD) - use the string directly
-            purchaseDateISO: purchaseDateStr,
-            warrantyExpiry: warrantyExpiryStr || '',
-            notes: item.notes || '',
-            taxDeductible: item.tax_deductible === 1 || item.tax_deductible === true,
-            modelNumber: item.model_number || '',
-            serialNumber: item.serial_number || '',
-            retailerOrderNumber: item.retailer_order_number || '',
-            quantity: item.quantity || 1,
-            link: item.link || '',
-            returnDeadline: returnDeadlineStr || '',
-            returnPolicy: item.return_policy || '',
-            tags: item.tags || '',
-          };
-        });
+        const dateRange = this.getDateRangeParams();
+        if (dateRange.date_from) params.set('date_from', dateRange.date_from);
+        if (dateRange.date_to) params.set('date_to', dateRange.date_to);
 
-        console.log(`Loaded ${this.items.length} total purchases from inventory`);
+        const response = await fetch(`${apiUrl}/purchases/?${params.toString()}`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
 
-        // Hide loading state
+        // Transform items (this is already one page of results)
+        this.items = (data.items || []).map((item) => this._transformItem(item));
+
+        // Server-side pagination state
+        this.serverTotal = data.total || 0;
+        this.serverTotalSpending = data.total_spending || 0;
+        this.totalPages = data.pages || 1;
+
+        // For server-side pagination, paginatedItems IS items (already one page)
+        this.paginatedItems = this.items;
+        // Keep filteredItems compatible with template's filteredItems.length
+        this.filteredItems = { length: this.serverTotal };
+
+        this.calculateStats();
         this.hideLoadingState();
       } catch (error) {
         console.error('Error loading inventory data:', error);
         this.hideLoadingState();
         this.showErrorState();
-        // Fallback to mock data if API fails
         this.loadMockInventoryData();
       }
     },
@@ -344,112 +358,16 @@ export function registerInventoryComponent() {
     },
 
     calculateStats() {
-      this.stats.total = this.items.length;
-      this.stats.totalSpending = this.items.reduce((sum, i) => sum + i.price, 0);
+      this.stats.total = this.serverTotal;
+      this.stats.totalSpending = this.serverTotalSpending;
     },
 
     filterInventory() {
-      this.filteredItems = this.items.filter((item) => {
-        const matchesSearch =
-          !this.searchQuery ||
-          item.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-          item.brand.toLowerCase().includes(this.searchQuery.toLowerCase());
-
-        const matchesDate = this.checkDateFilter(item);
-
-        return matchesSearch && matchesDate;
-      });
-
-      this.sortItems();
-      this.currentPage = 1;
-      this.updatePagination();
-    },
-
-    checkDateFilter(item) {
-      if (!this.dateFilter) return true; // No date filter applied
-
-      // Convert the purchaseDate back to a Date object for comparison
-      // The purchaseDate is in format like "Jan 30, 2026", so we need to parse it
-      // But we have purchaseDateISO which is in YYYY-MM-DD format, which is easier to work with
-      const purchaseDateStr = item.purchaseDateISO || item.purchaseDate;
-
-      if (!purchaseDateStr) return true; // If no date, include the item
-
-      // Try to parse the date - it might be in different formats
-      let purchaseDate;
-      if (item.purchaseDateISO) {
-        // If we have the ISO format (YYYY-MM-DD), parse it directly
-        const [year, month, day] = item.purchaseDateISO.split('-').map(Number);
-        purchaseDate = new Date(year, month - 1, day);
-      } else {
-        // If we only have the formatted date string, try to parse it
-        purchaseDate = new Date(purchaseDateStr);
-      }
-
-      // If parsing failed, include the item
-      if (isNaN(purchaseDate.getTime())) return true;
-
-      // Get today's date for comparison
-      const today = new Date();
-      today.setHours(0, 0, 0, 0); // Reset time part for accurate comparison
-
-      const itemDate = new Date(purchaseDate);
-      itemDate.setHours(0, 0, 0, 0);
-
-      switch (this.dateFilter) {
-        case 'week':
-          // Calculate the start of the week (Monday)
-          const startOfWeek = new Date(today);
-          const day = today.getDay();
-          const diff = today.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
-          startOfWeek.setDate(diff);
-          startOfWeek.setHours(0, 0, 0, 0);
-
-          return itemDate >= startOfWeek && itemDate <= today;
-        case 'month':
-          return (
-            itemDate.getMonth() === today.getMonth() &&
-            itemDate.getFullYear() === today.getFullYear()
-          );
-        case 'year':
-          return itemDate.getFullYear() === today.getFullYear();
-        case 'custom':
-          // For custom date range, check if startDate and endDate are set
-          if (!this.startDate || !this.endDate) return true; // If dates not set, show all
-
-          // Parse the custom date range
-          const startRange = new Date(this.startDate);
-          const endRange = new Date(this.endDate);
-          startRange.setHours(0, 0, 0, 0);
-          endRange.setHours(23, 59, 59, 999); // End of the day
-
-          return itemDate >= startRange && itemDate <= endRange;
-        default:
-          return true; // No filter applied
-      }
-    },
-
-    sortItems() {
-      this.filteredItems.sort((a, b) => {
-        let aValue = a[this.sortField];
-        let bValue = b[this.sortField];
-
-        // Handle boolean sorting for taxDeductible
-        if (this.sortField === 'taxDeductible') {
-          const aVal = aValue ? 1 : 0;
-          const bVal = bValue ? 1 : 0;
-          return this.sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
-        }
-
-        // Handle numeric sorting
-        if (typeof aValue === 'number' && typeof bValue === 'number') {
-          return this.sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
-        }
-
-        // Handle string sorting
-        const comparison = String(aValue).localeCompare(String(bValue));
-        return this.sortDirection === 'asc' ? comparison : -comparison;
-      });
+      clearTimeout(this.searchDebounceTimer);
+      this.searchDebounceTimer = setTimeout(() => {
+        this.currentPage = 1;
+        this.loadInventoryData();
+      }, 300);
     },
 
     sortBy(field) {
@@ -459,14 +377,8 @@ export function registerInventoryComponent() {
         this.sortField = field;
         this.sortDirection = 'asc';
       }
-      this.filterInventory();
-    },
-
-    updatePagination() {
-      this.totalPages = Math.ceil(this.filteredItems.length / this.itemsPerPage);
-      const start = (this.currentPage - 1) * this.itemsPerPage;
-      const end = start + this.itemsPerPage;
-      this.paginatedItems = this.filteredItems.slice(start, end);
+      this.currentPage = 1;
+      this.loadInventoryData();
     },
 
     get visiblePages() {
@@ -499,9 +411,9 @@ export function registerInventoryComponent() {
     },
 
     goToPage(page) {
-      if (page > 0 && page <= this.totalPages) {
+      if (page > 0 && page <= this.totalPages && page !== this.currentPage) {
         this.currentPage = page;
-        this.updatePagination();
+        this.loadInventoryData();
       }
     },
 
@@ -713,11 +625,7 @@ export function registerInventoryComponent() {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
 
-          // Only remove from UI after successful deletion
-          this.items = this.items.filter((i) => i.id !== item.id);
           this.selectedItems = this.selectedItems.filter((id) => id !== item.id);
-          this.filterInventory();
-          this.calculateStats();
 
           // Show success notification
           if (window.AdminApp && window.AdminApp.notificationManager) {
@@ -726,7 +634,8 @@ export function registerInventoryComponent() {
             );
           }
 
-          console.log('Item deleted from database:', item);
+          // Reload current page from server
+          await this.loadInventoryData();
 
           // Refresh dashboard data if available
           if (window.dashboardManager) {

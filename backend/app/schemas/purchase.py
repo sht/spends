@@ -23,7 +23,7 @@ class PurchaseBase(BaseModel):
     model_number: Optional[str] = Field(default=None, max_length=100)
     serial_number: Optional[str] = Field(default=None, max_length=100)
     retailer_order_number: Optional[str] = Field(default=None, max_length=100)
-    quantity: Optional[int] = Field(default=1, ge=1)
+    quantity: Optional[int] = Field(default=1, ge=0)
     link: Optional[str] = Field(default=None, max_length=500)
     return_deadline: Optional[date] = None
     return_policy: Optional[str] = Field(default=None, max_length=300)
@@ -55,7 +55,7 @@ class PurchaseUpdate(BaseModel):
     model_number: Optional[str] = Field(None, max_length=100)
     serial_number: Optional[str] = Field(None, max_length=100)
     retailer_order_number: Optional[str] = Field(None, max_length=100)
-    quantity: Optional[int] = Field(None, ge=1)
+    quantity: Optional[int] = Field(None, ge=0)
     link: Optional[str] = Field(None, max_length=500)
     return_deadline: Optional[date] = None
     return_policy: Optional[str] = Field(None, max_length=300)

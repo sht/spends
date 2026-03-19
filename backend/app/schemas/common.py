@@ -19,3 +19,4 @@ class PaginatedResponse(BaseModel):
     page: int
     limit: int
     pages: int
+    total_spending: Optional[float] = None
