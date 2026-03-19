@@ -57,10 +57,9 @@ export default defineConfig({
     // Proxy API requests to the FastAPI backend during development
     proxy: {
       '/api': {
-        target: env.VITE_API_URL || 'http://localhost:3031',
+        target: 'http://127.0.0.1:9999',
         changeOrigin: true,
         ws: true,
-        rewrite: (path) => path,
       },
     },
   },

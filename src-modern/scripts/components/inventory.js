@@ -8,7 +8,7 @@ export function registerInventoryComponent() {
     selectedItems: [],
     paginatedItems: [],
     currentPage: 1,
-    itemsPerPage: 10,
+    itemsPerPage: 20,
     totalPages: 1,
     searchQuery: '',
     dateFilter: '',
@@ -170,14 +170,37 @@ export function registerInventoryComponent() {
         // Get API URL from global variable or fallback to default
         const apiUrl = window.APP_CONFIG?.API_URL || '/api';
 
-        // Fetch inventory data from the backend API
-        const response = await fetch(`${apiUrl}/purchases/`);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json();
+        // Fetch ALL inventory data using pagination (100 items per page max)
+        let allItems = [];
+        let page = 1;
+        let hasMore = true;
+
+        while (hasMore) {
+          const skip = (page - 1) * 100;
+          const response = await fetch(`${apiUrl}/purchases/?skip=${skip}&limit=100`);
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          const data = await response.json();
+
+          if (!data.items || data.items.length === 0) {
+            hasMore = false;
+            break;
+          }
+
+          allItems = allItems.concat(data.items);
+
+          // Check if we've retrieved all items
+          if (data.total && allItems.length >= data.total) {
+            hasMore = false;
+          } else if (data.items.length < 100) {
+            hasMore = false;
+          }
+
+          page++;
+        }
 
         // Transform API response to match expected format
         // Dates come as YYYY-MM-DD strings, parse them without timezone conversion
-        this.items = data.items.map((item) => {
+        this.items = allItems.map((item) => {
           // Parse date strings directly without creating Date objects to avoid timezone issues
           const purchaseDateStr = item.purchase_date;
           const warrantyExpiryStr = item.warranty?.warranty_end || item.warranty_expiry;
@@ -208,6 +231,8 @@ export function registerInventoryComponent() {
             tags: item.tags || '',
           };
         });
+
+        console.log(`Loaded ${this.items.length} total purchases from inventory`);
 
         // Hide loading state
         this.hideLoadingState();

@@ -18,11 +18,11 @@ router = APIRouter(prefix="/api/purchases", tags=["purchases"])
 
 @router.get("/", response_model=PaginatedResponse)
 async def list_purchases(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(20, le=100),
-    retailer_id: Optional[str] = Query(None),
-    search: Optional[str] = Query(None),
-    tag: Optional[str] = Query(None),
+    skip: int = 0,
+    limit: int = 20,
+    retailer_id: Optional[str] = None,
+    search: Optional[str] = None,
+    tag: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
 ):
     purchases, total = await get_purchases(db, skip, limit, retailer_id, search, tag)

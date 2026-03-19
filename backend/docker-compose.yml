@@ -1,17 +1,15 @@
 services:
   backend:
-    build:
-      context: ../
-      dockerfile: backend/Dockerfile
     image: tajii/spends-tracker:latest
-    container_name: spends_tracker_backend
+    container_name: spends_tracker
     ports:
       - '3031:8000'
     environment:
       - DATABASE_URL=sqlite+aiosqlite:////app/data/spends_tracker.db
+      - UPLOADS_DIR=/app/data/uploads
       - HOST=0.0.0.0
       - PORT=8000
       - TZ=Europe/Berlin
     volumes:
-      - ./data:/app/data # Custom path for persistent data
+      - /mnt/ironwolf8tb/spends:/app/data
     restart: unless-stopped
