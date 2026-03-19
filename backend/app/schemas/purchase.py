@@ -9,7 +9,7 @@ class PurchaseBase(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
 
     product_name: str = Field(..., min_length=1, max_length=255)
-    price: Decimal = Field(..., gt=0)
+    price: Decimal = Field(..., ge=0)
     currency_code: Optional[str] = Field(default="USD", max_length=3)
     retailer_id: Optional[str] = None
     brand_id: Optional[str] = None
@@ -43,7 +43,7 @@ class PurchaseUpdate(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
 
     product_name: Optional[str] = Field(None, min_length=1, max_length=255)
-    price: Optional[Decimal] = Field(None, gt=0)
+    price: Optional[Decimal] = Field(None, ge=0)
     currency_code: Optional[str] = Field(None, max_length=3)
     retailer_id: Optional[str] = None
     brand_id: Optional[str] = None
