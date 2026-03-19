@@ -3,7 +3,7 @@ import Alpine from 'alpinejs';
 export function registerDataManagementComponent() {
   Alpine.data('dataManagementComponent', () => ({
     // UI State
-    confirmReset: '',  // Stores the confirmation text ('DELETE')
+    confirmReset: '', // Stores the confirmation text ('DELETE')
     showResetModal: false,
 
     // Data Management
@@ -11,12 +11,69 @@ export function registerDataManagementComponent() {
     selectedImportFile: null,
     exportFormats: ['JSON', 'CSV'],
 
+    // Amazon Import
+    amazonImportFile: null,
+    amazonImporting: false,
+
     // Handle file selection (stores file for later import)
     onFileSelected(event) {
       const file = event.target.files[0];
       if (file) {
         this.selectedImportFile = file;
         console.log('Selected file:', file.name);
+      }
+    },
+
+    // Handle Amazon file selection
+    onAmazonFileSelected(event) {
+      const file = event.target.files[0];
+      if (file) {
+        this.amazonImportFile = file;
+        console.log('Selected Amazon file:', file.name);
+      }
+    },
+
+    // Import Amazon orders from CSV
+    async importAmazonOrders() {
+      if (!this.amazonImportFile) {
+        this.showNotification('Please select an Amazon CSV file first', 'error');
+        return;
+      }
+
+      this.amazonImporting = true;
+      this.showNotification('Importing Amazon orders...', 'info');
+
+      const apiUrl = window.APP_CONFIG?.API_URL || '/api';
+
+      try {
+        const formData = new FormData();
+        formData.append('file', this.amazonImportFile);
+
+        const response = await fetch(`${apiUrl}/import/amazon-csv`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        const parts = [];
+        if (result.purchases_added) parts.push(`${result.purchases_added} purchases imported`);
+        if (result.purchases_skipped) parts.push(`${result.purchases_skipped} duplicates skipped`);
+
+        const message = parts.length > 0 ? parts.join(', ') : 'No new purchases imported';
+        this.showNotification(message, 'success');
+      } catch (error) {
+        console.error('Amazon import error:', error);
+        this.showNotification(`Amazon import failed: ${error.message}`, 'error');
+      } finally {
+        this.amazonImporting = false;
+        this.amazonImportFile = null;
+        document.getElementById('amazonImportFile').value = '';
       }
     },
 
@@ -74,7 +131,6 @@ export function registerDataManagementComponent() {
           const content = JSON.stringify(data, null, 2);
           const filename = `spends_export_${new Date().toISOString().split('T')[0]}.json`;
           this.downloadFile(content, filename, 'application/json');
-
         } else if (formatUpper === 'CSV') {
           // Fetch purchases as CSV from backend
           const response = await fetch(`${apiUrl}/export/csv`);
@@ -86,7 +142,6 @@ export function registerDataManagementComponent() {
           // Create and download file
           const filename = `spends_purchases_${new Date().toISOString().split('T')[0]}.csv`;
           this.downloadFile(csvContent, filename, 'text/csv');
-
         } else if (formatUpper === 'ZIP') {
           // Fetch full backup ZIP from backend
           this.showNotification('Creating full backup... This may take a moment.', 'info');
@@ -146,7 +201,10 @@ export function registerDataManagementComponent() {
       const isZip = file.name.toLowerCase().endsWith('.zip');
 
       if (!isJson && !isCsv && !isZip) {
-        this.showNotification('Invalid file type. Please upload a JSON, CSV, or ZIP file.', 'error');
+        this.showNotification(
+          'Invalid file type. Please upload a JSON, CSV, or ZIP file.',
+          'error'
+        );
         return;
       }
 
@@ -166,7 +224,7 @@ export function registerDataManagementComponent() {
         // Send file to backend
         const response = await fetch(endpoint, {
           method: 'POST',
-          body: formData
+          body: formData,
         });
 
         if (!response.ok) {
@@ -187,11 +245,10 @@ export function registerDataManagementComponent() {
 
           // Add skipped info if any
           const skippedParts = [];
-          if (result.purchases_skipped_future_date) skippedParts.push(`${result.purchases_skipped_future_date} with future date`);
+          if (result.purchases_skipped_future_date)
+            skippedParts.push(`${result.purchases_skipped_future_date} with future date`);
 
-          message = parts.length > 0
-            ? `Imported: ${parts.join(', ')}`
-            : 'No new data imported';
+          message = parts.length > 0 ? `Imported: ${parts.join(', ')}` : 'No new data imported';
           if (skippedParts.length > 0) {
             message += ` (${skippedParts.join(', ')} skipped)`;
           }
@@ -206,11 +263,10 @@ export function registerDataManagementComponent() {
 
           // Add skipped info if any
           const skippedParts = [];
-          if (result.purchases_skipped_future_date) skippedParts.push(`${result.purchases_skipped_future_date} purchases with future date`);
+          if (result.purchases_skipped_future_date)
+            skippedParts.push(`${result.purchases_skipped_future_date} purchases with future date`);
 
-          message = parts.length > 0
-            ? `Restored: ${parts.join(', ')}`
-            : 'No new data restored';
+          message = parts.length > 0 ? `Restored: ${parts.join(', ')}` : 'No new data restored';
           if (skippedParts.length > 0) {
             message += ` (${skippedParts.join(', ')} skipped)`;
           }
@@ -224,7 +280,6 @@ export function registerDataManagementComponent() {
 
         // Clear file input
         event.target.value = '';
-
       } catch (error) {
         console.error('Import error:', error);
         this.showNotification(`Import failed: ${error.message}`, 'error');
@@ -249,7 +304,7 @@ export function registerDataManagementComponent() {
       try {
         // Call the reset-all API endpoint
         const response = await fetch(`${apiUrl}/data/reset-all`, {
-          method: 'POST'
+          method: 'POST',
         });
 
         if (!response.ok) {
@@ -261,12 +316,11 @@ export function registerDataManagementComponent() {
 
         // Reset local settings to defaults
         localStorage.removeItem('appSettings');
-        
+
         // Close modal and show success
         this.showResetModal = false;
         this.confirmReset = '';
         this.showNotification('All data has been erased successfully', 'success');
-
       } catch (error) {
         console.error('Reset error:', error);
         this.showNotification(`Failed to erase data: ${error.message}`, 'error');
@@ -298,6 +352,6 @@ export function registerDataManagementComponent() {
             window.AdminApp.notificationManager.info(message);
         }
       }
-    }
+    },
   }));
 }

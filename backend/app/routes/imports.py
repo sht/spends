@@ -3,26 +3,28 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import json
 from app.database import get_db
 from app.utils.import_export import import_data_from_json, import_purchases_from_csv
+from app.utils.amazon_csv import import_amazon_csv
 from app.utils.zip_backup import restore_from_backup
 
 router = APIRouter(prefix="/api/import", tags=["import"])
 
 
 @router.post("/json")
-async def import_data_json(file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
+async def import_data_json(
+    file: UploadFile = File(...), db: AsyncSession = Depends(get_db)
+):
     """
     Import data from JSON file
     """
-    if not file.filename.endswith('.json'):
+    if not file.filename.endswith(".json"):
         raise HTTPException(
-            status_code=400,
-            detail="Invalid file type. Please upload a JSON file."
+            status_code=400, detail="Invalid file type. Please upload a JSON file."
         )
-    
+
     try:
         contents = await file.read()
-        json_data = json.loads(contents.decode('utf-8'))
-        
+        json_data = json.loads(contents.decode("utf-8"))
+
         result = await import_data_from_json(db, json_data)
         return result
     except json.JSONDecodeError:
@@ -32,48 +34,77 @@ async def import_data_json(file: UploadFile = File(...), db: AsyncSession = Depe
 
 
 @router.post("/csv")
-async def import_purchases_csv(file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
+async def import_purchases_csv(
+    file: UploadFile = File(...), db: AsyncSession = Depends(get_db)
+):
     """
     Import purchases from CSV file
     """
-    if not file.filename.endswith('.csv'):
+    if not file.filename.endswith(".csv"):
         raise HTTPException(
-            status_code=400,
-            detail="Invalid file type. Please upload a CSV file."
+            status_code=400, detail="Invalid file type. Please upload a CSV file."
         )
-    
+
     try:
         contents = await file.read()
-        csv_content = contents.decode('utf-8')
-        
+        csv_content = contents.decode("utf-8")
+
         result = await import_purchases_from_csv(db, csv_content)
         return result
     except UnicodeDecodeError:
-        raise HTTPException(status_code=400, detail="Invalid CSV format - unable to decode file")
+        raise HTTPException(
+            status_code=400, detail="Invalid CSV format - unable to decode file"
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error importing CSV: {str(e)}")
 
 
 @router.post("/zip")
-async def import_backup_zip(file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
+async def import_backup_zip(
+    file: UploadFile = File(...), db: AsyncSession = Depends(get_db)
+):
     """
     Import full backup from ZIP file (JSON data + files)
     """
-    if not file.filename.endswith('.zip'):
+    if not file.filename.endswith(".zip"):
         raise HTTPException(
-            status_code=400,
-            detail="Invalid file type. Please upload a ZIP file."
+            status_code=400, detail="Invalid file type. Please upload a ZIP file."
         )
-    
+
     try:
         contents = await file.read()
         result = await restore_from_backup(db, contents)
-        
+
         if result.get("errors"):
             raise HTTPException(status_code=400, detail=result["errors"])
-        
+
         return result
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error importing backup: {str(e)}")
+
+
+@router.post("/amazon-csv")
+async def import_amazon_csv_endpoint(
+    file: UploadFile = File(...), db: AsyncSession = Depends(get_db)
+):
+    """Import purchases from Amazon order history CSV"""
+    if not file.filename.endswith(".csv"):
+        raise HTTPException(
+            status_code=400, detail="Invalid file type. Please upload a CSV file."
+        )
+
+    try:
+        contents = await file.read()
+        try:
+            csv_content = contents.decode("utf-8").lstrip("\ufeff")
+        except UnicodeDecodeError:
+            csv_content = contents.decode("latin-1")
+
+        result = await import_amazon_csv(db, csv_content, fetch_images=False)
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error importing Amazon CSV: {str(e)}"
+        )

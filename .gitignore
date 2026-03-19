@@ -67,6 +67,7 @@ develop-eggs/
 dist/
 downloads/
 eggs/
+plan.md
 .eggs/
 lib/
 lib64/

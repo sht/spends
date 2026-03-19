@@ -53,6 +53,37 @@
                     </div>
                 </div>
 
+                <!-- Amazon Import Card -->
+                <div class="card mb-4">
+                    <div class="card-header bg-body-secondary border-bottom rounded-top py-3">
+                        <h5 class="mb-0"><i class="bi bi-cart me-2"></i>Import Amazon Orders</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-4">Import your order history from Amazon's CSV export</p>
+                        <div class="input-group">
+                            <input type="file" class="form-control" id="amazonImportFile" accept=".csv"
+                                   @change="onAmazonFileSelected($event)">
+                            <button class="btn btn-warning" type="button" :disabled="amazonImporting"
+                                    @click="importAmazonOrders()">
+                                <span x-show="!amazonImporting">
+                                    <i class="bi bi-cart-plus me-2"></i>Import
+                                </span>
+                                <span x-show="amazonImporting">
+                                    <span class="spinner-border spinner-border-sm me-2"></span>Importing...
+                                </span>
+                            </button>
+                        </div>
+                        <small class="text-muted d-block mt-2">
+                            Download your order history from
+                            <a href="https://www.amazon.de/-/en/hz/privacy-central/data-requests/preview.html" target="_blank" rel="noopener">
+                                Amazon Data & Privacy
+                            </a>
+                            → Request My Data → Select "Order History" → Download ZIP → Extract → Upload
+                            <code>Your Orders/Your Amazon Orders/Order History.csv</code>
+                        </small>
+                    </div>
+                </div>
+
                 <!-- Data Import and Danger Zone Row -->
                 <div class="row g-4 align-items-stretch">
                     <!-- Data Import Card -->
