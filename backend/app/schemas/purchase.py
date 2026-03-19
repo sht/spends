@@ -98,3 +98,4 @@ class PurchaseResponse(PurchaseBase, BaseResponse):
     retailer: Optional[RetailerInfo] = None
     brand: Optional[BrandInfo] = None
     warranty: Optional[WarrantyInfo] = None
+    updated_at: Optional[datetime] = None

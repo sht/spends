@@ -2195,6 +2195,7 @@ class AdminApp {
         taxDeductible: undefined,
         tags: '',
         notes: '',
+        updatedAt: '',
         files: [],
         receipts: [],
         manuals: [],

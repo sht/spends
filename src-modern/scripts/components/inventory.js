@@ -63,7 +63,9 @@ export function registerInventoryComponent() {
             const transformed = this._transformItem(apiItem);
             this.viewItem(transformed);
           }
-        } catch (e) { /* ignore */ }
+        } catch (e) {
+          /* ignore */
+        }
         window.history.replaceState({}, document.title, window.location.pathname);
       }
 
@@ -174,6 +176,7 @@ export function registerInventoryComponent() {
         returnDeadline: returnDeadlineStr || '',
         returnPolicy: item.return_policy || '',
         tags: item.tags || '',
+        updatedAt: item.updated_at || '',
       };
     },
 
@@ -541,6 +544,7 @@ export function registerInventoryComponent() {
         taxDeductible: freshItem.taxDeductible !== undefined ? freshItem.taxDeductible : undefined,
         tags: freshItem.tags !== undefined ? freshItem.tags : undefined,
         notes: freshItem.notes !== undefined ? freshItem.notes : undefined,
+        updatedAt: freshItem.updatedAt !== undefined ? freshItem.updatedAt : undefined,
         id: freshItem.id,
       };
 
