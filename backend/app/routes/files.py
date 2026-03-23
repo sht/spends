@@ -16,6 +16,7 @@ import hashlib
 import aiofiles
 from app.database import get_db
 from app.models.purchase import Purchase
+from app.models.component import Component
 from app.models.file import File as FileModel, FileType
 from app.schemas.file import FileResponse
 from app.config import settings
@@ -333,3 +334,143 @@ async def download_file(file_id: str, db: AsyncSession = Depends(get_db)):
             "Content-Disposition": f'{disposition}; filename="{db_file.filename}"'
         },
     )
+
+
+# Component file endpoints
+@router.post("/component/{component_id}/")
+async def upload_file_for_component(
+    component_id: str,
+    file: UploadFile = File(...),
+    file_type: str = Form(...),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Upload a file for a specific component
+    """
+    import traceback
+
+    try:
+        # Verify component exists
+        result = await db.execute(
+            select(Component).filter(Component.id == component_id)
+        )
+        component = result.scalar_one_or_none()
+        if not component:
+            raise HTTPException(status_code=404, detail="Component not found")
+
+        # Validate file type and convert to enum
+        valid_types = ["receipt", "manual", "photo", "warranty", "other"]
+        if file_type.lower() not in valid_types:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid file type. Valid types: {valid_types}"
+            )
+
+        file_type_enum = FileType(file_type.lower())
+
+        # Read file contents and validate size (max 10MB)
+        contents = await file.read()
+        max_size = 10 * 1024 * 1024
+        if len(contents) > max_size:
+            raise HTTPException(
+                status_code=413, detail="File too large. Maximum size is 10MB"
+            )
+
+        # Calculate file hash for deduplication
+        file_hash = hashlib.sha256(contents).hexdigest()
+
+        # Check if this component already has this file (same hash)
+        result = await db.execute(
+            select(FileModel).filter(
+                FileModel.file_hash == file_hash, FileModel.component_id == component_id
+            )
+        )
+        existing_in_component = result.scalar_one_or_none()
+        if existing_in_component:
+            return FileResponse.model_validate(
+                existing_in_component, from_attributes=True
+            )
+
+        # Check if file already exists anywhere (based on hash)
+        result = await db.execute(
+            select(FileModel).filter(FileModel.file_hash == file_hash)
+        )
+        existing_file = result.scalars().first()
+        if existing_file:
+            existing_file.reference_count += 1
+
+            db_file = FileModel(
+                purchase_id=component.purchase_id,
+                component_id=component_id,
+                filename=file.filename,
+                stored_filename=existing_file.stored_filename,
+                file_type=file_type_enum,
+                mime_type=file.content_type,
+                file_size=len(contents),
+                file_hash=file_hash,
+                reference_count=0,
+            )
+            db.add(db_file)
+            await db.commit()
+            await db.refresh(db_file)
+            return FileResponse.model_validate(db_file, from_attributes=True)
+
+        # Generate unique filename
+        _, ext = os.path.splitext(file.filename)
+        stored_filename = f"{file_hash}{ext}"
+
+        # Create subdirectories based on first 2 chars of hash
+        subdir1 = file_hash[:2]
+        subdir2 = file_hash[2:4]
+        full_dir = os.path.join(UPLOAD_DIR, subdir1, subdir2)
+        os.makedirs(full_dir, exist_ok=True)
+
+        # Save file
+        file_path = os.path.join(full_dir, stored_filename)
+        async with aiofiles.open(file_path, "wb") as f:
+            await f.write(contents)
+
+        # Create file record in database
+        db_file = FileModel(
+            purchase_id=component.purchase_id,
+            component_id=component_id,
+            filename=file.filename,
+            stored_filename=stored_filename,
+            file_type=file_type_enum,
+            mime_type=file.content_type,
+            file_size=len(contents),
+            file_hash=file_hash,
+        )
+
+        db.add(db_file)
+        await db.commit()
+        await db.refresh(db_file)
+
+        return FileResponse.model_validate(db_file, from_attributes=True)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"ERROR in upload_file_for_component: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
+@router.get("/component/{component_id}/")
+async def get_files_for_component(
+    component_id: str, db: AsyncSession = Depends(get_db)
+) -> List[FileResponse]:
+    """
+    Get all files for a specific component
+    """
+    # Verify component exists
+    result = await db.execute(select(Component).filter(Component.id == component_id))
+    component = result.scalar_one_or_none()
+    if not component:
+        raise HTTPException(status_code=404, detail="Component not found")
+
+    # Get files for this component
+    result = await db.execute(
+        select(FileModel).filter(FileModel.component_id == component_id)
+    )
+    files = result.scalars().all()
+    return [FileResponse.model_validate(f, from_attributes=True) for f in files]

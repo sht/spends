@@ -14,6 +14,7 @@ from app.routes import (
     files,
     data,
     settings,
+    components,
 )
 from app.database import get_db
 
@@ -58,6 +59,7 @@ app.include_router(imports)
 app.include_router(files)
 app.include_router(data)
 app.include_router(settings.router)
+app.include_router(components)
 
 
 # Mount public-assets for static resources (images, icons, etc.)

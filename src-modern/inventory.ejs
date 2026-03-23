@@ -753,6 +753,76 @@
                                             </div>
                                         </div>
                                     </div>
+
+                                    <!-- Components Section -->
+                                    <div class="card border shadow-sm mt-3">
+                                        <div class="card-header bg-transparent border-0 pb-0">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <h6 class="fw-semibold text-primary mb-0">
+                                                    <i class="bi bi-diagram-3 me-2"></i>Components
+                                                </h6>
+                                                <button type="button" class="btn btn-sm btn-outline-primary" @click="openAddComponentModal()">
+                                                    <i class="bi bi-plus-lg me-1"></i>Add Component
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="card-body pt-0">
+                                            <div x-show="loadingComponents" class="text-center py-3">
+                                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                            </div>
+                                            <div x-show="!loadingComponents && components.length === 0" class="text-center py-3 text-muted">
+                                                <small>No components yet. Click "Add Component" to add one.</small>
+                                            </div>
+                                            <div x-show="!loadingComponents && components.length > 0" class="table-responsive">
+                                                <table class="table table-sm table-hover mb-0">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Name</th>
+                                                            <th>Brand/Model</th>
+                                                            <th>Serial</th>
+                                                            <th>Warranty</th>
+                                                            <th></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <template x-for="comp in components" :key="comp.id">
+                                                            <tr>
+                                                                <td>
+                                                                    <span class="fw-medium" x-text="comp.name"></span>
+                                                                    <div x-show="comp.notes" class="text-muted small text-truncate" style="max-width: 200px;" x-text="comp.notes"></div>
+                                                                </td>
+                                                                <td>
+                                                                    <span x-text="comp.brand || '-'"></span>
+                                                                    <span x-show="comp.model_number" class="text-muted" x-text="' / ' + comp.model_number"></span>
+                                                                </td>
+                                                                <td><span x-text="comp.serial_number || '-'"></span></td>
+                                                                <td>
+                                                                    <template x-if="comp.warranty_expiry">
+                                                                        <span class="badge" :class="new Date(comp.warranty_expiry) >= new Date() ? 'bg-success' : 'bg-secondary'" x-text="comp.warranty_expiry"></span>
+                                                                    </template>
+                                                                    <template x-if="!comp.warranty_expiry">
+                                                                        <span class="text-muted">-</span>
+                                                                    </template>
+                                                                </td>
+                                                                <td>
+                                                                    <div class="btn-group btn-group-sm">
+                                                                        <button class="btn btn-outline-secondary" @click="editComponent(comp)" title="Edit">
+                                                                            <i class="bi bi-pencil"></i>
+                                                                        </button>
+                                                                        <button class="btn btn-outline-danger" @click="deleteComponent(comp.id)" title="Delete">
+                                                                            <i class="bi bi-trash"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </template>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

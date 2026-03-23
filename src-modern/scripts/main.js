@@ -2211,9 +2211,330 @@ class AdminApp {
             // Load files for this purchase
             if (e.detail.item.id) {
               this.loadFiles(e.detail.item.id);
+              // Load components for this purchase
+              this.loadComponents(e.detail.item.id);
             }
           }
         });
+      },
+
+      // Components
+      components: [],
+      loadingComponents: false,
+
+      async loadComponents(purchaseId) {
+        if (!purchaseId) return;
+        this.loadingComponents = true;
+        this.components = [];
+
+        try {
+          const apiUrl = window.APP_CONFIG?.API_URL || '/api';
+          const response = await fetch(`${apiUrl}/components/${purchaseId}/`);
+          if (response.ok) {
+            this.components = await response.json();
+          }
+        } catch (error) {
+          console.error('Error loading components:', error);
+        } finally {
+          this.loadingComponents = false;
+        }
+      },
+
+      async saveComponent(componentData) {
+        const apiUrl = window.APP_CONFIG?.API_URL || '/api';
+
+        try {
+          if (componentData.id) {
+            const response = await fetch(`${apiUrl}/components/${componentData.id}/`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(componentData),
+            });
+            if (!response.ok) throw new Error('Failed to update component');
+          } else {
+            const response = await fetch(`${apiUrl}/components/`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(componentData),
+            });
+            if (!response.ok) throw new Error('Failed to create component');
+          }
+          await this.loadComponents(this.item.id);
+          this.closeComponentModal();
+        } catch (error) {
+          console.error('Error saving component:', error);
+          if (window.AdminApp && window.AdminApp.notificationManager) {
+            window.AdminApp.notificationManager.error('Failed to save component: ' + error.message);
+          }
+        }
+      },
+
+      async deleteComponent(componentId) {
+        if (!confirm('Delete this component?')) return;
+
+        try {
+          const apiUrl = window.APP_CONFIG?.API_URL || '/api';
+          const response = await fetch(`${apiUrl}/components/${componentId}/`, {
+            method: 'DELETE',
+          });
+          if (!response.ok) throw new Error('Failed to delete component');
+          await this.loadComponents(this.item.id);
+        } catch (error) {
+          console.error('Error deleting component:', error);
+          if (window.AdminApp && window.AdminApp.notificationManager) {
+            window.AdminApp.notificationManager.error(
+              'Failed to delete component: ' + error.message
+            );
+          }
+        }
+      },
+
+      openAddComponentModal() {
+        // Hide the view modal first
+        const viewModalEl = document.getElementById('viewDetailsModal');
+        if (viewModalEl) {
+          const viewModal = bootstrap.Modal.getInstance(viewModalEl);
+          if (viewModal) viewModal.hide();
+        }
+
+        const modalHtml = `
+          <div class="modal fade" id="componentModal" tabindex="-1" aria-labelledby="componentModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="componentModalLabel">Add Component</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <form id="componentForm">
+                    <input type="hidden" name="id" value="">
+                    <input type="hidden" name="purchase_id" value="${this.item.id}">
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <label class="form-label">Name *</label>
+                        <input type="text" class="form-control" name="name" required>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Brand</label>
+                        <input type="text" class="form-control" name="brand">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Model Number</label>
+                        <input type="text" class="form-control" name="model_number">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Serial Number</label>
+                        <input type="text" class="form-control" name="serial_number">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Price</label>
+                        <input type="number" class="form-control" name="price" step="0.01" min="0">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Quantity</label>
+                        <input type="number" class="form-control" name="quantity" value="1" min="1">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Link</label>
+                        <input type="url" class="form-control" name="link">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Warranty Expiry</label>
+                        <input type="date" class="form-control" name="warranty_expiry">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Warranty Type</label>
+                        <select class="form-select" name="warranty_type">
+                          <option value="">None</option>
+                          <option value="LIMITED">Limited</option>
+                          <option value="LIFETIME">Lifetime</option>
+                        </select>
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="2"></textarea>
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" name="notes" rows="2"></textarea>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Tags</label>
+                        <input type="text" class="form-control" name="tags" placeholder="Comma-separated tags">
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label">Attachments</label>
+                        <div class="border rounded p-3 bg-light">
+                          <div class="row g-2">
+                            <div class="col-3">
+                              <label class="form-label small text-muted">Receipts</label>
+                              <input type="file" class="form-control form-control-sm" name="receipts" multiple accept="image/*,.pdf">
+                            </div>
+                            <div class="col-3">
+                              <label class="form-label small text-muted">Photos</label>
+                              <input type="file" class="form-control form-control-sm" name="photos" multiple accept="image/*">
+                            </div>
+                            <div class="col-3">
+                              <label class="form-label small text-muted">Manuals</label>
+                              <input type="file" class="form-control form-control-sm" name="manuals" multiple accept=".pdf,.doc,.docx">
+                            </div>
+                            <div class="col-3">
+                              <label class="form-label small text-muted">Warranties</label>
+                              <input type="file" class="form-control form-control-sm" name="warranties" multiple accept=".pdf,.doc,.docx,image/*">
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  <button type="button" class="btn btn-primary" onclick="saveComponentFromModal()">Save</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const existing = document.getElementById('componentModal');
+        if (existing) existing.remove();
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = new bootstrap.Modal(document.getElementById('componentModal'));
+        modal.show();
+
+        document.getElementById('componentModal').addEventListener('hidden.bs.modal', function () {
+          this.remove();
+        });
+      },
+
+      editComponent(comp) {
+        // Hide the view modal first
+        const viewModalEl = document.getElementById('viewDetailsModal');
+        if (viewModalEl) {
+          const viewModal = bootstrap.Modal.getInstance(viewModalEl);
+          if (viewModal) viewModal.hide();
+        }
+
+        const modalHtml = `
+          <div class="modal fade" id="componentModal" tabindex="-1" aria-labelledby="componentModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="componentModalLabel">Edit Component</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <form id="componentForm">
+                    <input type="hidden" name="id" value="${comp.id}">
+                    <input type="hidden" name="purchase_id" value="${this.item.id}">
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <label class="form-label">Name *</label>
+                        <input type="text" class="form-control" name="name" value="${comp.name}" required>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Brand</label>
+                        <input type="text" class="form-control" name="brand" value="${comp.brand || ''}">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Model Number</label>
+                        <input type="text" class="form-control" name="model_number" value="${comp.model_number || ''}">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Serial Number</label>
+                        <input type="text" class="form-control" name="serial_number" value="${comp.serial_number || ''}">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Price</label>
+                        <input type="number" class="form-control" name="price" step="0.01" min="0" value="${comp.price || ''}">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Quantity</label>
+                        <input type="number" class="form-control" name="quantity" value="${comp.quantity || 1}" min="1">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Link</label>
+                        <input type="url" class="form-control" name="link" value="${comp.link || ''}">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Warranty Expiry</label>
+                        <input type="date" class="form-control" name="warranty_expiry" value="${comp.warranty_expiry || ''}">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Warranty Type</label>
+                        <select class="form-select" name="warranty_type">
+                          <option value="">None</option>
+                          <option value="LIMITED" ${comp.warranty_type === 'LIMITED' ? 'selected' : ''}>Limited</option>
+                          <option value="LIFETIME" ${comp.warranty_type === 'LIFETIME' ? 'selected' : ''}>Lifetime</option>
+                        </select>
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="2">${comp.description || ''}</textarea>
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" name="notes" rows="2">${comp.notes || ''}</textarea>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Tags</label>
+                        <input type="text" class="form-control" name="tags" value="${comp.tags || ''}" placeholder="Comma-separated tags">
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label">Attachments</label>
+                        <div class="border rounded p-3 bg-light">
+                          <div class="row g-2">
+                            <div class="col-3">
+                              <label class="form-label small text-muted">Receipts</label>
+                              <input type="file" class="form-control form-control-sm" name="receipts" multiple accept="image/*,.pdf">
+                            </div>
+                            <div class="col-3">
+                              <label class="form-label small text-muted">Photos</label>
+                              <input type="file" class="form-control form-control-sm" name="photos" multiple accept="image/*">
+                            </div>
+                            <div class="col-3">
+                              <label class="form-label small text-muted">Manuals</label>
+                              <input type="file" class="form-control form-control-sm" name="manuals" multiple accept=".pdf,.doc,.docx">
+                            </div>
+                            <div class="col-3">
+                              <label class="form-label small text-muted">Warranties</label>
+                              <input type="file" class="form-control form-control-sm" name="warranties" multiple accept=".pdf,.doc,.docx,image/*">
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  <button type="button" class="btn btn-primary" onclick="saveComponentFromModal()">Save</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const existing = document.getElementById('componentModal');
+        if (existing) existing.remove();
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = new bootstrap.Modal(document.getElementById('componentModal'));
+        modal.show();
+
+        document.getElementById('componentModal').addEventListener('hidden.bs.modal', function () {
+          this.remove();
+        });
+      },
+
+      closeComponentModal() {
+        const modalEl = document.getElementById('componentModal');
+        if (modalEl) {
+          const modal = bootstrap.Modal.getInstance(modalEl);
+          if (modal) modal.hide();
+        }
       },
 
       setItem(itemData) {
@@ -2453,6 +2774,269 @@ class AdminApp {
       },
     }));
 
+    // Components Manager - handles components in view modal
+    Alpine.data('componentsManager', () => ({
+      components: [],
+      loadingComponents: false,
+      currentPurchaseId: null,
+
+      async loadComponents(purchaseId) {
+        if (!purchaseId) return;
+        this.currentPurchaseId = purchaseId;
+        this.loadingComponents = true;
+        this.components = [];
+
+        try {
+          const apiUrl = window.APP_CONFIG?.API_URL || '/api';
+          const response = await fetch(`${apiUrl}/components/${purchaseId}/`);
+          if (response.ok) {
+            this.components = await response.json();
+          }
+        } catch (error) {
+          console.error('Error loading components:', error);
+        } finally {
+          this.loadingComponents = false;
+        }
+      },
+
+      async saveComponent(componentData) {
+        const apiUrl = window.APP_CONFIG?.API_URL || '/api';
+
+        try {
+          if (componentData.id) {
+            // Update existing
+            const response = await fetch(`${apiUrl}/components/${componentData.id}/`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(componentData),
+            });
+            if (!response.ok) throw new Error('Failed to update component');
+          } else {
+            // Create new
+            const response = await fetch(`${apiUrl}/components/`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(componentData),
+            });
+            if (!response.ok) throw new Error('Failed to create component');
+          }
+          await this.loadComponents(this.currentPurchaseId);
+          this.closeComponentModal();
+        } catch (error) {
+          console.error('Error saving component:', error);
+          if (window.AdminApp && window.AdminApp.notificationManager) {
+            window.AdminApp.notificationManager.error('Failed to save component: ' + error.message);
+          }
+        }
+      },
+
+      async deleteComponent(componentId) {
+        if (!confirm('Delete this component?')) return;
+
+        try {
+          const apiUrl = window.APP_CONFIG?.API_URL || '/api';
+          const response = await fetch(`${apiUrl}/components/${componentId}/`, {
+            method: 'DELETE',
+          });
+          if (!response.ok) throw new Error('Failed to delete component');
+          await this.loadComponents(this.currentPurchaseId);
+        } catch (error) {
+          console.error('Error deleting component:', error);
+          if (window.AdminApp && window.AdminApp.notificationManager) {
+            window.AdminApp.notificationManager.error(
+              'Failed to delete component: ' + error.message
+            );
+          }
+        }
+      },
+
+      openAddComponentModal() {
+        const modalHtml = `
+          <div class="modal fade" id="componentModal" tabindex="-1" aria-labelledby="componentModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="componentModalLabel">Add Component</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <form id="componentForm">
+                    <input type="hidden" name="id" value="">
+                    <input type="hidden" name="purchase_id" value="${this.currentPurchaseId}">
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <label class="form-label">Name *</label>
+                        <input type="text" class="form-control" name="name" required>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Brand</label>
+                        <input type="text" class="form-control" name="brand">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Model Number</label>
+                        <input type="text" class="form-control" name="model_number">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Serial Number</label>
+                        <input type="text" class="form-control" name="serial_number">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Price</label>
+                        <input type="number" class="form-control" name="price" step="0.01" min="0">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Quantity</label>
+                        <input type="number" class="form-control" name="quantity" value="1" min="1">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Link</label>
+                        <input type="url" class="form-control" name="link">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Warranty Expiry</label>
+                        <input type="date" class="form-control" name="warranty_expiry">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Warranty Type</label>
+                        <select class="form-select" name="warranty_type">
+                          <option value="">None</option>
+                          <option value="LIMITED">Limited</option>
+                          <option value="LIFETIME">Lifetime</option>
+                        </select>
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="2"></textarea>
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" name="notes" rows="2"></textarea>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  <button type="button" class="btn btn-primary" onclick="saveComponentFromModal()">Save</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const existing = document.getElementById('componentModal');
+        if (existing) existing.remove();
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = new bootstrap.Modal(document.getElementById('componentModal'));
+        modal.show();
+
+        document.getElementById('componentModal').addEventListener('hidden.bs.modal', function () {
+          this.remove();
+        });
+      },
+
+      editComponent(comp) {
+        const modalHtml = `
+          <div class="modal fade" id="componentModal" tabindex="-1" aria-labelledby="componentModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="componentModalLabel">Edit Component</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <form id="componentForm">
+                    <input type="hidden" name="id" value="${comp.id}">
+                    <input type="hidden" name="purchase_id" value="${this.currentPurchaseId}">
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <label class="form-label">Name *</label>
+                        <input type="text" class="form-control" name="name" value="${comp.name}" required>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Brand</label>
+                        <input type="text" class="form-control" name="brand" value="${comp.brand || ''}">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Model Number</label>
+                        <input type="text" class="form-control" name="model_number" value="${comp.model_number || ''}">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Serial Number</label>
+                        <input type="text" class="form-control" name="serial_number" value="${comp.serial_number || ''}">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Price</label>
+                        <input type="number" class="form-control" name="price" step="0.01" min="0" value="${comp.price || ''}">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Quantity</label>
+                        <input type="number" class="form-control" name="quantity" value="${comp.quantity || 1}" min="1">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Link</label>
+                        <input type="url" class="form-control" name="link" value="${comp.link || ''}">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Warranty Expiry</label>
+                        <input type="date" class="form-control" name="warranty_expiry" value="${comp.warranty_expiry || ''}">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Warranty Type</label>
+                        <select class="form-select" name="warranty_type">
+                          <option value="">None</option>
+                          <option value="LIMITED" ${comp.warranty_type === 'LIMITED' ? 'selected' : ''}>Limited</option>
+                          <option value="LIFETIME" ${comp.warranty_type === 'LIFETIME' ? 'selected' : ''}>Lifetime</option>
+                        </select>
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="2">${comp.description || ''}</textarea>
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" name="notes" rows="2">${comp.notes || ''}</textarea>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  <button type="button" class="btn btn-primary" onclick="saveComponentFromModal()">Save</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const existing = document.getElementById('componentModal');
+        if (existing) existing.remove();
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = new bootstrap.Modal(document.getElementById('componentModal'));
+        modal.show();
+
+        document.getElementById('componentModal').addEventListener('hidden.bs.modal', function () {
+          this.remove();
+        });
+      },
+
+      closeComponentModal() {
+        const modalEl = document.getElementById('componentModal');
+        if (modalEl) {
+          const modal = bootstrap.Modal.getInstance(modalEl);
+          if (modal) modal.hide();
+        }
+      },
+    }));
+
+    // Remove duplicate componentsManager - functionality moved to viewPurchaseDetails
+    // (keeping the code for reference, can be removed after testing)
+    // Alpine.data('componentsManager', () => ({
+    //   components: [],
+    //   ...
+
     // Register page-specific Alpine components
     registerSettingsComponent();
     registerInventoryComponent();
@@ -2607,6 +3191,119 @@ window.viewItemById = async function (itemId) {
     viewDetailsModal.show();
   } catch (error) {
     console.error('Error fetching item:', error);
+  }
+};
+
+// Save component from modal
+window.saveComponentFromModal = async function () {
+  const form = document.getElementById('componentForm');
+  if (!form) return;
+
+  // Validate required fields
+  const name = form.querySelector('[name="name"]').value;
+  if (!name) {
+    if (window.AdminApp && window.AdminApp.notificationManager) {
+      window.AdminApp.notificationManager.error('Name is required');
+    }
+    return;
+  }
+
+  const formData = new FormData(form);
+  const data = {
+    id: formData.get('id') || null,
+    purchase_id: formData.get('purchase_id'),
+    name: name,
+    brand: formData.get('brand') || null,
+    model_number: formData.get('model_number') || null,
+    serial_number: formData.get('serial_number') || null,
+    price: formData.get('price') ? parseFloat(formData.get('price')) : null,
+    quantity: formData.get('quantity') ? parseInt(formData.get('quantity')) : 1,
+    link: formData.get('link') || null,
+    warranty_expiry: formData.get('warranty_expiry') || null,
+    warranty_type: formData.get('warranty_type') || null,
+    description: formData.get('description') || null,
+    notes: formData.get('notes') || null,
+    tags: formData.get('tags') || null,
+  };
+
+  // Collect files for upload
+  const receiptFiles = form.querySelector('[name="receipts"]').files;
+  const photoFiles = form.querySelector('[name="photos"]').files;
+  const manualFiles = form.querySelector('[name="manuals"]').files;
+  const warrantyFiles = form.querySelector('[name="warranties"]').files;
+
+  // Find the viewPurchaseDetails component
+  const viewModal = document.getElementById('viewDetailsModal');
+  if (!viewModal || !viewModal.__x) {
+    console.error('View modal not found');
+    return;
+  }
+
+  const viewData = viewModal.__x.$data;
+
+  try {
+    const apiUrl = window.APP_CONFIG?.API_URL || '/api';
+
+    // Save component first
+    let componentId = data.id;
+    if (componentId) {
+      // Update existing
+      const response = await fetch(`${apiUrl}/components/${componentId}/`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to update component');
+    } else {
+      // Create new
+      const response = await fetch(`${apiUrl}/components/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to create component');
+      const created = await response.json();
+      componentId = created.id;
+    }
+
+    // Upload files
+    const uploadFiles = async (files, fileType) => {
+      for (const file of files) {
+        const fileFormData = new FormData();
+        fileFormData.append('file', file);
+        fileFormData.append('file_type', fileType);
+
+        const response = await fetch(`${apiUrl}/files/component/${componentId}/`, {
+          method: 'POST',
+          body: fileFormData,
+        });
+        if (!response.ok) {
+          console.error(`Failed to upload ${fileType} file:`, file.name);
+        }
+      }
+    };
+
+    if (receiptFiles.length > 0) await uploadFiles(receiptFiles, 'receipt');
+    if (photoFiles.length > 0) await uploadFiles(photoFiles, 'photo');
+    if (manualFiles.length > 0) await uploadFiles(manualFiles, 'manual');
+    if (warrantyFiles.length > 0) await uploadFiles(warrantyFiles, 'warranty');
+
+    // Close component modal
+    const componentModal = bootstrap.Modal.getInstance(document.getElementById('componentModal'));
+    if (componentModal) componentModal.hide();
+
+    // Reload components
+    await viewData.loadComponents(viewData.item.id);
+
+    // Show success notification
+    if (window.AdminApp && window.AdminApp.notificationManager) {
+      window.AdminApp.notificationManager.success('Component saved successfully');
+    }
+  } catch (error) {
+    console.error('Error saving component:', error);
+    if (window.AdminApp && window.AdminApp.notificationManager) {
+      window.AdminApp.notificationManager.error('Failed to save component: ' + error.message);
+    }
   }
 };
 

@@ -1,4 +1,13 @@
-from sqlalchemy import Column, Integer, String, DECIMAL, Date, DateTime, ForeignKey, Enum
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    DECIMAL,
+    Date,
+    DateTime,
+    ForeignKey,
+    Enum,
+)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
@@ -26,11 +35,23 @@ class Purchase(Base):
     return_deadline = Column(Date, nullable=True)
     return_policy = Column(String(300), nullable=True)
     tags = Column(String(255), nullable=True)
-    created_at = Column(DateTime(timezone=True), default=datetime.now, server_default=func.now())
+    created_at = Column(
+        DateTime(timezone=True), default=datetime.now, server_default=func.now()
+    )
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relationships
     retailer = relationship("Retailer", back_populates="purchases")
     brand = relationship("Brand", back_populates="purchases")
-    warranty = relationship("Warranty", back_populates="purchase", uselist=False, cascade="all, delete-orphan")
-    files = relationship("File", back_populates="purchase", cascade="all, delete-orphan")
+    warranty = relationship(
+        "Warranty",
+        back_populates="purchase",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+    files = relationship(
+        "File", back_populates="purchase", cascade="all, delete-orphan"
+    )
+    components = relationship(
+        "Component", back_populates="purchase", cascade="all, delete-orphan"
+    )
