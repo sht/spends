@@ -11,7 +11,9 @@ async def get_retailer(db: AsyncSession, retailer_id: str) -> Optional[Retailer]
     return result.scalar_one_or_none()
 
 
-async def get_retailers(db: AsyncSession, skip: int = 0, limit: int = 20) -> tuple[List[Retailer], int]:
+async def get_retailers(
+    db: AsyncSession, skip: int = 0, limit: int = 20
+) -> tuple[List[Retailer], int]:
     query = select(Retailer).offset(skip).limit(limit)
     result = await db.execute(query)
     retailers = result.scalars().all()
@@ -24,7 +26,9 @@ async def get_retailers(db: AsyncSession, skip: int = 0, limit: int = 20) -> tup
     return retailers, total
 
 
-async def get_retailers_with_brand_status(db: AsyncSession, skip: int = 0, limit: int = 20) -> tuple[List[dict], int]:
+async def get_retailers_with_brand_status(
+    db: AsyncSession, skip: int = 0, limit: int = 20
+) -> tuple[List[dict], int]:
     """Get retailers with isBrand flag indicating if retailer is also a brand."""
     # Get all retailers
     query = select(Retailer).offset(skip).limit(limit)
@@ -38,13 +42,15 @@ async def get_retailers_with_brand_status(db: AsyncSession, skip: int = 0, limit
     # Build response with isBrand flag
     retailers_with_status = []
     for retailer in retailers:
-        retailers_with_status.append({
-            "id": retailer.id,
-            "name": retailer.name,
-            "url": retailer.url,
-            "created_at": retailer.created_at,
-            "is_brand": retailer.name in brand_names
-        })
+        retailers_with_status.append(
+            {
+                "id": retailer.id,
+                "name": retailer.name,
+                "url": retailer.url,
+                "created_at": retailer.created_at,
+                "is_brand": retailer.name in brand_names,
+            }
+        )
 
     # Get total count
     count_query = select(Retailer.id)
@@ -55,6 +61,11 @@ async def get_retailers_with_brand_status(db: AsyncSession, skip: int = 0, limit
 
 
 async def create_retailer(db: AsyncSession, retailer: RetailerCreate) -> Retailer:
+    result = await db.execute(select(Retailer).filter(Retailer.name == retailer.name))
+    existing = result.scalar_one_or_none()
+    if existing:
+        return existing
+
     db_retailer = Retailer(**retailer.model_dump())
     db.add(db_retailer)
     await db.commit()
@@ -62,7 +73,9 @@ async def create_retailer(db: AsyncSession, retailer: RetailerCreate) -> Retaile
     return db_retailer
 
 
-async def update_retailer(db: AsyncSession, retailer_id: str, retailer_update: RetailerUpdate) -> Optional[Retailer]:
+async def update_retailer(
+    db: AsyncSession, retailer_id: str, retailer_update: RetailerUpdate
+) -> Optional[Retailer]:
     db_retailer = await get_retailer(db, retailer_id)
     if not db_retailer:
         return None

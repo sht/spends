@@ -10,7 +10,9 @@ async def get_brand(db: AsyncSession, brand_id: str) -> Optional[Brand]:
     return result.scalar_one_or_none()
 
 
-async def get_brands(db: AsyncSession, skip: int = 0, limit: int = 20) -> tuple[List[Brand], int]:
+async def get_brands(
+    db: AsyncSession, skip: int = 0, limit: int = 20
+) -> tuple[List[Brand], int]:
     query = select(Brand).offset(skip).limit(limit)
     result = await db.execute(query)
     brands = result.scalars().all()
@@ -24,6 +26,11 @@ async def get_brands(db: AsyncSession, skip: int = 0, limit: int = 20) -> tuple[
 
 
 async def create_brand(db: AsyncSession, brand: BrandCreate) -> Brand:
+    result = await db.execute(select(Brand).filter(Brand.name == brand.name))
+    existing = result.scalar_one_or_none()
+    if existing:
+        return existing
+
     db_brand = Brand(**brand.model_dump())
     db.add(db_brand)
     await db.commit()
@@ -31,7 +38,9 @@ async def create_brand(db: AsyncSession, brand: BrandCreate) -> Brand:
     return db_brand
 
 
-async def update_brand(db: AsyncSession, brand_id: str, brand_update: BrandUpdate) -> Optional[Brand]:
+async def update_brand(
+    db: AsyncSession, brand_id: str, brand_update: BrandUpdate
+) -> Optional[Brand]:
     db_brand = await get_brand(db, brand_id)
     if not db_brand:
         return None
