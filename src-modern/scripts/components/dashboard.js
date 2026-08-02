@@ -36,6 +36,7 @@ Chart.register(
 export class DashboardManager {
   constructor() {
     this.charts = new Map();
+    this.spendingMonths = 24;
     this.data = {
       warranty: [],
       spending: [],
@@ -103,7 +104,7 @@ export class DashboardManager {
       // Fetch all required data from the backend API
       const [warrantyData, spendingData, retailersData, brandsData, topProductsData, recentOrdersData, summaryData] = await Promise.all([
         this.fetchWarrantyData(),
-        this.fetchSpendingData(),
+        this.fetchSpendingData(this.spendingMonths),
         this.fetchRetailersData(),
         this.fetchBrandsData(),
         this.fetchTopProductsData(),
@@ -183,11 +184,12 @@ export class DashboardManager {
     }
   }
 
-  async fetchSpendingData() {
+  async fetchSpendingData(months) {
     try {
       // Get API URL from global variable or fallback to default
       const apiUrl = window.APP_CONFIG?.API_URL || '/api';
-      const response = await fetch(`${apiUrl}/analytics/spending`);
+      const params = months !== undefined && months !== '' ? `?months=${months}` : '';
+      const response = await fetch(`${apiUrl}/analytics/spending${params}`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       // Transform API data to match chart format
@@ -199,6 +201,18 @@ export class DashboardManager {
     } catch (error) {
       console.error('Error fetching spending data:', error);
       return []; // Return empty on error
+    }
+  }
+
+  async changeSpendingRange(months) {
+    this.spendingMonths = months;
+    this.data.spending = await this.fetchSpendingData(months);
+    const chart = this.charts.get('spending');
+    if (chart) {
+      chart.data.labels = this.data.spending.map(item => item.month);
+      chart.data.datasets[0].data = this.data.spending.map(item => item.totalSpending);
+      chart.data.datasets[1].data = this.data.spending.map(item => item.itemsCount);
+      chart.update('none');
     }
   }
 
