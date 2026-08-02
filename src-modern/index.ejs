@@ -201,20 +201,20 @@
 <div class="row g-4 mb-4">
     <!-- Top 10 Purchases -->
     <div class="col-lg-6">
-        <div class="card">
-            <div class="card-header">
+        <div class="card h-100">
+            <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
                 <h5 class="card-title mb-0">Top 10 Purchases</h5>
+                <span class="badge text-bg-primary rounded-pill" id="top-products-count">0</span>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0">
+                    <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>#</th>
+                                <th class="text-center" style="width: 60px">Rank</th>
                                 <th>Product</th>
-                                <th>Brand</th>
-                                <th>Price</th>
-                                <th>Date</th>
+                                <th class="text-end">Price</th>
+                                <th class="text-end">Date</th>
                             </tr>
                         </thead>
                         <tbody id="top-products-table">
@@ -227,20 +227,20 @@
     </div>
     <!-- Recent 10 Purchases -->
     <div class="col-lg-6">
-        <div class="card">
-            <div class="card-header">
+        <div class="card h-100">
+            <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
                 <h5 class="card-title mb-0">Recent 10 Purchases</h5>
+                <span class="badge text-bg-primary rounded-pill" id="recent-orders-count">0</span>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0">
+                    <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>#</th>
+                                <th class="text-center" style="width: 60px">#</th>
                                 <th>Product</th>
-                                <th>Brand</th>
-                                <th>Price</th>
-                                <th>Date</th>
+                                <th class="text-end">Price</th>
+                                <th class="text-end">Date</th>
                             </tr>
                         </thead>
                         <tbody id="recent-orders-table">

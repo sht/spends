@@ -1,0 +1,43 @@
+// ==========================================================================
+// Dashboard Page Styles
+// ==========================================================================
+
+// Rank badges for the Top Purchases table
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  color: #fff;
+  flex-shrink: 0;
+
+  &.rank-1 {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.45);
+  }
+
+  &.rank-2 {
+    background: linear-gradient(135deg, #e2e8f0, #94a3b8);
+    box-shadow: 0 2px 8px rgba(148, 163, 184, 0.45);
+  }
+
+  &.rank-3 {
+    background: linear-gradient(135deg, #d97706, #92400e);
+    box-shadow: 0 2px 8px rgba(146, 64, 14, 0.45);
+  }
+
+  &.rank-plain {
+    background: var(--bs-secondary-bg);
+    color: var(--bs-secondary);
+  }
+}
+
+// Price emphasis in the top purchases table
+.price-cell {
+  color: var(--bs-primary);
+  font-variant-numeric: tabular-nums;
+}

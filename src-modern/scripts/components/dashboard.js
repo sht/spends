@@ -693,20 +693,27 @@ export class DashboardManager {
     const table = document.querySelector('tbody#top-products-table');
     if (!table) return;
 
+    const countBadge = document.getElementById('top-products-count');
+    if (countBadge) countBadge.textContent = this.data.topProducts.length;
+
     if (!this.data.topProducts || this.data.topProducts.length === 0) {
-      table.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">No purchases found</td></tr>';
+      table.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4"><i class="bi bi-inbox d-block mb-2 fs-3 opacity-50"></i>No purchases found</td></tr>';
       return;
     }
 
-    const html = this.data.topProducts.map(product => `
+    const html = this.data.topProducts.map(product => {
+      const rankClass = product.rank <= 3 ? `rank-${product.rank}` : 'rank-plain';
+      return `
         <tr>
-            <td><strong>#${product.rank}</strong></td>
-            <td>${product.name}</td>
-            <td>${product.brand}</td>
-            <td>${product.price}</td>
-            <td>${product.date}</td>
-        </tr>
-    `).join('');
+          <td class="text-center"><span class="rank-badge ${rankClass}">${product.rank}</span></td>
+          <td>
+            <div class="fw-medium text-truncate" style="max-width: 260px" title="${product.name}">${product.name}</div>
+            <small class="text-muted">${product.brand}</small>
+          </td>
+          <td class="text-end fw-semibold price-cell">${product.price}</td>
+          <td class="text-end text-muted small text-nowrap">${product.date}</td>
+        </tr>`;
+    }).join('');
 
     table.innerHTML = html;
   }
@@ -714,23 +721,30 @@ export class DashboardManager {
   populateRecentOrders() {
     // Populate recent 10 purchases table (same format as top products)
     const tables = document.querySelectorAll('tbody#recent-orders-table');
-    
+
+    const countBadge = document.getElementById('recent-orders-count');
+    if (countBadge) countBadge.textContent = this.data.recentOrders.length;
+
     if (!this.data.recentOrders || this.data.recentOrders.length === 0) {
       tables.forEach(table => {
-        table.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">No purchases found</td></tr>';
+        table.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4"><i class="bi bi-clock-history d-block mb-2 fs-3 opacity-50"></i>No purchases found</td></tr>';
       });
       return;
     }
-    
-    const html = this.data.recentOrders.map(order => `
+
+    const html = this.data.recentOrders.map(order => {
+      const rankClass = order.rank <= 3 ? `rank-${order.rank}` : 'rank-plain';
+      return `
         <tr>
-            <td><strong>#${order.rank}</strong></td>
-            <td>${order.name}</td>
-            <td>${order.brand}</td>
-            <td>${order.price}</td>
-            <td>${order.date}</td>
-        </tr>
-    `).join('');
+          <td class="text-center"><span class="rank-badge ${rankClass}">${order.rank}</span></td>
+          <td>
+            <div class="fw-medium text-truncate" style="max-width: 260px" title="${order.name}">${order.name}</div>
+            <small class="text-muted">${order.brand}</small>
+          </td>
+          <td class="text-end fw-semibold price-cell">${order.price}</td>
+          <td class="text-end text-muted small text-nowrap">${order.date}</td>
+        </tr>`;
+    }).join('');
 
     tables.forEach(table => {
       table.innerHTML = html;
