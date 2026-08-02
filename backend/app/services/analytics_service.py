@@ -68,6 +68,11 @@ async def get_warranty_timeline(db: AsyncSession, months: int = None) -> List[Wa
     """
     today = date.today()
 
+    # Only apply date filter if months is specified (same convention as spending timeline)
+    start_date = None
+    if months is not None:
+        start_date = today - timedelta(days=months * 30)
+
     # For SQLite, we need to use a different approach since it doesn't have advanced date functions
     # We'll create a simplified version that groups warranties by their status
     stmt = select(Warranty)
@@ -101,6 +106,10 @@ async def get_warranty_timeline(db: AsyncSession, months: int = None) -> List[Wa
                     continue  # Skip if we can't process the date
         except (ValueError, TypeError, AttributeError):
             continue  # Skip if we can't process the date
+
+        # Skip warranties whose end date is outside the requested range
+        if start_date is not None and warranty_end_date < start_date:
+            continue
 
         month_key = warranty_end_date.strftime('%Y-%m')
         if month_key not in monthly_data:

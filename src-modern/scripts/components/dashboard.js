@@ -37,6 +37,7 @@ export class DashboardManager {
   constructor() {
     this.charts = new Map();
     this.spendingMonths = 24;
+    this.warrantyMonths = 24;
     this.data = {
       warranty: [],
       spending: [],
@@ -103,7 +104,7 @@ export class DashboardManager {
 
       // Fetch all required data from the backend API
       const [warrantyData, spendingData, retailersData, brandsData, topProductsData, recentOrdersData, summaryData] = await Promise.all([
-        this.fetchWarrantyData(),
+        this.fetchWarrantyData(this.warrantyMonths),
         this.fetchSpendingData(this.spendingMonths),
         this.fetchRetailersData(),
         this.fetchBrandsData(),
@@ -159,22 +160,27 @@ export class DashboardManager {
         chart.data.datasets[1].data = this.data.spending.map(item => item.itemsCount);
         chart.update('none');
       } else if (key === 'retailers') {
-        chart.data.labels = this.data.retailers.map(item => item.name);
-        chart.data.datasets[0].data = this.data.retailers.map(item => Math.round(item.percentage));
+        const retailerData = this.aggregateTopN(this.data.retailers, 5);
+        chart.data.labels = retailerData.labels;
+        chart.data.datasets[0].data = retailerData.values;
+        chart.data.datasets[0].backgroundColor = this.buildChartColors(retailerData.values.length);
         chart.update('none');
       } else if (key === 'brands') {
-        chart.data.labels = this.data.brands.map(item => item.name);
-        chart.data.datasets[0].data = this.data.brands.map(item => Math.round(item.percentage));
+        const brandData = this.aggregateTopN(this.data.brands, 5);
+        chart.data.labels = brandData.labels;
+        chart.data.datasets[0].data = brandData.values;
+        chart.data.datasets[0].backgroundColor = this.buildChartColors(brandData.values.length);
         chart.update('none');
       }
     });
   }
 
-  async fetchWarrantyData() {
+  async fetchWarrantyData(months) {
     try {
       // Get API URL from global variable or fallback to default
       const apiUrl = window.APP_CONFIG?.API_URL || '/api';
-      const response = await fetch(`${apiUrl}/analytics/warranties/timeline`);
+      const params = months !== undefined && months !== '' ? `?months=${months}` : '';
+      const response = await fetch(`${apiUrl}/analytics/warranties/timeline${params}`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       return data.timeline || [];
@@ -182,6 +188,23 @@ export class DashboardManager {
       console.error('Error fetching warranty data:', error);
       return []; // Return empty on error
     }
+  }
+
+  async changeWarrantyRange(months) {
+    this.warrantyMonths = months;
+    this.data.warranty = await this.fetchWarrantyData(months);
+    this.updateWarrantyCharts();
+  }
+
+  updateWarrantyCharts() {
+    this.charts.forEach((chart, key) => {
+      if (key.startsWith('warranty-')) {
+        chart.data.labels = this.data.warranty.map(item => item.month);
+        chart.data.datasets[0].data = this.data.warranty.map(item => item.active);
+        chart.data.datasets[1].data = this.data.warranty.map(item => item.expired);
+        chart.update('none');
+      }
+    });
   }
 
   async fetchSpendingData(months) {
@@ -258,6 +281,7 @@ export class DashboardManager {
         .slice(0, 10);
       // Transform to match table format
       return sorted.map((item, index) => ({
+        id: item.id,
         rank: index + 1,
         name: item.product_name,
         brand: item.brand?.name || 'N/A',
@@ -284,6 +308,7 @@ export class DashboardManager {
         .slice(0, 10); // Take only most recent 10
       // Transform to match table format (same as top products)
       return sorted.map((item, index) => ({
+        id: item.id,
         rank: index + 1,
         name: item.product_name,
         brand: item.brand?.name || 'N/A',
@@ -628,6 +653,38 @@ export class DashboardManager {
     });
   }
 
+  aggregateTopN(data, topN) {
+    // Aggregate distribution data into top N items plus an "Other" slice
+    if (!data || data.length === 0) return { labels: [], values: [] };
+
+    const sorted = [...data].sort((a, b) => b.percentage - a.percentage);
+    const top = sorted.slice(0, topN);
+    const rest = sorted.slice(topN);
+
+    const labels = top.map(item => item.name);
+    const values = top.map(item => Math.round(item.percentage));
+
+    if (rest.length > 0) {
+      const otherPercentage = rest.reduce((sum, item) => sum + (item.percentage || 0), 0);
+      labels.push('Other');
+      values.push(Math.round(otherPercentage));
+    }
+
+    return { labels, values };
+  }
+
+  buildChartColors(count) {
+    const colors = [
+      'rgba(16, 185, 129, 0.8)',
+      'rgba(99, 102, 241, 0.8)',
+      'rgba(245, 158, 11, 0.8)',
+      'rgba(239, 68, 68, 0.8)',
+      'rgba(139, 92, 246, 0.8)',
+      'rgba(148, 163, 184, 0.6)'
+    ];
+    return colors.slice(0, count);
+  }
+
   initOrderStatusCharts() {
     // Initialize retailer chart (first doughnut)
     const retailerCtxs = document.querySelectorAll('canvas#orderStatusChart');
@@ -638,16 +695,7 @@ export class DashboardManager {
       const isRetailerChart = cardHeader?.textContent.includes('Retailers');
 
       const data = isRetailerChart ? this.data.retailers : this.data.brands;
-      const labels = data.map(item => item.name);
-      const values = data.map(item => Math.round(item.percentage));
-
-      const colors = [
-        'rgba(16, 185, 129, 0.8)',
-        'rgba(99, 102, 241, 0.8)',
-        'rgba(245, 158, 11, 0.8)',
-        'rgba(239, 68, 68, 0.8)',
-        'rgba(139, 92, 246, 0.8)'
-      ];
+      const { labels, values } = this.aggregateTopN(data, 5);
 
       const chart = new Chart(ctx, {
         type: 'doughnut',
@@ -655,7 +703,7 @@ export class DashboardManager {
           labels: labels,
           datasets: [{
             data: values,
-            backgroundColor: colors.slice(0, values.length),
+            backgroundColor: this.buildChartColors(values.length),
             borderWidth: 0,
             cutout: '60%'
           }]
@@ -707,7 +755,7 @@ export class DashboardManager {
         <tr>
           <td class="text-center"><span class="rank-badge ${rankClass}">${product.rank}</span></td>
           <td>
-            <div class="fw-medium text-truncate" style="max-width: 260px" title="${product.name}">${product.name}</div>
+            <a href="javascript:void(0)" class="text-decoration-none fw-medium text-truncate d-block" style="max-width: 260px" title="View ${product.name}" onclick="window.viewItemById('${product.id}')">${product.name}</a>
             <small class="text-muted">${product.brand}</small>
           </td>
           <td class="text-end fw-semibold price-cell">${product.price}</td>
@@ -738,7 +786,7 @@ export class DashboardManager {
         <tr>
           <td class="text-center"><span class="rank-badge ${rankClass}">${order.rank}</span></td>
           <td>
-            <div class="fw-medium text-truncate" style="max-width: 260px" title="${order.name}">${order.name}</div>
+            <a href="javascript:void(0)" class="text-decoration-none fw-medium text-truncate d-block" style="max-width: 260px" title="View ${order.name}" onclick="window.viewItemById('${order.id}')">${order.name}</a>
             <small class="text-muted">${order.brand}</small>
           </td>
           <td class="text-end fw-semibold price-cell">${order.price}</td>
