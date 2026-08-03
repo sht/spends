@@ -12,6 +12,7 @@ window.bootstrap = { Modal };
 // Import our custom modules
 import { ThemeManager } from './utils/theme-manager.js';
 import { DashboardManager } from './components/dashboard.js';
+import { MarketplaceManager } from './components/marketplace.js';
 import { NotificationManager } from './utils/notifications.js';
 import { SidebarManager } from './components/sidebar.js';
 import { iconManager } from './utils/icon-manager.js';
@@ -425,6 +426,12 @@ class AdminApp {
       case 'retailers':
         console.log('🏪 Retailers page components registered');
         registerRetailersComponent();
+        break;
+      case 'marketplace':
+        console.log('🛍️ Marketplace page components registered');
+        const marketplaceManager = new MarketplaceManager();
+        this.components.set('marketplace', marketplaceManager);
+        window.marketplaceManager = marketplaceManager;
         break;
       default:
         console.log('Page-specific components loading complete');

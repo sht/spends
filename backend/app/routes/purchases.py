@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 from app.database import get_db
 from app.models.purchase import Purchase
+from app.models.file import FileType
 from app.schemas.purchase import PurchaseCreate, PurchaseUpdate, PurchaseResponse
 from app.schemas.common import PaginatedResponse
 from app.services.purchase_service import (
@@ -14,6 +15,17 @@ from app.services.purchase_service import (
 )
 
 router = APIRouter(prefix="/api/purchases", tags=["purchases"])
+
+
+def _get_photo_info(purchase):
+    """Return (photo_id, photo_count) for a purchase based on its files."""
+    photos = [
+        f
+        for f in purchase.files
+        if (f.file_type.value if isinstance(f.file_type, FileType) else f.file_type)
+        == FileType.PHOTO.value
+    ]
+    return (str(photos[0].id) if photos else None, len(photos))
 
 
 @router.get("/", response_model=PaginatedResponse)
@@ -36,7 +48,13 @@ async def list_purchases(
     )
 
     # Convert SQLAlchemy models to Pydantic schemas
-    purchase_responses = [PurchaseResponse.model_validate(p) for p in purchases]
+    purchase_responses = []
+    for p in purchases:
+        resp = PurchaseResponse.model_validate(p)
+        photo_id, photo_count = _get_photo_info(p)
+        resp.photo_id = photo_id
+        resp.photo_count = photo_count
+        purchase_responses.append(resp)
 
     # Calculate number of pages
     pages = (total + limit - 1) // limit if limit > 0 else 1

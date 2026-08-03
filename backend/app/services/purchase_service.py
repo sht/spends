@@ -67,6 +67,7 @@ async def get_purchases(
         .options(selectinload(Purchase.retailer))
         .options(selectinload(Purchase.brand))
         .options(selectinload(Purchase.warranty))
+        .options(selectinload(Purchase.files))
     )
 
     # Apply filters to main query

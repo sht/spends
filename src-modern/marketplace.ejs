@@ -1,0 +1,55 @@
+<% const title = 'Marketplace'; %>
+<% const page = 'marketplace'; %>
+
+            <div class="container-fluid p-4 p-lg-5">
+                
+                <!-- Page Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4 mb-lg-5">
+                    <div>
+                        <h1 class="h3 mb-0">Marketplace</h1>
+                        <p class="text-muted mb-0">Browse your purchases in a marketplace view</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#purchaseModal">
+                            <i class="bi bi-plus-lg me-2"></i>Add New Purchase
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Marketplace Container -->
+                <div id="marketplace-app">
+
+                    <!-- Results Info -->
+                    <div class="d-flex justify-content-between align-items-center mb-3" id="marketplace-info"></div>
+
+                    <!-- Product Grid -->
+                    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3" id="marketplace-grid"></div>
+
+                    <!-- Loading State -->
+                    <div id="marketplace-loading" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="marketplace-empty" class="text-center py-5 d-none">
+                        <i class="bi bi-inbox d-block mb-2 fs-1 opacity-50"></i>
+                        <p class="text-muted mb-0">No purchases found</p>
+                    </div>
+
+                    <!-- Pagination -->
+                    <nav class="mt-4" id="marketplace-pagination" aria-label="Marketplace pagination"></nav>
+                </div>
+            </div>
+
+
+
+            </div>
+        </div>
+    </div>
+<!-- View Purchase Details Modal -->
+<%- include('view-details-modal.ejs') %>
+
+    <!-- Main Scripts -->
+    <script type="module" src="./scripts/main.js"></script>
