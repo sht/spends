@@ -1144,10 +1144,6 @@ class AdminApp {
         this.tempFiles = [];
         this.pendingFiles = [];
 
-        // Re-initialize air datepickers when entering edit mode
-        this.$nextTick(() => {
-          this.initAirDatepickers();
-        });
       },
 
       // Load files for a specific purchase
@@ -1407,6 +1403,7 @@ class AdminApp {
           taxDeductible: this.form.taxDeductible,
           tags: this.form.tags,
           notes: this.form.notes,
+          itemStatus: this.form.itemStatus || 'active',
           createdAt: new Date().toISOString(),
         };
 
