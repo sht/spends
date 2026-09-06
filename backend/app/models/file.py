@@ -20,9 +20,9 @@ class File(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     purchase_id = Column(
-        String, ForeignKey("purchases.id"), nullable=False
+        String, ForeignKey("purchases.id", ondelete="CASCADE"), nullable=False
     )  # Changed to String to match Purchase.id
-    component_id = Column(String, ForeignKey("components.id"), nullable=True)
+    component_id = Column(String, ForeignKey("components.id", ondelete="CASCADE"), nullable=True)
 
     # Original file information
     filename = Column(String, nullable=False)  # Original filename

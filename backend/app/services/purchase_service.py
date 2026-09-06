@@ -246,6 +246,11 @@ async def delete_purchase(db: AsyncSession, purchase_id: str) -> bool:
     if not db_purchase:
         return False
 
-    await db.delete(db_purchase)
-    await db.commit()
-    return True
+    try:
+        # Delete cascade will handle files and components via the relationship
+        await db.delete(db_purchase)
+        await db.commit()
+        return True
+    except Exception as e:
+        await db.rollback()
+        raise

@@ -9,7 +9,7 @@ from sqlalchemy import pool
 
 from alembic import context
 from app.database import Base
-from app.models import Purchase, Warranty, Retailer, Brand, File, Setting
+from app.models import Purchase, Warranty, Retailer, Brand, File, Setting, Component
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -42,7 +42,12 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
+    url = os.getenv("DATABASE_URL") or config.get_main_option("sqlalchemy.url")
+
+    # Convert async URL to sync URL for Alembic
+    if url and "aiosqlite" in url:
+        url = url.replace("sqlite+aiosqlite://", "sqlite:///")
+
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -61,8 +66,17 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+    configuration = config.get_section(config.config_ini_section, {})
+    db_url = os.getenv("DATABASE_URL") or config.get_main_option("sqlalchemy.url")
+
+    # Convert async URL to sync URL for Alembic
+    if db_url and "aiosqlite" in db_url:
+        db_url = db_url.replace("sqlite+aiosqlite://", "sqlite:///")
+
+    configuration["sqlalchemy.url"] = db_url
+
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        configuration,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
