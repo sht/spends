@@ -35,6 +35,7 @@ class Purchase(Base):
     return_deadline = Column(Date, nullable=True)
     return_policy = Column(String(300), nullable=True)
     tags = Column(String(255), nullable=True)
+    item_status = Column(String(20), nullable=False, default='active', server_default='active')
     created_at = Column(
         DateTime(timezone=True), default=datetime.now, server_default=func.now()
     )

@@ -11,6 +11,7 @@ export function registerInventoryComponent() {
     itemsPerPage: 20,
     totalPages: 1,
     searchQuery: '',
+    statusFilter: '',
     dateFilter: '',
     startDate: '',
     endDate: '',
@@ -176,6 +177,7 @@ export function registerInventoryComponent() {
         returnDeadline: returnDeadlineStr || '',
         returnPolicy: item.return_policy || '',
         tags: item.tags || '',
+        itemStatus: item.item_status || 'active',
         updatedAt: item.updated_at || '',
       };
     },
@@ -234,6 +236,10 @@ export function registerInventoryComponent() {
         const dateRange = this.getDateRangeParams();
         if (dateRange.date_from) params.set('date_from', dateRange.date_from);
         if (dateRange.date_to) params.set('date_to', dateRange.date_to);
+
+        if (this.statusFilter) {
+          params.set('item_status', this.statusFilter);
+        }
 
         const response = await fetch(`${apiUrl}/purchases/?${params.toString()}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);

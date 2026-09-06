@@ -28,6 +28,7 @@ class PurchaseBase(BaseModel):
     return_deadline: Optional[date] = None
     return_policy: Optional[str] = Field(default=None, max_length=300)
     tags: Optional[str] = Field(default=None, max_length=255)
+    item_status: Optional[str] = Field(default='active', max_length=20)
 
 
 class PurchaseCreate(PurchaseBase):
@@ -60,6 +61,7 @@ class PurchaseUpdate(BaseModel):
     return_deadline: Optional[date] = None
     return_policy: Optional[str] = Field(None, max_length=300)
     tags: Optional[str] = Field(None, max_length=255)
+    item_status: Optional[str] = Field(None, max_length=20)
 
 
 class RetailerInfo(BaseModel):

@@ -39,6 +39,19 @@
                                             <i class="bi bi-search position-absolute top-50 end-0 translate-middle-y me-2 text-muted"></i>
                                         </div>
 
+                                        <!-- Status Filter -->
+                                        <select class="form-select form-select-sm"
+                                                x-model="statusFilter"
+                                                @change="filterInventory()"
+                                                style="width: 130px; padding: 0.75rem 0.5rem;">
+                                            <option value="">All Status</option>
+                                            <option value="active">Active</option>
+                                            <option value="lost">Lost</option>
+                                            <option value="sold">Sold</option>
+                                            <option value="donated">Donated</option>
+                                            <option value="disposed">Disposed</option>
+                                        </select>
+
                                         <!-- Date Range -->
                                         <select class="form-select form-select-sm"
                                                 x-model="dateFilter"
@@ -310,7 +323,12 @@
                                                 <td class="fw-medium text-primary align-middle text-center" x-text="(currentPage - 1) * itemsPerPage + index + 1"></td>
                                                 <template x-if="visibleColumns.product">
                                                     <td class="align-middle">
-                                                        <div class="fw-medium" x-text="item.name"></div>
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <span class="fw-medium" x-text="item.name"></span>
+                                                            <template x-if="item.itemStatus && item.itemStatus !== 'active'">
+                                                                <span class="badge bg-secondary text-capitalize" x-text="item.itemStatus"></span>
+                                                            </template>
+                                                        </div>
                                                         <small class="text-muted" x-text="item.brand"></small>
                                                     </td>
                                                 </template>

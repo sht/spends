@@ -25,7 +25,7 @@ SORT_FIELD_MAP = {
 }
 
 
-def _apply_filters(query, retailer_id, search, tag, date_from, date_to):
+def _apply_filters(query, retailer_id, search, tag, date_from, date_to, item_status=None):
     if retailer_id:
         query = query.where(Purchase.retailer_id == retailer_id)
     if search:
@@ -36,6 +36,8 @@ def _apply_filters(query, retailer_id, search, tag, date_from, date_to):
         query = query.where(Purchase.purchase_date >= date.fromisoformat(date_from))
     if date_to:
         query = query.where(Purchase.purchase_date <= date.fromisoformat(date_to))
+    if item_status:
+        query = query.where(Purchase.item_status == item_status)
     return query
 
 
@@ -61,6 +63,7 @@ async def get_purchases(
     sort_direction: Optional[str] = "desc",
     date_from: Optional[str] = None,
     date_to: Optional[str] = None,
+    item_status: Optional[str] = None,
 ) -> tuple[List[Purchase], int, float]:
     query = (
         select(Purchase)
@@ -71,18 +74,25 @@ async def get_purchases(
     )
 
     # Apply filters to main query
-    query = _apply_filters(query, retailer_id, search, tag, date_from, date_to)
+    query = _apply_filters(query, retailer_id, search, tag, date_from, date_to, item_status)
 
-    # Get total count and total spending in one query
+    # Total count (respects all filters including item_status)
     stats_query = select(
         func.count(Purchase.id),
         func.coalesce(func.sum(Purchase.price), 0),
     ).select_from(Purchase)
-    stats_query = _apply_filters(stats_query, retailer_id, search, tag, date_from, date_to)
+    stats_query = _apply_filters(stats_query, retailer_id, search, tag, date_from, date_to, item_status)
     stats_result = await db.execute(stats_query)
     row = stats_result.one()
     total = row[0]
-    total_spending = float(row[1])
+
+    # Total spending counts only active items
+    spending_query = select(
+        func.coalesce(func.sum(Purchase.price), 0),
+    ).select_from(Purchase).where(Purchase.item_status == 'active')
+    spending_query = _apply_filters(spending_query, retailer_id, search, tag, date_from, date_to)
+    spending_result = await db.execute(spending_query)
+    total_spending = float(spending_result.scalar())
 
     # Apply sorting
     sort_column = SORT_FIELD_MAP.get(sort_by, Purchase.created_at)

@@ -198,6 +198,7 @@ async def import_data_from_json(db: AsyncSession, json_data: Dict[str, Any]) -> 
                         return_deadline=return_deadline,
                         return_policy=purchase_data.get("return_policy"),
                         tags=purchase_data.get("tags"),
+                        item_status=purchase_data.get("item_status", "active"),
                         created_at=datetime.now(),
                         updated_at=datetime.now() if purchase_data.get("updated_at") else None
                     )

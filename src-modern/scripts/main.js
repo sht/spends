@@ -1128,6 +1128,7 @@ class AdminApp {
         this.form.taxDeductible = this.ensureBoolean(item.taxDeductible);
         this.form.tags = item.tags || '';
         this.form.notes = item.notes || '';
+        this.form.itemStatus = item.itemStatus || item.item_status || 'active';
         console.log('Entered edit mode with item:', item);
         console.log('Form retailer set to:', this.form.retailer);
         console.log('Form brand set to:', this.form.brand);
@@ -1293,6 +1294,7 @@ class AdminApp {
           taxDeductible: false,
           tags: '',
           notes: '',
+          itemStatus: 'active',
         };
         this.warrantyExpiryEnabled = false;
         this.returnDeadlineEnabled = false;
@@ -1547,6 +1549,7 @@ class AdminApp {
               purchase.tags && purchase.tags !== 'N/A' && purchase.tags.trim() !== ''
                 ? purchase.tags
                 : null,
+            item_status: purchase.itemStatus || 'active',
           };
 
           console.log('Submitting purchase payload:', payload);
@@ -2202,6 +2205,7 @@ class AdminApp {
         taxDeductible: undefined,
         tags: '',
         notes: '',
+        itemStatus: 'active',
         updatedAt: '',
         files: [],
         receipts: [],

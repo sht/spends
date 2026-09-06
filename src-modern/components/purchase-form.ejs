@@ -121,11 +121,25 @@
 <div class="mb-4">
     <h6 class="text-muted text-uppercase small fw-semibold mb-3">Additional Info</h6>
 
-    <div class="form-check mb-3">
-        <input class="form-check-input" type="checkbox" id="taxDeductible" x-model="form.taxDeductible" :disabled="isViewMode || false">
-        <label class="form-check-label fw-bold" for="taxDeductible">
-            Tax Deductible
-        </label>
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <label for="itemStatus" class="form-label fw-bold">Item Status</label>
+            <select class="form-select bg-white" id="itemStatus" x-model="form.itemStatus" :disabled="isViewMode || false">
+                <option value="active">Active</option>
+                <option value="lost">Lost</option>
+                <option value="sold">Sold</option>
+                <option value="donated">Donated</option>
+                <option value="disposed">Disposed</option>
+            </select>
+        </div>
+        <div class="col-md-6 d-flex align-items-end">
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="taxDeductible" x-model="form.taxDeductible" :disabled="isViewMode || false">
+                <label class="form-check-label fw-bold" for="taxDeductible">
+                    Tax Deductible
+                </label>
+            </div>
+        </div>
     </div>
 
     <div>

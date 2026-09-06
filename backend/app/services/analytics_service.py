@@ -295,18 +295,18 @@ async def get_spending_summary(db: AsyncSession) -> SummaryAnalytics:
     """
     Get overall spending summary
     """
-    # Total spent
-    total_spent_stmt = select(func.sum(Purchase.price)).select_from(Purchase)
+    # Total spent — active items only
+    total_spent_stmt = select(func.sum(Purchase.price)).select_from(Purchase).where(Purchase.item_status == 'active')
     total_spent_result = await db.execute(total_spent_stmt)
     total_spent = total_spent_result.scalar() or Decimal('0.00')
-    
-    # Average price
-    avg_price_stmt = select(func.avg(Purchase.price)).select_from(Purchase)
+
+    # Average price — active items only
+    avg_price_stmt = select(func.avg(Purchase.price)).select_from(Purchase).where(Purchase.item_status == 'active')
     avg_price_result = await db.execute(avg_price_stmt)
     avg_price = avg_price_result.scalar() or Decimal('0.00')
-    
-    # Total items
-    total_items_stmt = select(func.count(Purchase.id)).select_from(Purchase)
+
+    # Total items — active only
+    total_items_stmt = select(func.count(Purchase.id)).select_from(Purchase).where(Purchase.item_status == 'active')
     total_items_result = await db.execute(total_items_stmt)
     total_items = total_items_result.scalar() or 0
     
