@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 revision = '08bb3a25'
-down_revision = '08bb3a24'
+down_revision = '002_add_tags_to_components'
 branch_labels = None
 depends_on = None
 
