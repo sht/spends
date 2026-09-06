@@ -552,6 +552,7 @@ export function registerInventoryComponent() {
         notes: freshItem.notes !== undefined ? freshItem.notes : undefined,
         updatedAt: freshItem.updatedAt !== undefined ? freshItem.updatedAt : undefined,
         id: freshItem.id,
+        itemStatus: freshItem.itemStatus || 'active',
       };
 
       // Dispatch custom event to notify viewPurchaseDetails component to show modal with data

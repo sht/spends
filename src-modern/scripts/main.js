@@ -3172,6 +3172,7 @@ window.viewItemById = async function (itemId) {
     const item = {
       id: apiItem.id,
       name: apiItem.product_name,
+      productName: apiItem.product_name,
       retailer: apiItem.retailer?.name,
       brand: apiItem.brand?.name,
       modelNumber: apiItem.model_number,
@@ -3188,6 +3189,7 @@ window.viewItemById = async function (itemId) {
       taxDeductible: apiItem.tax_deductible,
       tags: apiItem.tags,
       notes: apiItem.notes,
+      itemStatus: apiItem.item_status || 'active',
     };
 
     // Dispatch event to show view modal
