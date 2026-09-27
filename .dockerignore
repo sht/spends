@@ -1,0 +1,15 @@
+# Local dev env files can contain host-specific paths/secrets, never bake into the image
+backend/.env
+backend/.env.local
+backend/.env.*.local
+
+.git
+node_modules/
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.db
+backend/spends_tracker.db
+spends_tracker.db
+.DS_Store
