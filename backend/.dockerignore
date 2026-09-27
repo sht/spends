@@ -38,3 +38,8 @@ dist/
 build/
 *.db
 spends_tracker.db
+
+# Local dev env files can contain host-specific paths/secrets, never bake into the image
+.env
+.env.local
+.env.*.local
