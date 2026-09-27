@@ -677,7 +677,7 @@ cd backend && docker build -t spends-tracker .
 ### Medium Term
 - [ ] Add authentication (JWT)
 - [ ] Add user management
-- [ ] Add data backup/restore
+- [x] Add data backup/restore (backend implemented and scheduled, see `docs/DEVELOPMENT.md` Phase 9, frontend management UI still pending)
 - [ ] Add export to PDF
 - [ ] Add email notifications for expiring warranties
 

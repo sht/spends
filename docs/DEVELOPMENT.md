@@ -377,38 +377,40 @@ tests/
 **Background:**
 The app uses hash-sharded file storage (`uploads/{hash[:2]}/{hash[2:4]}/{hash}`) for scalability and automatic deduplication. This requires careful backup strategy to ensure data integrity and easy disaster recovery.
 
+**Status:** Backend backup/restore and offsite scheduling are implemented and running in production. Frontend management UI and a few hardening items below are still outstanding.
+
 #### Backup Components
 | Component | Location | Frequency | Notes |
 |-----------|----------|-----------|-------|
-| Database | `spends_tracker.db` | Daily | SQLite file, small size |
-| File Storage | `uploads/` | Weekly | Hash-sharded, can use incremental sync |
-| Config | `.env` | Once | Environment variables |
+| Database | `data.json` export inside the backup zip | Daily | Full row export, not the raw SQLite file |
+| File Storage | `uploads/` | Daily | Hash-sharded, bundled into the same zip |
+| Config | `.env` | Manual | Not included in automated backups |
 
 #### Backup Strategy (3-2-1 Rule)
-- **3 copies**: Primary + Local Backup + Offsite Backup
-- **2 media**: Local disk + Cloud storage
-- **1 offsite**: Cloud storage (S3, B2, Dropbox, etc.)
+- **Primary**: production SQLite DB + `uploads/` on the source disk
+- **Local**: daily zip snapshots kept alongside the source disk (7-day rolling window), same physical disk as production, protects against accidental deletes/bad imports but not disk failure
+- **Offsite**: synced nightly to a Raspberry Pi in a different location, 7-day rolling window plus one permanent copy per month
 
-#### Backend Tasks
-- [ ] Create backup service (`app/services/backup_service.py`)
-  - [ ] Export database to temp location (handle locked DB gracefully)
-  - [ ] Collect all files from hash-sharded storage
-  - [ ] Create timestamped .zip archive
-  - [ ] Verify backup integrity (checksum validation)
-- [ ] Create restore service
-  - [ ] Validate backup structure before restore
-  - [ ] Create restore point (backup current state first)
-  - [ ] Extract and verify database
-  - [ ] Extract uploads (skip existing files to avoid re-download)
-  - [ ] Run post-restore integrity check
-- [ ] Support incremental backups using rsync-style sync
-- [ ] API endpoints:
-  - [ ] `POST /api/backup/create` - Trigger manual backup
-  - [ ] `GET /api/backup/status` - Check backup job status
-  - [ ] `POST /api/backup/restore` - Restore from uploaded backup
-  - [ ] `GET /api/backup/list` - List available backups
+#### Backend Tasks (implemented)
+- [x] Backup/restore logic: `backend/app/utils/zip_backup.py`
+  - [x] Export all DB rows to `data.json` (`import_export.export_data_to_json`)
+  - [x] Bundle every file under `uploads/` into the same zip, preserving the hash-sharded path structure
+  - [x] `create_backup_to_file()` writes timestamped zips to `/app/data/backups`
+  - [x] `cleanup_old_backups()` prunes to the last N backups
+- [x] Restore: `restore_from_backup()` imports `data.json` and copies files back into `uploads/`, skipping ones that already exist by hash
+- [x] API endpoints (actual names differ from the original plan below):
+  - [x] `GET /api/export/zip` - download a full backup on demand
+  - [x] `POST /api/export/backup/save` - create a backup and save it to disk
+  - [x] `POST /api/export/backup/cleanup?max_backups=N` - prune old backups
+  - [x] `GET /api/export/backup/list` - list backups on disk
+  - [x] `POST /api/import/zip` - restore from an uploaded zip
+- [x] Scheduling: daily cron baked into the image (`/app/cron/spends-backup`, wired via `/etc/cron.d/spends-backup` in the Dockerfile), calls save then cleanup at 02:00
+- [x] Offsite sync + retention + alerting: handled outside the app, by a deployment-side script (see the homelab repo's backup plan), which syncs the latest zip to the Pi, keeps a monthly copy, and alerts on failure or on a DB/file-storage mismatch
+- [ ] Verify backup integrity (checksum manifest per backup, not just "the zip exists")
+- [ ] Create restore point (snapshot current state) before running a restore
+- [ ] Incremental/rsync-style backups (currently always a full zip)
 
-#### Frontend Tasks
+#### Frontend Tasks (not started)
 - [ ] Settings page → "Data Management" tab
   - [ ] Manual backup button (one-click download .zip)
   - [ ] Restore from backup (upload .zip file)
@@ -420,16 +422,15 @@ The app uses hash-sharded file storage (`uploads/{hash[:2]}/{hash[2:4]}/{hash}`)
   - [ ] Display backup status: "Last backup: 2 days ago, 45 files, 12MB"
   - [ ] Show restore warnings and confirmation dialog
 
-#### Disaster Recovery Scenarios to Handle
-- [ ] Database corruption: Restore SQLite from backup, uploads intact
-- [ ] Uploads folder lost: Identify orphaned DB records, mark files unavailable
-- [ ] Complete system failure: Fresh install + restore DB + sync uploads
+#### Disaster Recovery Scenarios
+- [x] Uploads folder partially lost: a deployment-side integrity check compares `files` DB rows against blobs on disk and alerts on mismatch, so this is caught automatically instead of surfacing later as 404s in the UI
+- [ ] Database corruption: restore `data.json` from the latest zip, uploads intact (untested end-to-end)
+- [ ] Complete system failure: fresh install + restore from the offsite Pi copy (untested end-to-end)
 
 #### Deliverables:
-- Users can create and download full backups
-- Users can restore from backups via UI
-- Automated backup scheduling (optional but recommended)
-- Clear disaster recovery documentation
+- [x] Automated backup scheduling with offsite sync, retention, and failure alerting
+- [ ] Users can restore from backups via UI (currently only via the `/api/import/zip` endpoint directly)
+- [ ] Clear disaster recovery documentation with a tested runbook
 
 **References:**
 - Hash-sharded storage used by: Git, Docker, IPFS, Immich, Paperless-ngx
@@ -550,7 +551,7 @@ pytest tests/test_purchases.py::test_create_purchase
 | Phase 6: Testing | 2-3 hours | ⏳ Pending |
 | Phase 7: Frontend Integration | 2-3 hours | ⏳ Pending |
 | Phase 8: Deployment | 1-2 hours | ⏳ Pending |
-| Phase 9: Backup & Recovery | 2-3 hours | ⏳ Pending |
+| Phase 9: Backup & Recovery | 2-3 hours | ✅ Backend done, frontend pending |
 | **Total** | **18-25 hours** | |
 
 ---
