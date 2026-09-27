@@ -4,7 +4,7 @@ from sqlalchemy import func, extract, and_, Float
 from datetime import datetime, timedelta, date
 from decimal import Decimal
 from app.models.purchase import Purchase
-from app.models.warranty import Warranty
+from app.models.warranty import Warranty, WarrantyStatus
 from app.models.retailer import Retailer
 from app.models.brand import Brand
 from sqlalchemy.future import select
@@ -61,91 +61,84 @@ async def get_spending_by_month(db: AsyncSession, months: int = None) -> List[Sp
     return spending_data
 
 
+def _add_months(d: date, delta: int) -> date:
+    """Return the first day of the month `delta` months away from `d`."""
+    month_index = d.month - 1 + delta
+    year = d.year + month_index // 12
+    month = month_index % 12 + 1
+    return date(year, month, 1)
+
+
+def _parse_warranty_end(warranty_end) -> date:
+    """Normalize a warranty_end value (date/datetime/ISO string) into a date, or None if unparseable."""
+    try:
+        if isinstance(warranty_end, datetime):
+            return warranty_end.date()
+        elif isinstance(warranty_end, date):
+            return warranty_end
+        elif isinstance(warranty_end, str):
+            if ' ' in warranty_end:  # Contains time part
+                return datetime.fromisoformat(warranty_end.replace(' ', 'T')).date()
+            return date.fromisoformat(warranty_end)
+    except (ValueError, TypeError, AttributeError):
+        pass
+    return None
+
+
 async def get_warranty_timeline(db: AsyncSession, months: int = None) -> List[WarrantyTimelineItem]:
     """
-    Get warranty timeline showing active, expired, and expiring soon warranties.
-    If months is None, returns all data.
+    Get a month-by-month snapshot of how many warranties were active vs expired.
+    Each point is a live snapshot as of that month (based on warranty_end vs that
+    month's reference date), not just the months where a warranty happens to expire,
+    so the x-axis is a contiguous timeline instead of scattered expiration dates.
+    If months is None, the range spans from the earliest warranty_end to today.
     """
     today = date.today()
 
-    # Only apply date filter if months is specified (same convention as spending timeline)
-    start_date = None
-    if months is not None:
-        start_date = today - timedelta(days=months * 30)
-
-    # For SQLite, we need to use a different approach since it doesn't have advanced date functions
-    # We'll create a simplified version that groups warranties by their status
     stmt = select(Warranty)
     result = await db.execute(stmt)
     warranties = result.scalars().all()
 
-    # Group warranties by month based on their end date
-    monthly_data: Dict[str, Dict[str, int]] = {}
-
+    # Voided warranties are excluded entirely, they're neither active nor expired.
+    end_dates: List[date] = []
     for warranty in warranties:
-        # Handle potential null values for warranty_end
-        if not warranty.warranty_end:
+        if not warranty.warranty_end or warranty.status == WarrantyStatus.VOIDED:
             continue
+        end_date = _parse_warranty_end(warranty.warranty_end)
+        if end_date is not None:
+            end_dates.append(end_date)
 
-        # Ensure warranty_end is a date object, not datetime or other format
-        try:
-            if isinstance(warranty.warranty_end, datetime):
-                warranty_end_date = warranty.warranty_end.date()
-            elif isinstance(warranty.warranty_end, date):
-                warranty_end_date = warranty.warranty_end
-            else:
-                # If it's a string or other format, try to parse it
-                if isinstance(warranty.warranty_end, str):
-                    # Parse the string date
-                    if ' ' in warranty.warranty_end:  # Contains time part
-                        parsed_date = datetime.fromisoformat(warranty.warranty_end.replace(' ', 'T'))
-                        warranty_end_date = parsed_date.date()
-                    else:
-                        warranty_end_date = date.fromisoformat(warranty.warranty_end)
-                else:
-                    continue  # Skip if we can't process the date
-        except (ValueError, TypeError, AttributeError):
-            continue  # Skip if we can't process the date
+    if not end_dates:
+        return []
 
-        # Skip warranties whose end date is outside the requested range
-        if start_date is not None and warranty_end_date < start_date:
-            continue
+    # Build a contiguous sequence of calendar months for the x-axis.
+    current_month_start = date(today.year, today.month, 1)
+    if months is not None:
+        first_month_start = _add_months(current_month_start, -(months - 1))
+    else:
+        earliest = min(end_dates)
+        first_month_start = date(earliest.year, earliest.month, 1)
 
-        month_key = warranty_end_date.strftime('%Y-%m')
-        if month_key not in monthly_data:
-            monthly_data[month_key] = {'active': 0, 'expired': 0}
+    month_starts = []
+    cursor = first_month_start
+    while cursor <= current_month_start:
+        month_starts.append(cursor)
+        cursor = _add_months(cursor, 1)
 
-        # Determine status for this warranty
-        if warranty.status.value == 'EXPIRED':
-            monthly_data[month_key]['expired'] += 1
-        elif warranty.status.value == 'ACTIVE':
-            monthly_data[month_key]['active'] += 1
-        elif warranty.status.value == 'VOIDED':
-            # Voided warranties are neither active nor expired in the traditional sense
-            pass
-
-    # Convert to WarrantyTimelineItem objects with formatted month names
     timeline_items = []
-    for month, counts in monthly_data.items():
-        # Format month from "2024-06" to "Jun 2024"
-        try:
-            month_date = datetime.strptime(month, '%Y-%m')
-            formatted_month = month_date.strftime('%b %Y')  # e.g., "Jun 2024"
-        except (ValueError, TypeError):
-            formatted_month = month  # Fallback to original if parsing fails
+    for month_start in month_starts:
+        # Snapshot as of the end of that month, or today for the current month.
+        next_month_start = _add_months(month_start, 1)
+        reference_date = min(next_month_start - timedelta(days=1), today)
+
+        active = sum(1 for end_date in end_dates if end_date >= reference_date)
+        expired = sum(1 for end_date in end_dates if end_date < reference_date)
 
         timeline_items.append(WarrantyTimelineItem(
-            month=formatted_month,
-            active=counts['active'],
-            expired=counts['expired']
+            month=month_start.strftime('%b %Y'),
+            active=active,
+            expired=expired
         ))
-
-    # Sort by month (convert back to sortable format for sorting)
-    try:
-        timeline_items.sort(key=lambda x: datetime.strptime(x.month, '%b %Y') if x.month else datetime.min)
-    except ValueError:
-        # If month format is unexpected, sort as strings
-        timeline_items.sort(key=lambda x: x.month)
 
     return timeline_items
 
