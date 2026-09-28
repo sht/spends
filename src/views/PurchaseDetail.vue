@@ -12,6 +12,8 @@ const components = ref([])
 const files = ref([])
 const componentFiles = reactive({})
 const componentFileErrors = reactive({})
+const selectedPhotoId = ref(null)
+const touchStart = ref(null)
 const loading = ref(true)
 const error = ref('')
 const actionError = ref('')
@@ -24,9 +26,38 @@ const componentFormOpen = ref(false)
 const componentForm = reactive({ name: '', description: '', price: '', currency_code: settings.currency_code,
   brand: '', model_number: '', serial_number: '', quantity: 1, link: '', warranty_expiry: '', warranty_type: '', notes: '', tags: '' })
 const fileGroups = computed(() => ['photo', 'receipt', 'warranty', 'manual', 'other'].map(type => ({ type, entries: files.value.filter(file => file.file_type === type) })).filter(group => group.entries.length))
+const photos = computed(() => {
+  const componentFileIds = new Set(components.value.flatMap(part => (componentFiles[part.id] || []).map(file => file.id)))
+  return files.value.filter(file => file.file_type === 'photo' && !componentFileIds.has(file.id))
+})
+const photoIndex = computed(() => Math.max(0, photos.value.findIndex(file => file.id === selectedPhotoId.value)))
+const currentPhoto = computed(() => photos.value[photoIndex.value] || null)
+
+function movePhoto(step) {
+  if (photos.value.length < 2) return
+  const next = (photoIndex.value + step + photos.value.length) % photos.value.length
+  selectedPhotoId.value = photos.value[next].id
+}
+
+function startPhotoTouch(event) {
+  const touch = event.changedTouches[0]
+  touchStart.value = touch ? { x: touch.clientX, y: touch.clientY } : null
+}
+
+function endPhotoTouch(event) {
+  if (!touchStart.value) return
+  const touch = event.changedTouches[0]
+  if (touch) {
+    const dx = touch.clientX - touchStart.value.x
+    const dy = touch.clientY - touchStart.value.y
+    if (Math.abs(dx) >= 40 && Math.abs(dx) > Math.abs(dy)) movePhoto(dx < 0 ? 1 : -1)
+  }
+  touchStart.value = null
+}
 
 async function load() {
   loading.value = true; error.value = ''; actionError.value = ''
+  selectedPhotoId.value = null
   try {
     const id = encodeURIComponent(route.params.id)
     const [purchase, parts, docs] = await Promise.all([
@@ -114,6 +145,7 @@ async function deleteComponent(part) {
   try {
     await request(`/components/${encodeURIComponent(part.id)}/`, { method: 'DELETE' })
     components.value = components.value.filter(value => value.id !== part.id)
+    files.value = await request(`/files/${encodeURIComponent(route.params.id)}/`)
   } catch (e) { actionError.value = errorMessage(e) }
   finally { busy.value = false }
 }
@@ -129,6 +161,14 @@ function sizeLabel(size) { return size < 1024 * 1024 ? `${Math.ceil(size / 1024)
     <template v-else-if="item">
       <div class="detail-heading"><div><div class="eyebrow">PURCHASE RECORD</div><h1>{{ item.product_name }}</h1><div class="heading-meta"><span class="status-chip" :class="item.item_status">{{ statusLabel(item.item_status) }}</span><span>{{ dateLabel(item.purchase_date, settings.date_format) }}</span><span v-if="item.retailer">· {{ item.retailer.name }}</span></div></div><RouterLink :to="`/purchases/${item.id}/edit`" class="button secondary">Edit purchase</RouterLink></div>
       <p v-if="actionError" class="notice error" role="alert">{{ actionError }}</p>
+      <section v-if="photos.length" class="panel photo-slider" role="region" aria-roledescription="carousel" :aria-label="`Photos of ${item.product_name}`" tabindex="0" @keydown.left.prevent="movePhoto(-1)" @keydown.right.prevent="movePhoto(1)" @touchstart.passive="startPhotoTouch" @touchend.passive="endPhotoTouch" @touchcancel="touchStart = null">
+        <div class="photo-slider-stage">
+          <img :key="currentPhoto.id" :src="fileUrl(currentPhoto.id)" :alt="`${item.product_name}, photo ${photoIndex + 1} of ${photos.length}`" />
+          <button v-if="photos.length > 1" type="button" class="photo-slider-arrow previous" aria-label="Previous photo" @click="movePhoto(-1)">‹</button>
+          <button v-if="photos.length > 1" type="button" class="photo-slider-arrow next" aria-label="Next photo" @click="movePhoto(1)">›</button>
+        </div>
+        <div class="photo-slider-footer"><span class="photo-slider-count" aria-live="polite">{{ photoIndex + 1 }} / {{ photos.length }}</span><div v-if="photos.length > 1" class="photo-slider-thumbnails" aria-label="Choose a photo"><button v-for="(photo, index) in photos" :key="photo.id" type="button" :class="{ selected: index === photoIndex }" :aria-label="`Show photo ${index + 1} of ${photos.length}`" :aria-current="index === photoIndex ? 'true' : undefined" @click="selectedPhotoId = photo.id"><img :src="fileUrl(photo.id)" :alt="`${item.product_name}, thumbnail ${index + 1}`" loading="lazy" /></button></div></div>
+      </section>
       <div class="detail-layout"><div class="detail-main">
         <section class="panel detail-card"><div class="panel-head"><div><span class="section-kicker">THE ESSENTIALS</span><h2>Purchase</h2></div><strong class="detail-price">{{ money(item.price, item.currency_code || settings.currency_code) }}</strong></div>
           <div class="facts"><div><span>Brand</span><strong>{{ item.brand?.name || '—' }}</strong></div><div><span>Retailer</span><strong>{{ item.retailer?.name || '—' }}</strong></div><div><span>Quantity</span><strong>{{ item.quantity || 1 }}</strong></div><div><span>Purchased</span><strong>{{ dateLabel(item.purchase_date, settings.date_format) }}</strong></div><div v-if="item.model_number"><span>Model</span><strong>{{ item.model_number }}</strong></div><div v-if="item.serial_number"><span>Serial</span><strong>{{ item.serial_number }}</strong></div><div v-if="item.retailer_order_number"><span>Order number</span><strong>{{ item.retailer_order_number }}</strong></div><div v-if="item.tax_deductible"><span>Tax</span><strong>Tax deductible</strong></div><div v-if="safeLink(item.link)"><span>Product</span><a :href="safeLink(item.link)" target="_blank" rel="noopener noreferrer">Open link ↗</a></div></div>
