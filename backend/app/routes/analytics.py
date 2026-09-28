@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 from app.database import get_db
+from app.models.warranty import current_warranty_status
 from app.schemas.analytics import (
     SpendingAnalytics, WarrantyAnalytics, DistributionAnalytics,
     TopProductsAnalytics, ExpensivePurchasesAnalytics, SummaryAnalytics
@@ -24,18 +25,6 @@ async def get_spending_analytics(
     return SpendingAnalytics(spending_over_time=spending_data)
 
 
-@router.get("/spending/by-period")
-async def get_spending_by_period(
-    start_date: str = None,
-    end_date: str = None,
-    db: AsyncSession = Depends(get_db)
-):
-    # This would require additional implementation based on specific date range
-    # For now, returning the default 12-month data
-    spending_data = await get_spending_by_month(db, 12)
-    return SpendingAnalytics(spending_over_time=spending_data)
-
-
 @router.get("/summary", response_model=SummaryAnalytics)
 async def get_summary_analytics(db: AsyncSession = Depends(get_db)):
     return await get_spending_summary(db)
@@ -49,22 +38,6 @@ async def get_warranty_timeline_analytics(
     timeline_data = await get_warranty_timeline(db, months)
     summary = {}  # Would compute summary from timeline data
     return WarrantyAnalytics(timeline=timeline_data, summary=summary)
-
-
-@router.get("/warranties/summary", response_model=dict)
-async def get_warranty_summary(db: AsyncSession = Depends(get_db)):
-    # Get summary data for warranties
-    active_stmt = "SELECT COUNT(*) FROM warranties WHERE status = 'ACTIVE'"
-    expired_stmt = "SELECT COUNT(*) FROM warranties WHERE status = 'EXPIRED'"
-    voided_stmt = "SELECT COUNT(*) FROM warranties WHERE status = 'VOIDED'"
-    
-    # For now, return a simple dictionary
-    # In a real implementation, we would execute these queries
-    return {
-        "active": 0,
-        "expired": 0,
-        "voided": 0
-    }
 
 
 @router.get("/retailers", response_model=DistributionAnalytics)
@@ -162,7 +135,7 @@ async def get_recent_purchases_analytics(
                 "warranty_start": purchase.warranty.warranty_start.isoformat() if hasattr(purchase, 'warranty') and purchase.warranty and purchase.warranty.warranty_start else None,
                 "warranty_end": purchase.warranty.warranty_end.isoformat() if hasattr(purchase, 'warranty') and purchase.warranty and purchase.warranty.warranty_end else None,
                 "warranty_type": purchase.warranty.warranty_type if hasattr(purchase, 'warranty') and purchase.warranty else None,
-                "status": purchase.warranty.status.value if hasattr(purchase, 'warranty') and purchase.warranty and purchase.warranty.status else None,
+                "status": current_warranty_status(purchase.warranty.status, purchase.warranty.warranty_end) if hasattr(purchase, 'warranty') and purchase.warranty else None,
                 "provider": purchase.warranty.provider if hasattr(purchase, 'warranty') and purchase.warranty else None,
                 "notes": purchase.warranty.notes if hasattr(purchase, 'warranty') and purchase.warranty else None
             } if hasattr(purchase, 'warranty') and purchase.warranty else None

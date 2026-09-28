@@ -1,8 +1,10 @@
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
 from typing import Optional
 from datetime import datetime, date
 from decimal import Decimal
+from enum import Enum
 from .common import BaseResponse
+from app.models.warranty import current_warranty_status
 
 
 class PurchaseBase(BaseModel):
@@ -91,6 +93,16 @@ class WarrantyInfo(BaseModel):
 
     class Config:
         from_attributes = True
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def enum_to_str(cls, v):
+        return v.value if isinstance(v, Enum) else v
+
+    @model_validator(mode="after")
+    def derive_status(self):
+        self.status = current_warranty_status(self.status, self.warranty_end)
+        return self
 
 
 class PurchaseResponse(PurchaseBase, BaseResponse):

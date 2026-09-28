@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, date
 from decimal import Decimal
 from app.models.purchase import Purchase
 from app.models.warranty import Warranty, WarrantyStatus
+from app.services.warranty_service import status_condition, not_voided
 from app.models.retailer import Retailer
 from app.models.brand import Brand
 from sqlalchemy.future import select
@@ -70,7 +71,7 @@ def _add_months(d: date, delta: int) -> date:
 
 
 def _parse_warranty_end(warranty_end) -> date:
-    """Normalize a warranty_end value (date/datetime/ISO string) into a date, or None if unparseable."""
+    """Normalize a warranty date value (date/datetime/ISO string) into a date, or None if unparseable."""
     try:
         if isinstance(warranty_end, datetime):
             return warranty_end.date()
@@ -100,15 +101,16 @@ async def get_warranty_timeline(db: AsyncSession, months: int = None) -> List[Wa
     warranties = result.scalars().all()
 
     # Voided warranties are excluded entirely, they're neither active nor expired.
-    end_dates: List[date] = []
+    periods: List[Tuple[date, date]] = []
     for warranty in warranties:
         if not warranty.warranty_end or warranty.status == WarrantyStatus.VOIDED:
             continue
         end_date = _parse_warranty_end(warranty.warranty_end)
+        start_date = _parse_warranty_end(warranty.warranty_start) or end_date
         if end_date is not None:
-            end_dates.append(end_date)
+            periods.append((start_date, end_date))
 
-    if not end_dates:
+    if not periods:
         return []
 
     # Build a contiguous sequence of calendar months for the x-axis.
@@ -116,7 +118,7 @@ async def get_warranty_timeline(db: AsyncSession, months: int = None) -> List[Wa
     if months is not None:
         first_month_start = _add_months(current_month_start, -(months - 1))
     else:
-        earliest = min(end_dates)
+        earliest = min(start for start, _ in periods)
         first_month_start = date(earliest.year, earliest.month, 1)
 
     month_starts = []
@@ -131,8 +133,10 @@ async def get_warranty_timeline(db: AsyncSession, months: int = None) -> List[Wa
         next_month_start = _add_months(month_start, 1)
         reference_date = min(next_month_start - timedelta(days=1), today)
 
-        active = sum(1 for end_date in end_dates if end_date >= reference_date)
-        expired = sum(1 for end_date in end_dates if end_date < reference_date)
+        # Warranties that hadn't started yet by that month aren't counted at all.
+        started = [end for start, end in periods if start <= reference_date]
+        active = sum(1 for end_date in started if end_date >= reference_date)
+        expired = sum(1 for end_date in started if end_date < reference_date)
 
         timeline_items.append(WarrantyTimelineItem(
             month=month_start.strftime('%b %Y'),
@@ -304,7 +308,7 @@ async def get_spending_summary(db: AsyncSession) -> SummaryAnalytics:
     total_items = total_items_result.scalar() or 0
     
     # Active warranties
-    active_warranties_stmt = select(func.count(Warranty.id)).where(Warranty.status == 'ACTIVE')
+    active_warranties_stmt = select(func.count(Warranty.id)).where(status_condition(WarrantyStatus.ACTIVE.value))
     active_warranties_result = await db.execute(active_warranties_stmt)
     active_warranties = active_warranties_result.scalar() or 0
 
@@ -313,16 +317,16 @@ async def get_spending_summary(db: AsyncSession) -> SummaryAnalytics:
     thirty_days_later = today + timedelta(days=30)
     expiring_warranties_stmt = select(func.count(Warranty.id)).where(
         and_(
-            Warranty.status == 'ACTIVE',
+            not_voided(),
             Warranty.warranty_end <= thirty_days_later,
             Warranty.warranty_end >= today
         )
     )
     expiring_warranties_result = await db.execute(expiring_warranties_stmt)
     expiring_warranties = expiring_warranties_result.scalar() or 0
-    
+
     # Expired warranties
-    expired_warranties_stmt = select(func.count(Warranty.id)).where(Warranty.status == 'EXPIRED')
+    expired_warranties_stmt = select(func.count(Warranty.id)).where(status_condition(WarrantyStatus.EXPIRED.value))
     expired_warranties_result = await db.execute(expired_warranties_stmt)
     expired_warranties = expired_warranties_result.scalar() or 0
     

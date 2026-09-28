@@ -6,7 +6,8 @@ from app.models.warranty import Warranty
 from app.schemas.warranty import WarrantyCreate, WarrantyUpdate, WarrantyResponse
 from app.schemas.common import PaginatedResponse
 from app.services.warranty_service import (
-    get_warranty, get_warranties, create_warranty, update_warranty, delete_warranty
+    get_warranty, get_warranties, get_expiring_warranties,
+    create_warranty, update_warranty, delete_warranty
 )
 
 router = APIRouter(prefix="/api/warranties", tags=["warranties"])
@@ -34,6 +35,16 @@ async def list_warranties(
         limit=limit,
         pages=pages
     )
+
+
+# Must be registered before /{warranty_id}, otherwise "expiring" is matched as an id.
+@router.get("/expiring", response_model=List[WarrantyResponse])
+async def list_expiring_warranties(
+    days: int = Query(30, ge=0, description="Warranties ending within this many days, soonest first"),
+    db: AsyncSession = Depends(get_db)
+):
+    warranties = await get_expiring_warranties(db, days)
+    return [WarrantyResponse.model_validate(w) for w in warranties]
 
 
 @router.get("/{warranty_id}", response_model=WarrantyResponse)
@@ -67,14 +78,3 @@ async def delete_existing_warranty(warranty_id: str, db: AsyncSession = Depends(
     if not success:
         raise HTTPException(status_code=404, detail="Warranty not found")
     return
-
-
-@router.get("/expiring", response_model=List[WarrantyResponse])
-async def get_expiring_warranties(
-    days: int = Query(30, description="Number of days to check for expiring warranties"),
-    db: AsyncSession = Depends(get_db)
-):
-    # This would require additional logic to filter warranties expiring within 'days' days
-    # For now, returning all warranties
-    warranties, _ = await get_warranties(db, skip=0, limit=100)
-    return [WarrantyResponse.model_validate(w) for w in warranties]

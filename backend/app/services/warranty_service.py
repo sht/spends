@@ -1,8 +1,34 @@
 from typing import List, Optional
+from datetime import date, timedelta
+from sqlalchemy import and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from app.models.warranty import Warranty
+from app.models.warranty import Warranty, WarrantyStatus
 from app.schemas.warranty import WarrantyCreate, WarrantyUpdate
+
+
+def not_voided():
+    return or_(Warranty.status.is_(None), Warranty.status != WarrantyStatus.VOIDED)
+
+
+def status_condition(status: str):
+    """SQL filter matching current_warranty_status(): ACTIVE/EXPIRED come from warranty_end."""
+    today = date.today()
+    if status == WarrantyStatus.ACTIVE.value:
+        return and_(not_voided(), Warranty.warranty_end >= today)
+    if status == WarrantyStatus.EXPIRED.value:
+        return and_(not_voided(), Warranty.warranty_end < today)
+    return Warranty.status == status
+
+
+async def get_expiring_warranties(db: AsyncSession, days: int) -> List[Warranty]:
+    today = date.today()
+    result = await db.execute(
+        select(Warranty)
+        .filter(not_voided(), Warranty.warranty_end >= today, Warranty.warranty_end <= today + timedelta(days=days))
+        .order_by(Warranty.warranty_end)
+    )
+    return result.scalars().all()
 
 
 async def get_warranty(db: AsyncSession, warranty_id: str) -> Optional[Warranty]:
@@ -20,12 +46,12 @@ async def get_warranties(
 
     # Apply filters
     if status:
-        query = query.filter(Warranty.status == status)
+        query = query.filter(status_condition(status))
 
     # Get total count
     count_query = select(Warranty.id)
     if status:
-        count_query = count_query.filter(Warranty.status == status)
+        count_query = count_query.filter(status_condition(status))
 
     total_result = await db.execute(count_query)
     total = len(total_result.scalars().all())

@@ -1,8 +1,9 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from typing import Optional
 from datetime import datetime, date
 from enum import Enum
 from .common import BaseResponse
+from app.models.warranty import current_warranty_status
 
 
 class WarrantyStatus(str, Enum):
@@ -35,4 +36,7 @@ class WarrantyUpdate(BaseModel):
 
 
 class WarrantyResponse(WarrantyBase, BaseResponse):
-    pass
+    @model_validator(mode="after")
+    def derive_status(self):
+        self.status = WarrantyStatus(current_warranty_status(self.status, self.warranty_end))
+        return self

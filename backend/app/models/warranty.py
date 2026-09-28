@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
 from uuid import uuid4
-from datetime import datetime
+from datetime import datetime, date
 from enum import Enum as PyEnum
 
 
@@ -11,6 +11,18 @@ class WarrantyStatus(PyEnum):
     ACTIVE = "ACTIVE"
     EXPIRED = "EXPIRED"
     VOIDED = "VOIDED"
+
+
+def current_warranty_status(status, warranty_end) -> str:
+    """ACTIVE/EXPIRED is derived from warranty_end, only VOIDED is taken from the stored status."""
+    value = status.value if isinstance(status, PyEnum) else status
+    if value == WarrantyStatus.VOIDED.value:
+        return value
+    if isinstance(warranty_end, datetime):
+        warranty_end = warranty_end.date()
+    if isinstance(warranty_end, date):
+        return WarrantyStatus.ACTIVE.value if warranty_end >= date.today() else WarrantyStatus.EXPIRED.value
+    return value
 
 
 class Warranty(Base):
