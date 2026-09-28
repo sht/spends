@@ -33,6 +33,7 @@ async def list_purchases(
     skip: int = 0,
     limit: int = 20,
     retailer_id: Optional[str] = None,
+    brand_id: Optional[str] = None,
     search: Optional[str] = None,
     tag: Optional[str] = None,
     sort_by: Optional[str] = None,
@@ -46,7 +47,7 @@ async def list_purchases(
         db, skip, limit, retailer_id, search, tag,
         sort_by=sort_by, sort_direction=sort_direction,
         date_from=date_from, date_to=date_to,
-        item_status=item_status,
+        item_status=item_status, brand_id=brand_id,
     )
 
     # Convert SQLAlchemy models to Pydantic schemas

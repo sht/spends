@@ -2,10 +2,12 @@ from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from datetime import datetime, date
 from app.models.purchase import Purchase
 from app.models.warranty import Warranty
+from app.models.retailer import Retailer
+from app.models.brand import Brand
 from app.schemas.purchase import PurchaseCreate, PurchaseUpdate
 from uuid import UUID
 
@@ -14,7 +16,9 @@ SORT_FIELD_MAP = {
     "name": Purchase.product_name,
     "price": Purchase.price,
     "purchaseDate": Purchase.purchase_date,
-    "retailer": Purchase.retailer_id,
+    "createdAt": Purchase.created_at,
+    "retailer": select(Retailer.name).where(Retailer.id == Purchase.retailer_id).scalar_subquery(),
+    "brand": select(Brand.name).where(Brand.id == Purchase.brand_id).scalar_subquery(),
     "modelNumber": Purchase.model_number,
     "quantity": Purchase.quantity,
     "serialNumber": Purchase.serial_number,
@@ -25,11 +29,23 @@ SORT_FIELD_MAP = {
 }
 
 
-def _apply_filters(query, retailer_id, search, tag, date_from, date_to, item_status=None):
+def _apply_filters(query, retailer_id, search, tag, date_from, date_to, item_status=None, brand_id=None):
     if retailer_id:
         query = query.where(Purchase.retailer_id == retailer_id)
+    if brand_id:
+        query = query.where(Purchase.brand_id == brand_id)
     if search:
-        query = query.where(Purchase.product_name.ilike(f"%{search}%"))
+        pattern = f"%{search}%"
+        query = query.where(or_(
+            Purchase.product_name.ilike(pattern),
+            Purchase.model_number.ilike(pattern),
+            Purchase.serial_number.ilike(pattern),
+            Purchase.retailer_order_number.ilike(pattern),
+            Purchase.tags.ilike(pattern),
+            Purchase.notes.ilike(pattern),
+            Purchase.retailer_id.in_(select(Retailer.id).where(Retailer.name.ilike(pattern))),
+            Purchase.brand_id.in_(select(Brand.id).where(Brand.name.ilike(pattern))),
+        ))
     if tag:
         query = query.where(Purchase.tags.ilike(f"%{tag}%"))
     if date_from:
@@ -64,6 +80,7 @@ async def get_purchases(
     date_from: Optional[str] = None,
     date_to: Optional[str] = None,
     item_status: Optional[str] = None,
+    brand_id: Optional[str] = None,
 ) -> tuple[List[Purchase], int, float]:
     query = (
         select(Purchase)
@@ -74,14 +91,14 @@ async def get_purchases(
     )
 
     # Apply filters to main query
-    query = _apply_filters(query, retailer_id, search, tag, date_from, date_to, item_status)
+    query = _apply_filters(query, retailer_id, search, tag, date_from, date_to, item_status, brand_id)
 
     # Total count (respects all filters including item_status)
     stats_query = select(
         func.count(Purchase.id),
         func.coalesce(func.sum(Purchase.price), 0),
     ).select_from(Purchase)
-    stats_query = _apply_filters(stats_query, retailer_id, search, tag, date_from, date_to, item_status)
+    stats_query = _apply_filters(stats_query, retailer_id, search, tag, date_from, date_to, item_status, brand_id)
     stats_result = await db.execute(stats_query)
     row = stats_result.one()
     total = row[0]
@@ -90,7 +107,7 @@ async def get_purchases(
     spending_query = select(
         func.coalesce(func.sum(Purchase.price), 0),
     ).select_from(Purchase).where(Purchase.item_status == 'active')
-    spending_query = _apply_filters(spending_query, retailer_id, search, tag, date_from, date_to)
+    spending_query = _apply_filters(spending_query, retailer_id, search, tag, date_from, date_to, brand_id=brand_id)
     spending_result = await db.execute(spending_query)
     total_spending = float(spending_result.scalar())
 

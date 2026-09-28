@@ -37,7 +37,7 @@ async def get_spending_by_month(db: AsyncSession, months: int = None) -> List[Sp
     # Only apply date filter if months is specified
     if months is not None:
         today = date.today()
-        start_date = today - timedelta(days=months * 30)
+        start_date = _add_months(date(today.year, today.month, 1), -(months - 1))
         stmt = stmt.where(Purchase.purchase_date >= start_date)
     
     result = await db.execute(stmt)
