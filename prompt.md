@@ -18,7 +18,7 @@ Spends Tracker is a self-hosted, single-user app for tracking personal purchases
 - See spending patterns: spending over time, by retailer, by brand, most expensive items.
 - Import and export data (JSON, CSV, Amazon order CSV, full ZIP backup including files).
 
-It runs on a home server and is open source. There is 1 user and no login. Today there are about 30 purchases, 17 warranties and 300 files, growing to roughly 300 purchases. Design for a personal inventory, not an enterprise dashboard.
+It runs on a home server and is open source. There is 1 user and no login. Expect a few dozen purchases at first, growing to roughly 300. Design for a personal inventory, not an enterprise dashboard.
 
 ## Current frontend (being replaced)
 
@@ -43,7 +43,7 @@ Problems with the current UI that show what to avoid:
 - **Stack**: Python 3.10, FastAPI, SQLAlchemy (async), Pydantic, SQLite.
 - **Deployment**: 1 Docker image that runs the API and also serves the built frontend as static files from a `dist-modern/` folder at the repo root, mounted at `/` with `html=True` (so `/` serves `dist-modern/index.html`). Your build must output static files to `dist-modern/`.
 - The API is on the same origin under `/api`. Use relative paths (`/api/...`). CORS is open and there's no authentication.
-- Money values (`price`, `total_spent`, and so on) come back as decimal strings, for example `"153.01"`. Parse them before doing math.
+- Money values (`price`, `total_spent`, and so on) come back as decimal strings, for example `"49.99"`. Parse them before doing math.
 - Dates are ISO strings (`"2026-09-28"`), timestamps are ISO datetimes.
 - Trailing slashes matter: use the paths exactly as written below.
 
@@ -53,7 +53,7 @@ Problems with the current UI that show what to avoid:
 
 ```json
 {
-  "id": "f5bb7545-c41b-45a4-be2b-d06c3494c399",
+  "id": "3f2b8c1e-7a4d-4e9b-9c21-5d6e8f0a1b2c",
   "product_name": "Sony WH-1000XM5",
   "price": "349.00",
   "currency_code": "EUR",
@@ -81,7 +81,7 @@ Problems with the current UI that show what to avoid:
     "provider": "Sony",
     "notes": null
   },
-  "photo_id": "007a615210914469a131a4efae618fdc",
+  "photo_id": "9a8b7c6d5e4f4a3b8c2d1e0f9a8b7c6d",
   "photo_count": 3,
   "created_at": "2025-11-02T18:21:05",
   "updated_at": null
@@ -103,7 +103,7 @@ Create/update body fields: `product_name` (required on create), `price` (require
 
 ```json
 {
-  "id": "007a615210914469a131a4efae618fdc",
+  "id": "9a8b7c6d5e4f4a3b8c2d1e0f9a8b7c6d",
   "purchase_id": "…",
   "filename": "receipt.pdf",
   "file_type": "receipt",
@@ -124,7 +124,7 @@ Create/update body fields: `product_name` (required on create), `price` (require
 List endpoints are paginated with `skip` and `limit` and return:
 
 ```json
-{ "items": [ ... ], "total": 31, "page": 1, "limit": 20, "pages": 2 }
+{ "items": [ ... ], "total": 30, "page": 1, "limit": 20, "pages": 2 }
 ```
 
 **Purchases**
@@ -164,9 +164,9 @@ List endpoints are paginated with `skip` and `limit` and return:
 
 - `GET /api/analytics/summary`:
   ```json
-  { "total_spent": "4743.42", "avg_price": "153.01", "total_items": 31,
-    "active_warranties": 13, "expiring_warranties": 1, "expired_warranties": 4,
-    "tax_deductible_count": 17 }
+  { "total_spent": "2450.00", "avg_price": "81.67", "total_items": 30,
+    "active_warranties": 12, "expiring_warranties": 2, "expired_warranties": 5,
+    "tax_deductible_count": 9 }
   ```
   Totals count only purchases with `item_status = active`. `expiring_warranties` means ending within 30 days.
 - `GET /api/analytics/spending?months=N`: `{ "spending_over_time": [ { "month": "Jun 2025", "total_amount": "412.00", "item_count": 3 } ] }`. Only months that have purchases are included, and all time if `months` is omitted.

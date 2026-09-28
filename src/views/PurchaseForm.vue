@@ -2,7 +2,7 @@
 import { computed, inject, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { allPages, request } from '../api'
-import { errorMessage, today } from '../utils'
+import { currencyMismatch, errorMessage, today } from '../utils'
 
 const route = useRoute()
 const router = useRouter()
@@ -17,12 +17,14 @@ const fields = ref({})
 const adding = ref('')
 const newName = ref('')
 const addError = ref('')
+const convertLegacy = ref(false)
 const form = reactive({
   product_name: '', price: '', currency_code: settings.currency_code, purchase_date: today(),
   retailer_id: '', brand_id: '', model_number: '', serial_number: '', retailer_order_number: '',
   quantity: 1, link: '', return_deadline: '', return_policy: '', notes: '', tags: '',
   tax_deductible: false, item_status: 'active', warranty_type: 'LIMITED', warranty_expiry: '', has_warranty: false,
 })
+const legacyCurrency = computed(() => editing.value && currencyMismatch(form, settings.currency_code))
 let original = null
 
 async function load() {
@@ -50,7 +52,7 @@ onMounted(load)
 
 function payload() {
   return {
-    product_name: form.product_name.trim(), price: String(form.price), currency_code: form.currency_code.trim().toUpperCase(),
+    product_name: form.product_name.trim(), price: String(form.price), currency_code: convertLegacy.value ? settings.currency_code : form.currency_code.trim().toUpperCase(),
     purchase_date: form.purchase_date, retailer_id: form.retailer_id || null, brand_id: form.brand_id || null,
     model_number: form.model_number || null, serial_number: form.serial_number || null,
     retailer_order_number: form.retailer_order_number || null, quantity: Number(form.quantity), link: form.link || null,
@@ -105,8 +107,9 @@ async function addEntity(type) {
       <section class="panel form-section"><div class="form-section-head"><span class="step-number">01</span><div><h2>Purchase details</h2><p>The item and when you bought it.</p></div></div>
         <div class="form-grid">
           <label class="full">Product name <span class="required">*</span><input v-model="form.product_name" required maxlength="250" placeholder="e.g. Sony WH-1000XM5" /><small v-if="fields.product_name" class="field-error">{{ fields.product_name }}</small></label>
-          <label>Price <span class="required">*</span><input v-model="form.price" required type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" /><small v-if="fields.price" class="field-error">{{ fields.price }}</small></label>
-          <label>Currency <span class="required">*</span><input v-model="form.currency_code" required maxlength="3" placeholder="EUR" autocapitalize="characters" /><small v-if="fields.currency_code" class="field-error">{{ fields.currency_code }}</small></label>
+          <label>Price ({{ legacyCurrency && !convertLegacy ? form.currency_code : settings.currency_code }}) <span class="required">*</span><input v-model="form.price" required type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" /><small v-if="fields.price" class="field-error">{{ fields.price }}</small></label>
+          <label v-if="legacyCurrency" class="check-row full"><input v-model="convertLegacy" type="checkbox" /><span>I entered the equivalent amount in {{ settings.currency_code }}. Include this purchase in spending totals.</span></label>
+          <p v-if="legacyCurrency" class="form-hint full">This purchase was recorded in {{ form.currency_code }}. Checking the box changes its currency label; enter the converted amount first. No exchange rate is applied automatically.</p>
           <label>Purchase date <span class="required">*</span><input v-model="form.purchase_date" required type="date" :max="today()" /><small v-if="fields.purchase_date" class="field-error">{{ fields.purchase_date }}</small></label>
           <label>Quantity<input v-model.number="form.quantity" type="number" min="1" step="1" /><small v-if="fields.quantity" class="field-error">{{ fields.quantity }}</small></label>
           <div class="field-with-action"><label>Retailer<select v-model="form.retailer_id"><option value="">None</option><option v-for="item in retailers" :key="item.id" :value="item.id">{{ item.name }}</option></select></label><button type="button" class="text-button" @click="adding = 'retailers'; newName = ''; addError = ''">+ New retailer</button></div>

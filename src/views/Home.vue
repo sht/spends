@@ -1,7 +1,7 @@
 <script setup>
 import { computed, inject, onMounted, ref } from 'vue'
 import { allPages } from '../api'
-import { activePurchases, dateLabel, daysUntil, deadlineLabel, errorMessage, money, photo, price, totalsByCurrency } from '../utils'
+import { activePurchases, currencyMismatch, dateLabel, daysUntil, deadlineLabel, errorMessage, money, photo, price, spendingInCurrency } from '../utils'
 
 const settings = inject('settings')
 const items = ref([])
@@ -20,7 +20,8 @@ const returns = computed(() => active.value.filter(p => p.return_deadline && day
 const warranties = computed(() => active.value.filter(p => p.warranty?.status === 'ACTIVE' && p.warranty.warranty_end !== '9999-12-31' && daysUntil(p.warranty.warranty_end) >= 0 && daysUntil(p.warranty.warranty_end) <= 30)
   .sort((a, b) => a.warranty.warranty_end.localeCompare(b.warranty.warranty_end)))
 const recent = computed(() => [...items.value].sort((a, b) => (b.created_at || b.purchase_date).localeCompare(a.created_at || a.purchase_date)).slice(0, 5))
-const totals = computed(() => totalsByCurrency(active.value))
+const spending = computed(() => spendingInCurrency(active.value, settings.currency_code))
+const needsReview = computed(() => active.value.filter(item => currencyMismatch(item, settings.currency_code)))
 </script>
 
 <template>
@@ -31,9 +32,10 @@ const totals = computed(() => totalsByCurrency(active.value))
     <template v-else>
       <div class="summary-strip">
         <div><span class="metric-label">ACTIVE PURCHASES</span><strong>{{ active.length }}</strong><RouterLink to="/purchases">View collection →</RouterLink></div>
-        <div><span class="metric-label">RECORDED SPENDING · ACTIVE</span><strong class="total-numbers">{{ totals.length ? totals.map(([code, value]) => money(value, code)).join(' · ') : '—' }}</strong><span class="metric-foot">In original purchase currencies</span></div>
+        <div><span class="metric-label">Recorded Spendings</span><strong class="total-numbers">{{ money(spending, settings.currency_code) }}</strong></div>
         <div><span class="metric-label">NEEDS ATTENTION · NEXT 30 DAYS</span><strong>{{ returns.length + warranties.length }}</strong><span class="metric-foot">Return and warranty deadlines</span></div>
       </div>
+      <div v-if="needsReview.length" class="notice" role="status">{{ needsReview.length }} active {{ needsReview.length === 1 ? 'purchase has' : 'purchases have' }} an older currency and {{ needsReview.length === 1 ? 'is' : 'are' }} excluded from spending totals. Enter {{ settings.currency_code }} amounts to include {{ needsReview.length === 1 ? 'it' : 'them' }}: <RouterLink v-for="(item, index) in needsReview" :key="item.id" :to="`/purchases/${item.id}/edit`">{{ item.product_name }}{{ index < needsReview.length - 1 ? ', ' : '' }}</RouterLink></div>
       <div class="home-grid">
         <section class="panel attention"><div class="panel-head"><div><span class="section-kicker amber">TIME SENSITIVE</span><h2>Return windows</h2></div><span class="count">{{ returns.length }}</span></div>
           <div v-if="returns.length" class="stack-list"><RouterLink v-for="item in returns.slice(0, 6)" :key="item.id" :to="`/purchases/${item.id}`" class="attention-row"><span class="row-name">{{ item.product_name }}<small>{{ dateLabel(item.return_deadline, settings.date_format) }}</small></span><span class="due-pill" :class="{ urgent: daysUntil(item.return_deadline) <= 3 }">{{ deadlineLabel(daysUntil(item.return_deadline)) }}</span></RouterLink><RouterLink v-if="returns.length > 6" :to="{ path: '/purchases', query: { due: 'returns' } }" class="text-link">See all {{ returns.length }} →</RouterLink></div>

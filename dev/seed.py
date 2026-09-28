@@ -37,6 +37,8 @@ async def seed():
             today = date.today()
             for entry in json.loads((ROOT / 'dev/purchases.json').read_text()):
                 entry = dict(entry)
+                if entry.get('currency_code') != 'EUR':
+                    raise ValueError(f"Development sample {entry.get('product_name')} must use EUR")
                 days_ago = entry.pop('days_ago')
                 warranty_days = entry.pop('warranty_days', None)
                 return_days = entry.pop('return_days', None)

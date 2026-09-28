@@ -2,7 +2,8 @@
 import { computed, inject, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { fileUrl, request, upload } from '../api'
-import { dateLabel, daysUntil, deadlineLabel, errorMessage, money, safeLink, statusLabel } from '../utils'
+import { currencyMismatch, dateLabel, daysUntil, deadlineLabel, errorMessage, money, safeLink, statusLabel } from '../utils'
+import FileViewer from '../components/FileViewer.vue'
 
 const settings = inject('settings')
 const route = useRoute()
@@ -14,6 +15,7 @@ const componentFiles = reactive({})
 const componentFileErrors = reactive({})
 const selectedPhotoId = ref(null)
 const touchStart = ref(null)
+const viewer = ref(null)
 const loading = ref(true)
 const error = ref('')
 const actionError = ref('')
@@ -23,8 +25,10 @@ const fileInput = ref(null)
 const cameraInput = ref(null)
 const editingComponent = ref(null)
 const componentFormOpen = ref(false)
+const convertComponentLegacy = ref(false)
 const componentForm = reactive({ name: '', description: '', price: '', currency_code: settings.currency_code,
   brand: '', model_number: '', serial_number: '', quantity: 1, link: '', warranty_expiry: '', warranty_type: '', notes: '', tags: '' })
+const legacyComponentCurrency = computed(() => Boolean(editingComponent.value) && currencyMismatch(componentForm, settings.currency_code))
 const fileGroups = computed(() => ['photo', 'receipt', 'warranty', 'manual', 'other'].map(type => ({ type, entries: files.value.filter(file => file.file_type === type) })).filter(group => group.entries.length))
 const photos = computed(() => {
   const componentFileIds = new Set(components.value.flatMap(part => (componentFiles[part.id] || []).map(file => file.id)))
@@ -55,9 +59,17 @@ function endPhotoTouch(event) {
   touchStart.value = null
 }
 
+function openViewer(file) {
+  const purchaseFiles = [...files.value]
+  let index = purchaseFiles.findIndex(entry => entry.id === file.id)
+  if (index < 0) { index = purchaseFiles.length; purchaseFiles.push(file) }
+  viewer.value = { files: purchaseFiles, index }
+}
+
 async function load() {
   loading.value = true; error.value = ''; actionError.value = ''
   selectedPhotoId.value = null
+  viewer.value = null
   try {
     const id = encodeURIComponent(route.params.id)
     const [purchase, parts, docs] = await Promise.all([
@@ -84,6 +96,7 @@ async function saveFile(event, path, type) {
       const componentId = path.split('/')[3]
       componentFiles[componentId] = await request(`/files/component/${componentId}/`)
       componentFileErrors[componentId] = ''
+      files.value = await request(`/files/${encodeURIComponent(route.params.id)}/`)
     } else {
       files.value = await request(`/files/${encodeURIComponent(route.params.id)}/`)
       item.value = await request(`/purchases/${encodeURIComponent(route.params.id)}/`)
@@ -112,9 +125,10 @@ async function deletePurchase() {
 
 function openComponent(part = null) {
   editingComponent.value = part?.id || null
+  convertComponentLegacy.value = false
   Object.assign(componentForm, {
     name: part?.name || '', description: part?.description || '', price: part?.price || '',
-    currency_code: part?.currency_code || item.value?.currency_code || settings.currency_code,
+    currency_code: part?.currency_code || settings.currency_code,
     brand: part?.brand || '', model_number: part?.model_number || '', serial_number: part?.serial_number || '',
     quantity: part?.quantity || 1, link: part?.link || '', warranty_expiry: part?.warranty_expiry || '',
     warranty_type: part?.warranty_type || '', notes: part?.notes || '', tags: part?.tags || '',
@@ -128,6 +142,7 @@ async function saveComponent() {
     const body = Object.fromEntries(Object.entries(componentForm).map(([key, value]) => [key, value === '' ? null : value]))
     body.name = componentForm.name.trim()
     body.price = String(componentForm.price || '0')
+    body.currency_code = convertComponentLegacy.value ? settings.currency_code : componentForm.currency_code
     body.quantity = Number(componentForm.quantity)
     if (!editingComponent.value) body.purchase_id = item.value.id
     await request(editingComponent.value ? `/components/${encodeURIComponent(editingComponent.value)}/` : '/components/', {
@@ -161,9 +176,10 @@ function sizeLabel(size) { return size < 1024 * 1024 ? `${Math.ceil(size / 1024)
     <template v-else-if="item">
       <div class="detail-heading"><div><div class="eyebrow">PURCHASE RECORD</div><h1>{{ item.product_name }}</h1><div class="heading-meta"><span class="status-chip" :class="item.item_status">{{ statusLabel(item.item_status) }}</span><span>{{ dateLabel(item.purchase_date, settings.date_format) }}</span><span v-if="item.retailer">· {{ item.retailer.name }}</span></div></div><RouterLink :to="`/purchases/${item.id}/edit`" class="button secondary">Edit purchase</RouterLink></div>
       <p v-if="actionError" class="notice error" role="alert">{{ actionError }}</p>
+      <p v-if="currencyMismatch(item, settings.currency_code)" class="notice">This purchase was recorded in {{ item.currency_code }} and is excluded from {{ settings.currency_code }} spending totals. <RouterLink :to="`/purchases/${item.id}/edit`">Enter its {{ settings.currency_code }} amount →</RouterLink></p>
       <section v-if="photos.length" class="panel photo-slider" role="region" aria-roledescription="carousel" :aria-label="`Photos of ${item.product_name}`" tabindex="0" @keydown.left.prevent="movePhoto(-1)" @keydown.right.prevent="movePhoto(1)" @touchstart.passive="startPhotoTouch" @touchend.passive="endPhotoTouch" @touchcancel="touchStart = null">
         <div class="photo-slider-stage">
-          <img :key="currentPhoto.id" :src="fileUrl(currentPhoto.id)" :alt="`${item.product_name}, photo ${photoIndex + 1} of ${photos.length}`" />
+          <button type="button" class="photo-slider-main" :aria-label="`Open photo ${photoIndex + 1} full screen`" @click="openViewer(currentPhoto)"><img :key="currentPhoto.id" :src="fileUrl(currentPhoto.id)" :alt="`${item.product_name}, photo ${photoIndex + 1} of ${photos.length}`" /></button>
           <button v-if="photos.length > 1" type="button" class="photo-slider-arrow previous" aria-label="Previous photo" @click="movePhoto(-1)">‹</button>
           <button v-if="photos.length > 1" type="button" class="photo-slider-arrow next" aria-label="Next photo" @click="movePhoto(1)">›</button>
         </div>
@@ -176,19 +192,20 @@ function sizeLabel(size) { return size < 1024 * 1024 ? `${Math.ceil(size / 1024)
         </section>
         <section class="panel detail-card"><div class="panel-head"><div><span class="section-kicker">IN THE BOX</span><h2>Components <span class="heading-count">{{ components.length }}</span></h2></div><button class="button small secondary" @click="openComponent()">+ Add component</button></div>
           <p v-if="!components.length" class="empty-inline">Add parts of this purchase that have their own price, warranty or files.</p>
-          <div v-for="part in components" :key="part.id" class="component-row"><div class="component-title"><strong>{{ part.name }}</strong><span>{{ money(part.price, part.currency_code || item.currency_code) }}<template v-if="part.quantity > 1"> · Qty {{ part.quantity }}</template></span></div><p v-if="part.description">{{ part.description }}</p><div class="component-meta"><span v-if="part.brand">{{ part.brand }}</span><span v-if="part.model_number">Model {{ part.model_number }}</span><span v-if="part.serial_number">Serial {{ part.serial_number }}</span><span v-if="part.warranty_expiry">Warranty until {{ dateLabel(part.warranty_expiry, settings.date_format) }}</span><span v-if="part.warranty_type">{{ part.warranty_type }}</span><a v-if="safeLink(part.link)" :href="safeLink(part.link)" target="_blank" rel="noopener noreferrer">Product link ↗</a></div><p v-if="part.notes" class="item-notes">{{ part.notes }}</p><p v-if="part.tags" class="small-muted">Tags: {{ part.tags }}</p>
-            <div class="component-files"><a v-for="file in componentFiles[part.id] || []" :key="file.id" :href="fileUrl(file.id)" target="_blank" rel="noopener noreferrer" class="file-chip">↗ {{ file.filename }}</a><label class="text-button upload-inline">+ Attach file<input type="file" hidden :disabled="busy" @change="saveFile($event, `/files/component/${part.id}/`, 'other')" /></label></div><p v-if="componentFileErrors[part.id]" class="field-error" role="alert">Could not load component files: {{ componentFileErrors[part.id] }}</p>
+          <div v-for="part in components" :key="part.id" class="component-row"><div class="component-title"><strong>{{ part.name }}</strong><span>{{ money(part.price, part.currency_code || item.currency_code) }}<template v-if="part.quantity > 1"> · Qty {{ part.quantity }}</template></span></div><p v-if="currencyMismatch(part, settings.currency_code)" class="small-muted">Recorded in {{ part.currency_code }}. Enter an equivalent {{ settings.currency_code }} amount when editing this component.</p><p v-if="part.description">{{ part.description }}</p><div class="component-meta"><span v-if="part.brand">{{ part.brand }}</span><span v-if="part.model_number">Model {{ part.model_number }}</span><span v-if="part.serial_number">Serial {{ part.serial_number }}</span><span v-if="part.warranty_expiry">Warranty until {{ dateLabel(part.warranty_expiry, settings.date_format) }}</span><span v-if="part.warranty_type">{{ part.warranty_type }}</span><a v-if="safeLink(part.link)" :href="safeLink(part.link)" target="_blank" rel="noopener noreferrer">Product link ↗</a></div><p v-if="part.notes" class="item-notes">{{ part.notes }}</p><p v-if="part.tags" class="small-muted">Tags: {{ part.tags }}</p>
+            <div class="component-files"><button v-for="file in componentFiles[part.id] || []" :key="file.id" type="button" class="file-chip" @click="openViewer(file)">↗ {{ file.filename }}</button><label class="text-button upload-inline">+ Attach file<input type="file" hidden :disabled="busy" @change="saveFile($event, `/files/component/${part.id}/`, 'other')" /></label></div><p v-if="componentFileErrors[part.id]" class="field-error" role="alert">Could not load component files: {{ componentFileErrors[part.id] }}</p>
             <div class="row-actions"><button class="text-button" @click="openComponent(part)">Edit</button><button class="text-button danger-text" @click="deleteComponent(part)">Delete</button></div></div>
         </section>
         <section class="panel detail-card"><div class="panel-head"><div><span class="section-kicker">DOCUMENTS & IMAGES</span><h2>Files <span class="heading-count">{{ files.length }}</span></h2></div></div>
           <div class="upload-bar"><label>File type<select v-model="fileType"><option v-for="type in ['receipt','photo','warranty','manual','other']" :key="type" :value="type">{{ statusLabel(type) }}</option></select></label><button class="button secondary" :disabled="busy" @click="fileInput?.click()">+ Upload file</button><button class="button quiet" :disabled="busy" @click="cameraInput?.click()">Take receipt photo</button><input ref="fileInput" class="sr-only" type="file" @change="saveFile($event, `/files/${item.id}/`, fileType)" /><input ref="cameraInput" class="sr-only" type="file" accept="image/*" capture="environment" @change="saveFile($event, `/files/${item.id}/`, 'receipt')" /></div><p class="form-hint">Receipts, manuals, photos and warranty cards · up to 10 MB per file</p>
           <p v-if="!files.length" class="empty-inline">No files yet. Add a receipt now so it is easy to find later.</p>
-          <div v-for="group in fileGroups" :key="group.type" class="file-group"><h3>{{ statusLabel(group.type) }}{{ group.entries.length === 1 ? '' : 's' }}</h3><div class="file-list"><div v-for="file in group.entries" :key="file.id" class="file-row"><a :href="fileUrl(file.id)" target="_blank" rel="noopener noreferrer" class="file-name"><img v-if="file.mime_type?.startsWith('image/')" :src="fileUrl(file.id)" alt="" class="file-preview" /><span v-else class="file-icon">▤</span><span>{{ file.filename }}<small>{{ sizeLabel(file.file_size) }}</small></span></a><button class="text-button danger-text" :disabled="busy" @click="deleteFile(file)">Delete</button></div></div></div>
+          <div v-for="group in fileGroups" :key="group.type" class="file-group"><h3>{{ statusLabel(group.type) }}{{ group.entries.length === 1 ? '' : 's' }}</h3><div class="file-list"><div v-for="file in group.entries" :key="file.id" class="file-row"><button type="button" class="file-name" @click="openViewer(file)"><img v-if="file.mime_type?.startsWith('image/')" :src="fileUrl(file.id)" alt="" class="file-preview" /><span v-else class="file-icon">▤</span><span>{{ file.filename }}<small>{{ sizeLabel(file.file_size) }}</small></span></button><button class="text-button danger-text" :disabled="busy" @click="deleteFile(file)">Delete</button></div></div></div>
         </section>
       </div><aside class="detail-side"><section class="panel side-card"><span class="section-kicker">AFTER PURCHASE</span><h2>Coverage & returns</h2><div class="deadline-block"><span>Warranty</span><strong v-if="item.warranty">{{ item.warranty.warranty_end === '9999-12-31' ? 'Lifetime' : dateLabel(item.warranty.warranty_end, settings.date_format) }}</strong><strong v-else>No warranty</strong><span v-if="item.warranty" class="coverage-state" :class="item.warranty.status.toLowerCase()">{{ statusLabel(item.warranty.status) }}<template v-if="item.warranty.status === 'ACTIVE' && item.warranty.warranty_end !== '9999-12-31'"> · {{ deadlineLabel(daysUntil(item.warranty.warranty_end)) }}</template></span></div><div class="deadline-block"><span>Return deadline</span><strong>{{ dateLabel(item.return_deadline, settings.date_format) }}</strong><span v-if="item.return_deadline" class="small-muted">{{ deadlineLabel(daysUntil(item.return_deadline)) }}</span><span v-if="item.return_policy" class="small-muted">{{ item.return_policy }}</span></div></section>
         <div class="danger-action"><button class="text-button danger-text" :disabled="busy" @click="deletePurchase">Delete purchase</button></div>
       </aside></div>
     </template>
-    <div v-if="componentFormOpen" class="dialog-backdrop" @click.self="componentFormOpen = false"><form class="dialog panel component-dialog" @submit.prevent="saveComponent"><h2>{{ editingComponent ? 'Edit component' : 'Add component' }}</h2><p class="subtle">A part with its own details and files.</p><div class="form-grid"><label class="full">Name <span class="required">*</span><input v-model="componentForm.name" required /></label><label>Price<input v-model="componentForm.price" type="number" step="0.01" min="0" placeholder="0.00" /></label><label>Currency<input v-model="componentForm.currency_code" maxlength="3" /></label><label>Quantity<input v-model.number="componentForm.quantity" type="number" min="1" step="1" /></label><label>Brand<input v-model="componentForm.brand" /></label><label>Model number<input v-model="componentForm.model_number" /></label><label>Serial number<input v-model="componentForm.serial_number" /></label><label>Warranty expiry<input v-model="componentForm.warranty_expiry" type="date" /></label><label>Warranty type<input v-model="componentForm.warranty_type" /></label><label class="full">Product link<input v-model="componentForm.link" type="url" /></label><label class="full">Description<textarea v-model="componentForm.description" rows="2"></textarea></label><label class="full">Notes<textarea v-model="componentForm.notes" rows="2"></textarea></label><label class="full">Tags <span class="label-note">comma separated</span><input v-model="componentForm.tags" /></label></div><p v-if="actionError" class="field-error" role="alert">{{ actionError }}</p><div class="form-actions"><button type="button" class="button quiet" @click="componentFormOpen = false; actionError = ''">Cancel</button><button class="button primary" :disabled="busy" type="submit">{{ busy ? 'Saving…' : 'Save component' }}</button></div></form></div>
+    <FileViewer v-if="viewer" :files="viewer.files" :initial-index="viewer.index" @close="viewer = null" />
+    <div v-if="componentFormOpen" class="dialog-backdrop" @click.self="componentFormOpen = false"><form class="dialog panel component-dialog" @submit.prevent="saveComponent"><h2>{{ editingComponent ? 'Edit component' : 'Add component' }}</h2><p class="subtle">A part with its own details and files.</p><div class="form-grid"><label class="full">Name <span class="required">*</span><input v-model="componentForm.name" required /></label><label>Price ({{ legacyComponentCurrency && !convertComponentLegacy ? componentForm.currency_code : settings.currency_code }})<input v-model="componentForm.price" type="number" step="0.01" min="0" placeholder="0.00" /></label><label v-if="legacyComponentCurrency" class="check-row full"><input v-model="convertComponentLegacy" type="checkbox" /><span>I entered the equivalent amount in {{ settings.currency_code }}. No exchange rate is applied automatically.</span></label><label>Quantity<input v-model.number="componentForm.quantity" type="number" min="1" step="1" /></label><label>Brand<input v-model="componentForm.brand" /></label><label>Model number<input v-model="componentForm.model_number" /></label><label>Serial number<input v-model="componentForm.serial_number" /></label><label>Warranty expiry<input v-model="componentForm.warranty_expiry" type="date" /></label><label>Warranty type<input v-model="componentForm.warranty_type" /></label><label class="full">Product link<input v-model="componentForm.link" type="url" /></label><label class="full">Description<textarea v-model="componentForm.description" rows="2"></textarea></label><label class="full">Notes<textarea v-model="componentForm.notes" rows="2"></textarea></label><label class="full">Tags <span class="label-note">comma separated</span><input v-model="componentForm.tags" /></label></div><p v-if="actionError" class="field-error" role="alert">{{ actionError }}</p><div class="form-actions"><button type="button" class="button quiet" @click="componentFormOpen = false; actionError = ''">Cancel</button><button class="button primary" :disabled="busy" type="submit">{{ busy ? 'Saving…' : 'Save component' }}</button></div></form></div>
   </div>
 </template>

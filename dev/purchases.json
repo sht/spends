@@ -2,10 +2,10 @@
   {"product_name":"Sample headphones", "price":"129.00", "currency_code":"EUR", "days_ago":7, "return_days":7, "warranty_days":358, "tags":"sample,audio"},
   {"product_name":"Sample laptop", "price":"1199.00", "currency_code":"EUR", "days_ago":350, "warranty_days":15, "tax_deductible":1, "component":"Sample memory upgrade", "tags":"sample,work"},
   {"product_name":"Sample coffee maker", "price":"89.50", "currency_code":"EUR", "days_ago":400, "warranty_days":-35, "tags":"sample,kitchen"},
-  {"product_name":"Sample backpack", "price":"75.00", "currency_code":"USD", "days_ago":60, "lifetime":true, "tags":"sample,travel"},
+  {"product_name":"Sample backpack", "price":"75.00", "currency_code":"EUR", "days_ago":60, "lifetime":true, "tags":"sample,travel"},
   {"product_name":"Sample desk lamp", "price":"34.95", "currency_code":"EUR", "days_ago":90, "tags":"sample,home"},
   {"product_name":"Sample old phone", "price":"299.00", "currency_code":"EUR", "days_ago":800, "item_status":"sold", "tags":"sample"},
   {"product_name":"Sample donated books", "price":"24.00", "currency_code":"EUR", "days_ago":120, "item_status":"donated", "tags":"sample"},
-  {"product_name":"Sample lost umbrella", "price":"18.00", "currency_code":"GBP", "days_ago":200, "item_status":"lost", "tags":"sample"},
+  {"product_name":"Sample lost umbrella", "price":"18.00", "currency_code":"EUR", "days_ago":200, "item_status":"lost", "tags":"sample"},
   {"product_name":"Sample retired kettle", "price":"39.00", "currency_code":"EUR", "days_ago":900, "item_status":"disposed", "tags":"sample"}
 ]

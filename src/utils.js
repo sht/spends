@@ -45,13 +45,13 @@ export function statusLabel(value) { return value ? value.charAt(0).toUpperCase(
 
 export function activePurchases(items) { return items.filter(p => p.item_status === 'active') }
 
-export function totalsByCurrency(items) {
-  const totals = new Map()
-  for (const item of items) {
-    const code = item.currency_code || 'USD'
-    totals.set(code, (totals.get(code) || 0) + Number(item.price || 0))
-  }
-  return [...totals.entries()].sort(([a], [b]) => a.localeCompare(b))
+export function currencyMismatch(item, currency) {
+  return Boolean(item.currency_code && item.currency_code.toUpperCase() !== currency.toUpperCase())
+}
+
+export function spendingInCurrency(items, currency) {
+  return items.filter(item => !currencyMismatch(item, currency))
+    .reduce((sum, item) => sum + Number(item.price || 0), 0)
 }
 
 export function photo(purchase) { return purchase.photo_id ? `/api/files/file/${encodeURIComponent(purchase.photo_id)}/download/` : '' }
