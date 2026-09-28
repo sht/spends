@@ -210,14 +210,12 @@ curl -X POST http://localhost:3031/api/retailers/ \
 | 🟢 GET | `/api/analytics/summary`             | Get dashboard summary  |
 | 🟢 GET | `/api/analytics/spending`            | Get spending trends    |
 | 🟢 GET | `/api/analytics/warranties/timeline` | Warranty timeline      |
-| 🟢 GET | `/api/analytics/warranties/summary`  | Warranty summary       |
 | 🟢 GET | `/api/analytics/retailers`           | Retailer distribution  |
 | 🟢 GET | `/api/analytics/brands`              | Brand distribution     |
 | 🟢 GET | `/api/analytics/top-products`        | Top products           |
 | 🟢 GET | `/api/analytics/expensive-purchases` | Expensive purchases    |
 | 🟢 GET | `/api/analytics/recent-purchases`    | Recent purchases       |
 | 🟢 GET | `/api/analytics/recent-warranties`   | Recent warranties      |
-| 🟢 GET | `/api/analytics/spending/by-period`  | Spending by date range |
 
 #### Analytics Parameters
 
