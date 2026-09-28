@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.purchase import Purchase
 from app.schemas.purchase import PurchaseCreate
 from app.services.purchase_service import create_purchase
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal
 
 
@@ -37,7 +37,7 @@ async def test_create_purchase(test_client: AsyncClient, db_session: AsyncSessio
         "retailer_id": retailer_id,
         "brand_id": brand_id,
         "status": "RECEIVED",
-        "purchase_date": datetime.now().isoformat(),
+        "purchase_date": date.today().isoformat(),
         "notes": "Test purchase for testing"
     }
     
@@ -81,7 +81,7 @@ async def test_get_purchase(test_client: AsyncClient, db_session: AsyncSession):
         "retailer_id": retailer_id,
         "brand_id": brand_id,
         "status": "RECEIVED",
-        "purchase_date": datetime.now().isoformat(),
+        "purchase_date": date.today().isoformat(),
         "notes": "Another test purchase"
     }
     
@@ -91,7 +91,7 @@ async def test_get_purchase(test_client: AsyncClient, db_session: AsyncSession):
     purchase_id = created_data["id"]
     
     # Retrieve the purchase
-    response = await test_client.get(f"/api/purchases/{purchase_id}")
+    response = await test_client.get(f"/api/purchases/{purchase_id}/")
     
     assert response.status_code == 200
     data = response.json()

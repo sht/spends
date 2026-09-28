@@ -115,3 +115,9 @@ class PurchaseResponse(PurchaseBase, BaseResponse):
     photo_id: Optional[str] = None
     photo_count: Optional[int] = 0
     updated_at: Optional[datetime] = None
+
+    @model_validator(mode="after")
+    def fill_warranty_id(self):
+        if self.warranty and not self.warranty_id:
+            self.warranty_id = self.warranty.id
+        return self

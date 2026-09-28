@@ -1,6 +1,5 @@
-from sqlalchemy import Column, Integer, String, DateTime, BigInteger, ForeignKey, Enum
+from sqlalchemy import Column, Integer, String, DateTime, BigInteger, ForeignKey, Enum, Uuid
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from app.database import Base
 import uuid
@@ -18,7 +17,7 @@ class FileType(PyEnum):
 class File(Base):
     __tablename__ = "files"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     purchase_id = Column(
         String, ForeignKey("purchases.id", ondelete="CASCADE"), nullable=False
     )  # Changed to String to match Purchase.id
