@@ -11,5 +11,6 @@ services:
       - PORT=8000
       - TZ=Europe/Berlin
     volumes:
-      - /mnt/ironwolf8tb/spends:/app/data
+      # Set SPENDS_DATA_DIR in backend/.env (gitignored) to the host folder with the DB and uploads.
+      - ${SPENDS_DATA_DIR:?Set SPENDS_DATA_DIR in backend/.env}:/app/data
     restart: unless-stopped
