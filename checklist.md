@@ -20,7 +20,7 @@ Missing and weak features in the new Vue frontend (`src/`), compared with the pr
   - Data: `GET /api/files/{purchase_id}/` returns all files. Photos are the ones with `file_type === "photo"`. Image URL: `/api/files/file/{file_id}/download/`.
   - Done when: a purchase with 3 photos lets you browse all 3 by button, thumbnail, keyboard and swipe, and a purchase with no photos shows no empty slider.
 
-- [ ] **2. Bring back the Marketplace page**
+- [x] **2. Bring back the Marketplace page**
   - Problem: the Marketplace page is gone. The list/grid toggle on Purchases doesn't replace it.
   - Expected: a separate "Marketplace" item in the sidebar and in the mobile bottom nav, at `#/marketplace`. It's a photo-first grid of cards: large photo (a placeholder if none), product name, brand, price, and a small badge with the photo count when there's more than 1. Newest purchase first, 20 per page with pagination. A header shows the total item count and total spending. Clicking a card opens the purchase detail page.
   - Data: `GET /api/purchases/?skip=&limit=20&sort_by=purchaseDate&sort_direction=desc`. Each item has `photo_id` (first photo) and `photo_count`. The response has `total` and `total_spending`.

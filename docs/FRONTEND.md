@@ -16,7 +16,7 @@ For standalone frontend development, `npm run dev:frontend` uses `VITE_API_URL` 
 
 ## UI and data rules
 
-- Home lists active items with return deadlines or non-voided warranties ending in the next 30 days. The purchase list is the sole collection; list and grid are display modes. Purchase detail handles files and components. Insights use active purchases and group spending by original currency.
+- Home lists active items with return deadlines or non-voided warranties ending in the next 30 days. Purchases is the main collection, with list and grid display modes. Marketplace shows the same purchases in a separate photo-first, server-paginated view (20 per page), with active spending totaled in the app currency. Purchase detail handles files and components. Insights use active purchases and group spending by original currency.
 - The API does not convert currencies. `settings.currency_code` is the default for new purchases; each recorded amount is rendered in that purchase's currency. Totals never add unlike currencies.
 - Purchase dates and deadlines are treated as local calendar dates, without converting ISO date strings through UTC. Lifetime warranties show “Lifetime”.
 - Upload a purchase first, then add a receipt or take its photo from the detail view. Purchase files are limited to 10 MB each. Component file upload and listing are supported; the described API has no component-file delete route.

@@ -23,6 +23,7 @@ request('/settings/').then(value => Object.assign(settings, value)).catch(() => 
       <nav class="side-links" aria-label="Main navigation">
         <RouterLink to="/" exact-active-class="selected"><span class="nav-icon">⌂</span>Overview</RouterLink>
         <RouterLink to="/purchases" :class="{ selected: route.path.startsWith('/purchases') }"><span class="nav-icon">▦</span>Purchases</RouterLink>
+        <RouterLink to="/marketplace" active-class="selected"><span class="nav-icon">▤</span>Marketplace</RouterLink>
         <RouterLink to="/insights" active-class="selected"><span class="nav-icon">◫</span>Insights</RouterLink>
       </nav>
       <div class="sidebar-bottom">
@@ -43,6 +44,7 @@ request('/settings/').then(value => Object.assign(settings, value)).catch(() => 
     <nav class="bottom-nav" aria-label="Mobile navigation">
       <RouterLink to="/" exact-active-class="selected">⌂<span>Home</span></RouterLink>
       <RouterLink to="/purchases" :class="{ selected: route.path.startsWith('/purchases') }">▦<span>Purchases</span></RouterLink>
+      <RouterLink to="/marketplace" active-class="selected">▤<span>Marketplace</span></RouterLink>
       <RouterLink to="/insights" active-class="selected">◫<span>Insights</span></RouterLink>
       <RouterLink to="/settings" active-class="selected">⚙<span>Settings</span></RouterLink>
     </nav>
