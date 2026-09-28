@@ -8,7 +8,7 @@ if settings.database_url.startswith("sqlite"):
     # Use sync SQLite for Alembic compatibility
     sync_engine = create_engine(
         settings.database_url.replace("+aiosqlite", ""),
-        echo=True,
+        echo=False,
         connect_args={"check_same_thread": False}  # Required for SQLite
     )
 else:
@@ -18,7 +18,7 @@ else:
 # Create async engine for application use
 async_engine = create_async_engine(
     settings.database_url,
-    echo=True,  # Set to True to see SQL queries in the logs
+    echo=False,  # Set to True to see SQL queries in the logs
     pool_pre_ping=True,  # Verify connections before using them
 )
 

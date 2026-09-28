@@ -104,3 +104,12 @@ src-modern/*.html
 # Uploads folder - user files stored here
 backend/uploads/
 uploads/
+
+# Local development state
+.dev/
+.venv/
+.env.production
+.archify/
+
+# Original generated frontend package (integrated into root src/)
+spends-tracker-frontend/

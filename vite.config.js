@@ -1,102 +1,17 @@
-import { defineConfig, loadEnv } from 'vite';
-import { resolve } from 'path';
-import { fileURLToPath, URL } from 'node:url';
+import { defineConfig, loadEnv } from 'vite'
+import vue from '@vitejs/plugin-vue'
 
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
-const env = loadEnv('development', __dirname);
-
-export default defineConfig({
-  plugins: [],
-  root: 'src-modern',
-  publicDir: '../public-assets',
-  base: '/',
-
-  build: {
-    outDir: '../dist-modern',
-    emptyOutDir: true,
-    sourcemap: false,
-    // Warn for chunks over 500KB
-    chunkSizeWarningLimit: 500,
-
-    rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'src-modern/index.html'),
-        inventory: resolve(__dirname, 'src-modern/inventory.html'),
-        marketplace: resolve(__dirname, 'src-modern/marketplace.html'),
-        retailers: resolve(__dirname, 'src-modern/retailers.html'),
-        settings: resolve(__dirname, 'src-modern/settings.html'),
-        'data-management': resolve(__dirname, 'src-modern/data-management.html'),
-      },
-
-      output: {
-        // Manual chunk splitting for better caching
-        manualChunks: {
-          // Core Bootstrap framework
-          'vendor-bootstrap': ['bootstrap', '@popperjs/core'],
-          // Charting libraries
-          'vendor-charts': ['chart.js', 'apexcharts'],
-          // UI utilities
-          'vendor-ui': ['alpinejs', 'sweetalert2', 'dayjs'],
-        },
-        // Asset naming for better caching
-        chunkFileNames: 'assets/[name]-[hash].js',
-        entryFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash].[ext]',
-      },
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd())
+  return {
+    plugins: [vue()],
+    publicDir: 'public-assets',
+    build: { outDir: 'dist-modern', emptyOutDir: true },
+    server: {
+      host: env.VITE_HOST || '0.0.0.0',
+      port: Number(env.VITE_PORT) || 3030,
+      open: env.VITE_OPEN_BROWSER === 'true',
+      proxy: { '/api': { target: env.VITE_API_URL || 'http://localhost:3031', changeOrigin: true } },
     },
-  },
-
-  server: {
-    host: env.VITE_HOST || '0.0.0.0',
-    port: env.VITE_PORT ? parseInt(env.VITE_PORT) : 3030,
-    open: env.VITE_OPEN_BROWSER === 'true',
-    // Ensure file watching works properly
-    watch: {
-      usePolling: true,
-      interval: 100,
-    },
-    // Proxy API requests to the FastAPI backend during development
-    proxy: {
-      '/api': {
-        target: 'http://127.0.0.1:9999',
-        changeOrigin: true,
-        ws: true,
-      },
-    },
-  },
-
-  preview: {
-    port: 4173,
-    open: true,
-  },
-
-  css: {
-    // Enable CSS source maps in development
-    devSourcemap: true,
-    preprocessorOptions: {
-      scss: {
-        api: 'modern-compiler',
-        silenceDeprecations: [
-          'legacy-js-api',
-          'import',
-          'global-builtin',
-          'color-functions',
-          'if-function',
-        ],
-      },
-    },
-  },
-
-  resolve: {
-    alias: {
-      '@': resolve(__dirname, 'src-modern'),
-      '~bootstrap': resolve(__dirname, 'node_modules/bootstrap'),
-    },
-  },
-
-  // Optimize dependencies
-  optimizeDeps: {
-    include: ['bootstrap', 'alpinejs', 'chart.js', 'apexcharts', 'sweetalert2', 'dayjs'],
-    exclude: ['lucide'], // Optional dependency, loaded dynamically
-  },
-});
+  }
+})

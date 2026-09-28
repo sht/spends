@@ -10,9 +10,9 @@ Track your purchases, manage warranties, and analyze spending patterns. Upload r
 
 | Frontend         | Backend              | Storage                          |
 | ---------------- | -------------------- | -------------------------------- |
-| Vite + Alpine.js | FastAPI + SQLAlchemy | SQLite (dev) / PostgreSQL (prod) |
-| Bootstrap 5      | Pydantic             | Hash-sharded files               |
-| Chart.js         | Uvicorn              | Reference counting               |
+| Vue 3 + Vite | FastAPI + SQLAlchemy | SQLite (dev) / PostgreSQL (prod) |
+| Vue Router      | Pydantic             | Hash-sharded files               |
+| CSS         | Uvicorn              | Reference counting               |
 
 ## Documentation
 
@@ -21,73 +21,31 @@ Track your purchases, manage warranties, and analyze spending patterns. Upload r
   - [System Architecture](docs/ARCHITECTURE.md) - Architecture overview and design
   - [Development Plan](docs/DEVELOPMENT.md) - Roadmap and development phases
   - [Security Policy](docs/SECURITY.md) - Security guidelines and vulnerability reporting
-  - [Architecture Diagram](docs/DIAGRAM.md) - Visual system architecture
+  - [Architecture Diagram](docs/diagrams/spends-components.html) - Interactive component architecture
 - [Backend Documentation](backend/README.md) - Backend-specific implementation details
 
 ## Security
 
 For security vulnerabilities, please report to **oss@mailite.com** or create a private GitHub security advisory.
 
-## Quick Start
+## Development
 
-### Prerequisites
+Install Git, Node.js 22.12+ and Python 3.12, then from the repository root:
 
-- Node.js 16+
-- Python 3.10+
-
-### Installation
-
-```bash
-# Install frontend dependencies
-npm install
-
-# Install backend dependencies
-cd backend
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-cd ..
+```sh
+python3.12 scripts/dev.py setup
+npm run dev
 ```
 
-### Configure Ports (Optional)
+Open http://localhost:3030. This starts both the frontend and local API. Fictional sample data, uploads, and backups live in `.dev/`, isolated from your home-server data. Setup preserves existing dev data.
 
-Default ports are **3030** (frontend) and **3031** (backend). To customize, edit the `.env` files:
+## Production
 
-**`.env`** (frontend):
+The multi-stage `backend/Dockerfile` builds the Vue frontend and packages it with FastAPI. Production serves the UI and `/api` from one address, with no Vite server. No sample data is included in the image.
 
-```env
-VITE_PORT=3030
-VITE_API_URL=http://localhost:3031
-```
+Use root `compose.yaml` and `.env.production.example` with your existing persistent data directory. See [Development, testing, and release workflow](docs/ENVIRONMENTS.md) for complete setup, Docker Hub publishing, backups, and upgrade instructions.
 
-**`backend/.env`** (backend):
-
-```env
-PORT=3031
-FRONTEND_URL=http://localhost:3030
-```
-
-### Run Development Environment
-
-**Terminal 1 - Frontend:**
-
-```bash
-npm run dev -- --host 0.0.0.0
-```
-
-**Terminal 2 - Backend:**
-
-```bash
-cd backend
-source venv/bin/activate
-uvicorn app.main:app --reload --host 0.0.0.0 --port 3031
-```
-
-| Service     | Default URL                |
-| ----------- | -------------------------- |
-| Frontend    | http://localhost:3030      |
-| Backend API | http://localhost:3031/api  |
-| API Docs    | http://localhost:3031/docs |
+See [Frontend documentation](docs/FRONTEND.md) for UI behavior and source details.
 
 ## Features
 
@@ -101,9 +59,10 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 3031
 
 ```
 spends/
-├── src-modern/          # Frontend source (Vite + Alpine.js)
-│   ├── scripts/         # Alpine.js components
-│   └── styles/scss/     # SCSS styles
+├── src/                 # Frontend source (Vue 3 + Vite)
+│   ├── views/           # Vue page components
+│   ├── api.js           # Same-origin API client
+│   └── styles.css       # Responsive light/dark styles
 ├── backend/             # FastAPI backend
 │   ├── app/             # Routes, models, schemas
 │   └── migrations/      # Alembic migrations
@@ -115,7 +74,7 @@ spends/
 
 ```bash
 # Frontend
-npm run dev              # Development server
+npm run dev              # Local frontend + backend
 npm run build            # Production build
 
 # Backend
@@ -124,7 +83,7 @@ alembic upgrade head     # Run database migrations
 uvicorn app.main:app --reload --host 0.0.0.0 --port 3031
 
 # Testing
-pytest                   # Run backend tests
+npm run test:backend     # From repository root; isolated test database
 ```
 
 ## License

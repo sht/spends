@@ -1,0 +1,65 @@
+name: Test and release
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install and seed isolated development environment
+        run: python scripts/dev.py setup
+      - name: Test backend
+        run: npm run test:backend
+      - name: Build frontend
+        run: npm run build
+      - name: Verify unchanged dependency locks
+        run: git diff --exit-code -- backend/requirements.txt backend/requirements-dev.txt package-lock.json
+
+  image:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build production image
+        run: docker build -f backend/Dockerfile -t spends-tracker:ci .
+      - name: Verify fresh startup, data persistence, and migration failure
+        run: python3 scripts/test-image.py spends-tracker:ci
+
+  publish:
+    needs: image
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-qemu-action@v4
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: backend/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ vars.DOCKERHUB_USERNAME }}/spends-tracker:${{ github.ref_name }}
+          provenance: true
+          sbom: true

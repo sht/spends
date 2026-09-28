@@ -5,6 +5,7 @@ import os
 
 class Settings(BaseSettings):
     database_url: str = "sqlite+aiosqlite:////app/data/spends_tracker.db"
+    backups_dir: str = "/app/data/backups"
     host: str = "127.0.0.1"
     port: int = 3031
     debug: bool = False

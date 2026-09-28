@@ -15,7 +15,7 @@ from app.utils.import_export import import_data_from_json, export_data_to_json
 from app.config import settings
 
 UPLOAD_DIR = Path(settings.uploads_dir)
-BACKUP_DIR = Path("/app/data/backups")
+BACKUP_DIR = Path(settings.backups_dir)
 
 
 async def create_full_backup(db: AsyncSession) -> bytes:

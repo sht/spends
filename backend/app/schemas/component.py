@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
 
@@ -47,5 +47,5 @@ class ComponentUpdate(BaseModel):
 
 class ComponentResponse(ComponentBase):
     id: str
-    created_at: Optional[str] = None
-    updated_at: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None

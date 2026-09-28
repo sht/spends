@@ -8,6 +8,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+from app.config import settings
 from app.database import Base
 from app.models import Purchase, Warranty, Retailer, Brand, File, Setting, Component
 
@@ -42,7 +43,7 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = os.getenv("DATABASE_URL") or config.get_main_option("sqlalchemy.url")
+    url = settings.database_url
 
     # Convert async URL to sync URL for Alembic
     if url:
@@ -67,7 +68,7 @@ def run_migrations_online() -> None:
 
     """
     configuration = config.get_section(config.config_ini_section, {})
-    db_url = os.getenv("DATABASE_URL") or config.get_main_option("sqlalchemy.url")
+    db_url = settings.database_url
 
     # Convert async URL to sync URL for Alembic
     if db_url:

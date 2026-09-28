@@ -1,0 +1,18 @@
+# Production only. Set both values in .env.production; no sample-data startup.
+services:
+  app:
+    image: ${SPENDS_IMAGE:?Set SPENDS_IMAGE to a versioned Docker Hub image}
+    ports:
+      - '${SPENDS_PORT:-3031}:8000'
+    environment:
+      DATABASE_URL: sqlite+aiosqlite:////app/data/spends_tracker.db
+      UPLOADS_DIR: /app/data/uploads
+      BACKUPS_DIR: /app/data/backups
+      TZ: ${TZ:-Europe/Berlin}
+    volumes:
+      - type: bind
+        source: ${SPENDS_DATA_DIR:?Set SPENDS_DATA_DIR to your existing production data directory}
+        target: /app/data
+        bind:
+          create_host_path: false
+    restart: unless-stopped

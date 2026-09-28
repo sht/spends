@@ -1,128 +1,14 @@
-# Spends Tracker Backend
+# Spends Tracker backend
 
-This is the backend API for the Spends Tracker application, built with FastAPI and SQLAlchemy.
+FastAPI + SQLAlchemy + SQLite. The API is available under `/api`; the compiled Vue frontend is served at `/` in production.
 
-## Features
+For local development, start from the repository root:
 
-- RESTful API endpoints for managing purchases, warranties, retailers, and brands
-- Analytics endpoints for spending insights
-- Data import/export functionality
-- SQLite database for local development (migratable to PostgreSQL)
-
-## Tech Stack
-
-- **Language:** Python 3.10+
-- **Framework:** FastAPI
-- **Database:** SQLite (development) → PostgreSQL (production)
-- **ORM:** SQLAlchemy 2.0+
-- **Validation:** Pydantic v2
-- **Migrations:** Alembic
-
-## Local Development Setup
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd spends/backend
-   ```
-
-2. **Create a virtual environment**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Set up environment variables**
-   ```bash
-   cp .env.example .env
-   # Edit .env file as needed
-   ```
-
-5. **Run database migrations**
-   ```bash
-   alembic upgrade head
-   ```
-
-6. **Start the development server**
-   ```bash
-   python run_server.py
-   ```
-   
-   Or with uvicorn directly:
-   ```bash
-   uvicorn app.main:app --reload
-   ```
-
-7. **Access the API**
-   - API root: http://localhost:8000
-   - Documentation: http://localhost:8000/docs
-
-## Running Tests
-
-```bash
-pytest
+```sh
+python3.12 scripts/dev.py setup
+npm run dev
 ```
 
-## Migrating to PostgreSQL
+This starts the backend on `127.0.0.1:3031` using `.dev/spends_tracker.db`, `.dev/uploads/`, and `.dev/backups/`. The frontend runs on `127.0.0.1:3030` and proxies `/api` locally. Test with `npm run test:backend`.
 
-When you're ready to switch to PostgreSQL:
-
-1. Start PostgreSQL with Docker:
-   ```bash
-   docker-compose up -d
-   ```
-
-2. Update your `.env` file to use PostgreSQL:
-   ```env
-   DATABASE_URL=postgresql+asyncpg://spends_user:spends_password@localhost/spends_tracker
-   ```
-
-3. Run migrations again:
-   ```bash
-   alembic upgrade head
-   ```
-
-## Cloud Deployment
-
-The application is designed for easy deployment to cloud platforms. Here are guides for popular platforms:
-
-### Deploy to Render
-
-1. Create a new Web Service on Render
-2. Connect to your GitHub repository
-3. Set the build command to:
-   ```bash
-   cd backend && pip install -r requirements.txt
-   ```
-4. Set the start command to:
-   ```bash
-   uvicorn app.main:app --host 0.0.0.0 --port $PORT
-   ```
-5. Add environment variables as needed (DATABASE_URL, etc.)
-
-### Deploy to Railway
-
-1. Create a new project on Railway
-2. Connect to your GitHub repository
-3. Add a new service and select your repository
-4. Set the deploy command to:
-   ```bash
-   cd backend && pip install -r requirements.txt && alembic upgrade head
-   ```
-5. Set the start command to:
-   ```bash
-   uvicorn app.main:app --host 0.0.0.0 --port $PORT
-   ```
-
-### Deploy to AWS, GCP, or Azure
-
-The application can be deployed to any cloud platform that supports Docker containers. Use the provided Dockerfile and docker-compose.yml as a starting point.
-
-## API Documentation
-
-Auto-generated API documentation is available at `/docs` endpoint when the server is running.
+Production uses the repository-root `compose.yaml` and the multi-stage `backend/Dockerfile`, which builds both frontend and backend. Configure a persistent data directory with `.env.production`; its `spends_tracker.db`, `uploads/`, and `backups/` survive image replacement. The image has no sample data and does not seed on startup. See [environment and release instructions](../docs/ENVIRONMENTS.md).
