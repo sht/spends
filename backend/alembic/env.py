@@ -45,8 +45,8 @@ def run_migrations_offline() -> None:
     url = os.getenv("DATABASE_URL") or config.get_main_option("sqlalchemy.url")
 
     # Convert async URL to sync URL for Alembic
-    if url and "aiosqlite" in url:
-        url = url.replace("sqlite+aiosqlite://", "sqlite:///")
+    if url:
+        url = url.replace("+aiosqlite", "")
 
     context.configure(
         url=url,
@@ -70,8 +70,8 @@ def run_migrations_online() -> None:
     db_url = os.getenv("DATABASE_URL") or config.get_main_option("sqlalchemy.url")
 
     # Convert async URL to sync URL for Alembic
-    if db_url and "aiosqlite" in db_url:
-        db_url = db_url.replace("sqlite+aiosqlite://", "sqlite:///")
+    if db_url:
+        db_url = db_url.replace("+aiosqlite", "")
 
     configuration["sqlalchemy.url"] = db_url
 

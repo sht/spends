@@ -1,7 +1,7 @@
 """add item_status to purchases
 
 Revision ID: 08bb3a25
-Revises: 08bb3a24
+Revises: 002_add_tags_to_components
 Create Date: 2026-09-07
 
 """
